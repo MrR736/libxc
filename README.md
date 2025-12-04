@@ -1,6 +1,3 @@
-Here’s a polished and slightly enhanced version of your `README.md` with minor fixes and consistency improvements, especially for code examples and formatting:
-
-````markdown
 # libxc — Extern C Utility Library
 
 [![License: GPL-3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
