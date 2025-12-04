@@ -1,0 +1,74 @@
+/**
+ * xstddef.h: Extern Library
+ *
+ * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XSTDDEF_H__
+#define __XSTDDEF_H__
+
+#include <stdarg.h>
+#include <stdint.h>
+#include <wchar.h>
+#include <sys/types.h>
+
+#if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(inline)
+#define inline __inline
+#endif
+
+
+#if defined(__GNUC__) || defined(__clang__)
+#define __xattribute__(V) __attribute__( V )
+#if __has_attribute(visibility)
+#ifdef ARM
+#define __xvisibility__(V) __attribute__((externally_visible,visibility(#V)))
+#else
+#define __xvisibility__(V) __attribute__((visibility(#V)))
+#endif
+#else
+#define __xvisibility__(V)
+#endif
+#else
+#define __xattribute__(V)
+#define __xvisibility__(V)
+#endif
+
+#ifdef __GNUC__
+#ifndef _MSC_VER
+#define __restrict	__restrict
+#else
+#define __restrict	__restrict__
+#endif /* !_MSC_VER */
+#else
+#define __restrict	/* nothing */
+#endif /* !__GNUC__ */
+
+#ifndef XSTDDEF_EXPORT_API
+#define XSTDDEF_EXPORT_API	__xvisibility__(default)
+#endif
+
+#ifndef XSTDDEF_IMPORT_API
+#define XSTDDEF_IMPORT_API	extern __xvisibility__(default)
+#endif
+
+#ifndef XSTDDEF_INLINE_API
+#define XSTDDEF_INLINE_API	static inline
+#endif
+
+#endif // __XSTDDEF_H__

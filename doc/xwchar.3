@@ -1,0 +1,82 @@
+.\" XWCHAR(3) Manual Page
+.TH XWCHAR 3 "2025" "Extern Library" "Programmer's Manual"
+.SH NAME
+xwcslen, vxwcslen \- compute the length of a formatted wide string
+.SH SYNOPSIS
+.nf
+#include <xwchar.h>
+
+size_t vxwcslen(const wchar_t *restrict fmt, va_list ap);
+size_t xwcslen(const wchar_t *restrict fmt, ...);
+.fi
+.SH DESCRIPTION
+The xwchar library provides portable routines for determining the length
+of a formatted wide\-character string without producing output.
+
+These functions act similarly to vswprintf(3) and swprintf(3), but return
+only the number of characters that would be written.
+
+.SH vxwcslen()
+vxwcslen() computes the number of wide characters required to format the
+string described by \fIfmt\fP and arguments in \fIap\fP.
+
+On Windows systems, the function wraps _vscwprintf(), which directly
+returns the required length.
+
+On POSIX systems, the function first attempts:
+
+.RS
+vswprintf(NULL, 0, fmt, ap)
+.RE
+
+If supported and successful, its return value is used.
+
+If this call fails, the function allocates an internal buffer whose size
+is doubled repeatedly until formatting succeeds. If no buffer large
+enough can be allocated before internal limits are reached, the function
+fails with errno set appropriately.
+
+The return value never includes the terminating NUL.
+
+.SH xwcslen()
+xwcslen() is a convenience wrapper around vxwcslen() that accepts a
+variadic argument list.
+
+.SH RETURN VALUES
+Both functions return the number of wide characters required to format
+the string, excluding the terminating NUL.
+
+On error they return 0, and vxwcslen() sets errno to one of:
+
+.TP
+ENOMEM
+Memory allocation failed during probing.
+.TP
+EOVERFLOW
+The required buffer size exceeds safe internal limits.
+
+Windows does not set errno on failure.
+
+.SH ERRORS
+These functions may set errno as described in RETURN VALUES.
+
+.SH PORTABILITY
+vxwcslen() is portable across Windows, Linux, BSD, and other POSIX
+systems. Systems without support for vswprintf(NULL,0,...) are handled
+via fallback buffer probing.
+
+.SH EXAMPLES
+.nf
+size_t len = xwcslen(L"%ls %d", L"hello", 42);
+wchar_t *buf = malloc((len + 1) * sizeof(wchar_t));
+swprintf(buf, len + 1, L"%ls %d", L"hello", 42);
+.fi
+
+.SH SEE ALSO
+swprintf(3), vswprintf(3), wcslen(3)
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+GPLv3 or later.

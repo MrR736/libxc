@@ -1,0 +1,100 @@
+.\" xstdlib(3) — Extended stdlib utilities
+.TH XSTDLIB 3 "2025" "Extern Library" "Programmer's Manual"
+
+.SH NAME
+xstdlib \- UTF-8 conversion, formatted system(), perror(), and process utilities.
+
+.SH SYNOPSIS
+.nf
+#include <xstdlib.h>
+.fi
+
+.SH DESCRIPTION
+The xstdlib header provides a set of extensions to the standard C library,
+including UTF-8 conversion functions, formatted system execution,
+portable wide-character wrappers, random memory generation, and
+fork/exec-based process launching.
+
+All functions are defined as inline and are intended for internal or
+moderately high-performance use.
+
+.SH FUNCTIONS
+
+.SS Random byte utility
+.TP
+.B void *xrand(size_t size, unsigned int flags)
+Allocates a block of memory and fills it with pseudorandom bytes in the
+range 0 to flags-1.
+
+Returns NULL on invalid arguments or allocation failure.
+
+.SS Unicode conversion
+.TP
+.B char *xwcstombs(const wchar_t *wcs)
+Convert a wide-character string to UTF-8. Caller must free.
+
+.TP
+.B wchar_t *xmbstowcs(const char *mbs)
+Convert a UTF-8 multibyte string to wide characters. Caller must free.
+
+.SS System execution (UTF-8 aware)
+.TP
+.B int wsystem(const wchar_t *command)
+Wide-character version of system(). On POSIX systems converts to UTF-8.
+
+.SS Formatted system() helpers (char)
+.B vnxsystem, nxsystem, vxsystem, xsystem
+Format a command via printf-style rules, allocate memory, and pass it to
+system().
+
+.SS Formatted system() helpers (wide)
+.B vnxwsystem, nxwsystem, vxwsystem, xwsystem
+Wide-character versions of the above.
+
+.SS perror() wrappers
+Provides formatted versions of perror() for both char and wide
+character types:
+
+.B vnxperror, nxperror, vxperror, xperror
+.B vnxwperror, nxwperror, vxwperror, xwperror
+
+.SS Child-process execution
+.TP
+.B int csystem(const char *cmd)
+Execute a command using a child process:
+.RS
+• Windows: _spawnlp()
+• POSIX: fork/exec combined
+.RE
+Return value normalized to shell conventions.
+
+.TP
+.B int wcsystem(const wchar_t *cmd)
+Wide-character wrapper for csystem().
+
+.SS Formatted child-process execution
+.B vnxcsystem, nxcsystem, vxcsystem, xcsystem
+.B vnxwcsystem, nxwcsystem, vxwcsystem, xwcsystem
+
+These format a command, allocate memory, and pass it to csystem().
+
+.SH RETURN VALUES
+Most system wrappers return:
+.RS
+• exit code (0–255)
+• 128 + signal_number (if killed by a signal)
+• −1 on failure
+.RE
+
+.SH ERRORS
+EINVAL, ENOMEM, or system-level errno values may be set.
+
+.SH SEE ALSO
+system(3), perror(3), exec(3), fork(2), wchar_t(3)
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+Copyright 2025.
+Licensed under the GNU GPL v3 or later.

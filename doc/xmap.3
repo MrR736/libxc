@@ -1,0 +1,145 @@
+NAME
+       xmap - Thread-safe dynamically indexed pointer and string map
+
+SYNOPSIS
+       #include <xmap.h>
+
+       void xmap_init(xmap_t *xm);
+       void xmap_destroy(xmap_t *xm);
+
+       /* Generic pointers */
+       void   xmap_insert(xmap_t *xm, void *data);
+       void*  xmap_get(xmap_t *xm, size_t index);
+       int    xmap_exists(xmap_t *xm, size_t index);
+       void   xmap_erase(xmap_t *xm, size_t index);
+       void   xmap_erase_no_shift(xmap_t *xm, size_t index);
+
+       /* Strings (char*) */
+       void   xmap_strinsert(xmap_t *xm, const char *str);
+       char*  xmap_strget(xmap_t *xm, size_t str_index);
+       int    xmap_strexists(xmap_t *xm, size_t str_index);
+       void   xmap_strerase(xmap_t *xm, size_t str_index);
+       void   xmap_strerase_no_shift(xmap_t *xm, size_t str_index);
+
+       /* Wide strings (wchar_t*) */
+       void       xmap_wcsinsert(xmap_t *xm, const wchar_t *str);
+       wchar_t*   xmap_wcsget(xmap_t *xm, size_t wstr_index);
+       int        xmap_wcsexists(xmap_t *xm, size_t wstr_index);
+       void       xmap_wcserase(xmap_t *xm, size_t wstr_index);
+       void       xmap_wcserase_no_shift(xmap_t *xm, size_t wstr_index);
+
+DESCRIPTION
+       The xmap library implements a dynamically growing pointer array with
+       thread-safe access through an internal pthread mutex. In addition to
+       storing arbitrary void* pointers, the library maintains dedicated
+       index lists for NUL-terminated ASCII strings (char*) and wide strings
+       (wchar_t*). Strings are automatically duplicated on insertion and
+       automatically freed on erase.
+
+       The main storage array (xm->map) holds all items; the string and wide
+       string index arrays reference entries within this array.
+
+       All public API calls are thread-safe unless explicitly documented as
+       "nolock" variants. Internal helpers that reallocate memory must only
+       be used when the caller already holds the map mutex.
+
+INITIALIZATION
+       xmap_init() initializes a new map structure. No memory is allocated
+       until the first insertion.
+
+       xmap_destroy() frees the map, all items stored in it, and destroys
+       the pthread mutex. The map is unusable after this call.
+
+GENERIC POINTER INSERTION AND RETRIEVAL
+       xmap_insert() inserts a raw pointer (not copied). The caller retains
+       ownership responsibility and the memory is freed by xmap on erase.
+
+       xmap_get() returns the pointer stored at a given index or NULL.
+
+       xmap_exists() checks whether an index holds a non-NULL pointer.
+
+       xmap_erase() deletes the element, frees memory, and shifts all later
+       entries left. All string/wstring index lists are adjusted.
+
+       xmap_erase_no_shift() deletes the element and sets the slot to NULL
+       without shifting the map.
+
+STRING INSERTION AND RETRIEVAL
+       xmap_strinsert() inserts a char* string. The string is duplicated
+       using strdup() and freed automatically by erase or destroy.
+
+       xmap_strget() retrieves the char* by string index (not map index).
+
+       xmap_strexists() checks whether the string-index is valid.
+
+       xmap_strerase() deletes the string entry and shifts the map and
+       string index list.
+
+       xmap_strerase_no_shift() deletes only the stored string and sets
+       the corresponding map slot to NULL without shifting.
+
+WIDE STRING INSERTION AND RETRIEVAL
+       xmap_wcsinsert() stores a wchar_t* using wcsdup().
+
+       xmap_wcsget() retrieves a wide string from the wstring index list.
+
+       xmap_wcsexists() checks whether the string-index is valid.
+
+       xmap_wcserase() deletes the entry, shifts map and index lists.
+
+       xmap_wcserase_no_shift() deletes only the underlying wide string.
+
+MEMORY MANAGEMENT
+       The library frees:
+           - All strings inserted by xmap_strinsert() or xmap_wcsinsert()
+           - All raw pointers inserted with xmap_insert()
+           - Both index arrays
+           - The map itself
+
+       The user must not free pointers stored in xmap directly.
+
+THREAD SAFETY
+       All public API routines lock xm->mutex internally.
+
+       The "_nolock" variants require the caller to hold the mutex.
+
+C++ BINDINGS
+       The header provides:
+           - Typed iterators
+           - Typed pointer retrieval templates
+           - std::string / std::wstring helpers
+
+       C++ wrappers behave identically to their C equivalents but use
+       static_cast/reinterpret_cast and RAII strings.
+
+RETURN VALUES
+       xmap_get(), xmap_strget(), and xmap_wcsget() return NULL on error.
+
+       Existence checks return 1 if the entry exists, 0 otherwise.
+
+ERRORS
+       ENOMEM  Allocation failed during resize or strdup/wcsdup.
+
+       Invalid indices are silently ignored by erase routines.
+
+EXAMPLE
+       xmap_t xm;
+       xmap_init(&xm);
+
+       xmap_strinsert(&xm, "hello");
+       xmap_strinsert(&xm, "world");
+
+       printf("%s\n", xmap_strget(&xm, 0));    /* prints "hello" */
+
+       xmap_destroy(&xm);
+
+AUTHOR
+       Written by MrR736.
+
+COPYRIGHT
+       This library is Free Software, distributed under the terms of the
+       GNU General Public License version 3 or later.
+
+SEE ALSO
+       pthread_mutex_init(3), strdup(3), wcsdup(3)
+

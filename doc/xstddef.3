@@ -1,0 +1,80 @@
+.\" XSTDDEF(3) Base Header Manual Page
+.TH XSTDDEF 3 "2025" "Extern Library" "Programmer's Manual"
+.SH NAME
+xstddef \- core portability, visibility, and compiler feature definitions
+.SH SYNOPSIS
+.nf
+#include <xstddef.h>
+.fi
+
+.SH DESCRIPTION
+The xstddef header provides the foundational portability and compiler
+abstraction layer for the Extern Library. This header contains no public
+functions. Instead, it supplies:
+
+.RS
+• Standard library header aggregation
+• Windows and POSIX platform includes
+• Compiler attribute wrappers
+• Symbol visibility macros
+• Portable inline definition
+• Compiler-agnostic restrict keyword handling
+.RE
+
+These definitions are required by all other library headers such as
+xmap(3), xstring(3), xwchar(3), and xlocale(3).
+
+.SH PORTABILITY FEATURES
+xstddef normalizes differences across compilers and operating systems.
+
+.SS Inline compatibility
+MSVC versions prior to 1900 replace 'inline' with '__inline'.
+
+.SS Attribute wrappers
+GCC and Clang variants are supported through __attribute__.
+
+.SS Symbol visibility
+Functions and data exported from shared libraries may be marked using:
+
+.RS
+XSTDDEF_EXPORT_API
+XSTDDEF_IMPORT_API
+XSTDDEF_INLINE_API
+.RE
+
+These macros expand to compiler-specific visibility attributes when
+available.
+
+.SS restrict compatibility
+When supported, __restrict expands to the compiler's restrict keyword.
+On older compilers it becomes a no-op.
+
+.SH PLATFORM SUPPORT
+On Windows, additional headers are automatically included:
+
+.RS
+process.h, windows.h, fcntl.h, io.h
+.RE
+
+On POSIX systems:
+
+.RS
+unistd.h, sys/wait.h
+.RE
+
+These provide consistent access to system APIs across all platforms.
+
+.SH NOTES
+xstddef is not intended to be used directly by applications. It is a
+technical support header required internally by all Extern Library
+components.
+
+.SH SEE ALSO
+xmap(3), xstring(3), xwchar(3), xlocale(3)
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+Copyright (C) 2025.
+Licensed under the GNU GPL version 3 or later.
