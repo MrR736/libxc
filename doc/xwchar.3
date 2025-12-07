@@ -1,79 +1,101 @@
 .\" XWCHAR(3) Manual Page
 .TH XWCHAR 3 "2025" "Extern Library" "Programmer's Manual"
 .SH NAME
-xwcslen, vxwcslen \- compute the length of a formatted wide string
+xwcslen, vxwcslen, xwcscmp \- compute the length of a formatted wide string or compare wide strings
 .SH SYNOPSIS
 .nf
 #include <xwchar.h>
 
 size_t vxwcslen(const wchar_t *restrict fmt, va_list ap);
 size_t xwcslen(const wchar_t *restrict fmt, ...);
+
+int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
 .fi
 .SH DESCRIPTION
-The xwchar library provides portable routines for determining the length
-of a formatted wide\-character string without producing output.
+The xwchar library provides portable routines for wide-character string manipulation.
 
-These functions act similarly to vswprintf(3) and swprintf(3), but return
-only the number of characters that would be written.
+These functions allow:
+
+.IP "\\fIxwcslen(), vxwcslen()\\fP"
+Computing the number of wide characters required to format a string without producing output or allocating memory.
+
+.IP "\\fIxwcscmp()\\fP"
+Comparing a single wide string against an array of wide strings, returning a boolean-style result.
+It is null-safe: a match occurs if both the target and array element are NULL, otherwise NULL elements are skipped.
 
 .SH vxwcslen()
-vxwcslen() computes the number of wide characters required to format the
-string described by \fIfmt\fP and arguments in \fIap\fP.
+Computes the number of wide characters required to format the string described by \fIfmt\fP with arguments in \fIap\fP.
 
-On Windows systems, the function wraps _vscwprintf(), which directly
-returns the required length.
+On Windows, wraps:
 
-On POSIX systems, the function first attempts:
+.RS
+_vscwprintf(fmt, ap)
+.RE
+
+On POSIX systems, attempts:
 
 .RS
 vswprintf(NULL, 0, fmt, ap)
 .RE
 
-If supported and successful, its return value is used.
-
-If this call fails, the function allocates an internal buffer whose size
-is doubled repeatedly until formatting succeeds. If no buffer large
-enough can be allocated before internal limits are reached, the function
-fails with errno set appropriately.
-
-The return value never includes the terminating NUL.
+If unsupported or failing, an internal buffer is allocated and doubled until formatting succeeds or limits are reached.
+The return value does not include the terminating NUL character.
 
 .SH xwcslen()
-xwcslen() is a convenience wrapper around vxwcslen() that accepts a
-variadic argument list.
+A variadic wrapper around vxwcslen():
+
+.nf
+va_list ap;
+va_start(ap, fmt);
+len = vxwcslen(fmt, ap);
+va_end(ap);
+.fi
+
+.SH xwcscmp()
+Compares a wide string \fI__s1\fP against an array of wide strings \fI__s2\fP containing \fIn\fP elements.
+Returns 1 if a match is found, 0 otherwise.
+
+Null-safety behavior:
+
+.IP
+- Both \fI__s1\fP and an array element are NULL → match
+.IP
+- One is NULL → skipped
+.IP
+- Otherwise, compared using \fIwcscmp()\fP
 
 .SH RETURN VALUES
-Both functions return the number of wide characters required to format
-the string, excluding the terminating NUL.
-
-On error they return 0, and vxwcslen() sets errno to one of:
+vxwcslen(), xwcslen() return the number of wide characters required, excluding the terminating NUL.
+On error, return 0; vxwcslen() sets errno to:
 
 .TP
 ENOMEM
 Memory allocation failed during probing.
 .TP
 EOVERFLOW
-The required buffer size exceeds safe internal limits.
+Required buffer size exceeds internal limits.
 
-Windows does not set errno on failure.
+xwcscmp() returns 1 if a match is found, 0 otherwise.
 
 .SH ERRORS
-These functions may set errno as described in RETURN VALUES.
+vxwcslen() may set errno as described above. Windows does not set errno on failure.
 
 .SH PORTABILITY
-vxwcslen() is portable across Windows, Linux, BSD, and other POSIX
-systems. Systems without support for vswprintf(NULL,0,...) are handled
-via fallback buffer probing.
+These functions are portable across Windows, Linux, BSD, and other POSIX systems.
+Fallback probing ensures compatibility with libc implementations that do not support vswprintf(NULL,0,...).
 
 .SH EXAMPLES
 .nf
 size_t len = xwcslen(L"%ls %d", L"hello", 42);
 wchar_t *buf = malloc((len + 1) * sizeof(wchar_t));
 swprintf(buf, len + 1, L"%ls %d", L"hello", 42);
+
+const wchar_t *arr[] = {L"foo", L"bar", NULL};
+int result = xwcscmp(L"bar", arr, 3); // returns 1
 .fi
 
 .SH SEE ALSO
-swprintf(3), vswprintf(3), wcslen(3)
+swprintf(3), vswprintf(3), wcslen(3), wcscmp(3)
 
 .SH AUTHOR
 Written by MrR736.

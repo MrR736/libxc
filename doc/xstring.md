@@ -8,76 +8,58 @@
 
 ## Overview
 
-`xstring.h` provides two lightweight helper functions:
+`xstring.h` provides lightweight helper functions for:
 
-* **`vxstrlen()`** — length of formatted output using a `va_list`
-* **`xstrlen()`** — convenience variadic wrapper
+* Measuring the length of formatted strings without producing output:
 
-These functions behave like `snprintf(NULL, 0, ...)` but return only the length of the formatted string, with no allocation or output performed.
+  * **`vxstrlen()`** — uses a `va_list`
+  * **`xstrlen()`** — variadic wrapper
+* Comparing strings against an array of string literals:
 
-They provide a portable interface that:
+  * **`xstrcmp()`** — boolean-style matcher
 
-* Uses `_vscprintf()` on Windows (reliable length probe)
-* Uses `vsnprintf(NULL,0,...)` on POSIX
+These functions are **portable** and safe across platforms:
+
+* Windows: uses `_vscprintf()`
+* POSIX: uses `vsnprintf(NULL,0,...)`
+
+They do **not allocate memory** and **do not write output**, making them suitable for size probes.
 
 ---
 
-# 1. Function Summary
+## 1. Function Summary
 
 ```c
 size_t vxstrlen(const char *restrict fmt, va_list ap);
 size_t xstrlen(const char *restrict fmt, ...);
+int xstrcmp(const char * __s1, const char ** __s2, size_t n);
 ```
 
-Both compute the length the formatted output *would* require, excluding the terminating `'\0'`.
-
-Return:
-
-* **length** on success
-* **0** on failure
+| Function   | Purpose                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `vxstrlen` | Returns length of formatted output using `va_list`                      |
+| `xstrlen`  | Convenience variadic wrapper around `vxstrlen`                          |
+| `xstrcmp`  | Checks if a string matches any entry in a string array (returns 0 or 1) |
 
 ---
 
-# 2. Detailed Function Behavior
+## 2. Detailed Function Behavior
+
+### `vxstrlen()`
+
+* **Windows:** `_vscprintf(fmt, ap)` returns the number of characters excluding the null terminator.
+* **POSIX:** `vsnprintf(NULL, 0, fmt, ap)` returns required byte count excluding `\0`, negative on error.
+* **Common behavior:**
+
+  * Returns `-1` if format evaluation fails
+  * Does not write to a buffer
+  * Never allocates memory
 
 ---
 
-## `vxstrlen()`
+### `xstrlen()`
 
-### Windows
-
-Uses:
-
-```c
-_vscprintf(fmt, ap)
-```
-
-which returns the number of characters needed for formatted output (excluding `\0`).
-
-### POSIX
-
-Uses:
-
-```c
-vsnprintf(NULL, 0, fmt, ap)
-```
-
-which returns:
-
-* required byte count (excluding `\0`)
-* a negative value on error
-
-### Common behavior
-
-* Returns `0` if the format evaluation fails
-* Never allocates a buffer
-* Does not write output
-
----
-
-## `xstrlen()`
-
-Simple convenience wrapper:
+Convenience wrapper:
 
 ```c
 va_list ap;
@@ -86,35 +68,72 @@ len = vxstrlen(fmt, ap);
 va_end(ap);
 ```
 
-Equivalent to:
+Equivalent to computing the length of `sprintf(fmt, ...)` without output. Safe and side-effect-free.
+
+---
+
+### `xstrcmp()`
+
+**Description:**
+Compares a single string (`__s1`) against an array of strings (`__s2`) of length `n`. Returns **1 if a match exists**, otherwise **0**. Null-safe.
+
+#### Parameters
+
+| Parameter | Type            | Description                                              |
+| --------- | --------------- | -------------------------------------------------------- |
+| `__s1`    | `const char *`  | String to compare. Can be `NULL`.                        |
+| `__s2`    | `const char **` | Array of strings to compare against. Can contain `NULL`. |
+| `n`       | `size_t`        | Number of elements in the array `__s2`.                  |
+
+#### Behavior
+
+* Both `__s1` and `__s2[i]` being `NULL` counts as a match.
+* One being `NULL` and the other not → skipped.
+* Otherwise, standard `strcmp()` comparison is used.
+
+#### Example Usage
 
 ```c
-strlen(sprintf(fmt, ...));
+#include <stdio.h>
+#include <string.h>
+#include "xstring.h"
+
+const char *arr[] = {"fff", "333", NULL};
+
+int main(void) {
+    int result;
+
+    result = xstrcmp("fff", arr, 3);   // returns 1
+    result = xstrcmp("abc", arr, 3);   // returns 0
+    result = xstrcmp(NULL, arr, 3);    // returns 0
+    result = xstrcmp(NULL, (const char*[]){NULL, "foo"}, 2); // returns 1
+
+    printf("Results: %d\n", result);
+    return 0;
+}
 ```
 
-But safe and side-effect-free.
+---
+
+## 3. Error Handling
+
+| Condition                | Result         |
+| ------------------------ | -------------- |
+| Format OK                | Returns length |
+| Formatting error         | Returns 0      |
+| Windows internal failure | Returns 0      |
+| `fmt == NULL`            | Returns 0      |
+
+No `errno` is set — mirrors behavior of `_vscprintf` and `vsnprintf`.
 
 ---
 
-# 3. Error Handling
+## 4. Portability Notes
 
-| Condition                | Result          |
-| ------------------------ | --------------- |
-| Format OK                | Length returned |
-| Formatting error         | Returns 0       |
-| Windows internal failure | Returns 0       |
-| `fmt == NULL`            | Returns 0       |
-
-No errno is set — this mirrors system behavior for `_vscprintf` and `vsnprintf`.
-
----
-
-# 4. Portability Notes
-
-* `_vscprintf()` (Windows) accurately reports output length
-* `vsnprintf(NULL,0,...)` is supported by all modern POSIX systems (C99+)
-* No fallback probing or dynamic allocation is needed
-* Works identically on:
+* `_vscprintf()` accurately probes formatted string length on Windows.
+* `vsnprintf(NULL,0,...)` works on POSIX (C99+).
+* No dynamic allocation or buffer probing needed.
+* Compatible with:
 
   * Linux, BSD, macOS
   * Windows (MSVCRT)
@@ -122,9 +141,9 @@ No errno is set — this mirrors system behavior for `_vscprintf` and `vsnprintf
 
 ---
 
-# 5. Example Usage
+## 5. Example Usage
 
-### Allocate exactly enough buffer space
+### Allocate a buffer of the exact required length
 
 ```c
 size_t len = xstrlen("%s: %d", "count", 42);
@@ -132,7 +151,7 @@ char *buf = malloc(len + 1);
 sprintf(buf, "%s: %d", "count", 42);
 ```
 
-### Variadic wrapper using vxstrlen()
+### Variadic wrapper using `vxstrlen()`
 
 ```c
 size_t format_and_measure(const char *fmt, ...) {
@@ -146,6 +165,6 @@ size_t format_and_measure(const char *fmt, ...) {
 
 ---
 
-# 6. License
+## 6. License
 
 This library is distributed under the **GNU GPL v3 or later**.

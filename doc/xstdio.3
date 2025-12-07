@@ -1,100 +1,141 @@
-.\" xstdlib(3) — Extended stdlib utilities
-.TH XSTDLIB 3 "2025" "Extern Library" "Programmer's Manual"
+.\" Manpage for xstdio.h
+.TH XSTDIO 3 "2025" "Extern Library" "Programmer's Manual"
 
 .SH NAME
-xstdlib \- UTF-8 conversion, formatted system(), perror(), and process utilities.
+xstdio \- Extended STDIO Utilities for safe and Unicode-aware I/O operations
 
 .SH SYNOPSIS
-.nf
-#include <xstdlib.h>
-.fi
+#include "xstdio.h"
 
+.BR int fdputs(const char *s, int fd);
+.BR FILE* fdno(int fd);
+.BR FILE* fdno_unlocked(int fd);
+.BR void* furead(FILE *fp, size_t *out_size);
+.BR void* fduread(int fd, size_t *out_size);
+.BR char* vcprintf(const char *fmt, va_list ap);
+.BR char* cprintf(const char *fmt, ...);
+.BR wchar_t* vwcprintf(const wchar_t *fmt, va_list ap);
+.BR wchar_t* wcprintf(const wchar_t *fmt, ...);
+.BR char* vwccprintf(const wchar_t *fmt, va_list ap);
+.BR char* wccprintf(const wchar_t *fmt, ...);
+.BR FILE* wfopen(const wchar_t *filename, const wchar_t *modes);
+.BR int xremove(const char *fmt, ...);
+.BR int wremove(const wchar_t *s);
+.BR int xwremove(const wchar_t *fmt, ...);
+.BR char* getcurrentdirectory_size(size_t n);
+.BR char* getcurrentdirectory(void);
+.BR wchar_t* wgetcurrentdirectory_size(size_t n);
+.BR wchar_t* wgetcurrentdirectory(void);
 .SH DESCRIPTION
-The xstdlib header provides a set of extensions to the standard C library,
-including UTF-8 conversion functions, formatted system execution,
-portable wide-character wrappers, random memory generation, and
-fork/exec-based process launching.
+The `xstdio.h` library provides an extended set of I/O functions that enhance POSIX/ISO C standard I/O functionality with additional features such as Unicode-aware formatted output, full file reading, and dynamic string builders. All functions that allocate memory return dynamically allocated buffers that must be freed by the caller.
 
-All functions are defined as inline and are intended for internal or
-moderately high-performance use.
+### Functions
 
-.SH FUNCTIONS
+The following functions are provided:
 
-.SS Random byte utility
-.TP
-.B void *xrand(size_t size, unsigned int flags)
-Allocates a block of memory and fills it with pseudorandom bytes in the
-range 0 to flags-1.
+#### Descriptor Output
 
-Returns NULL on invalid arguments or allocation failure.
+.BR int fdputs(const char *s, int fd)
+Write the string `s` to the file descriptor `fd`. Returns 0 on success and -1 on failure.
 
-.SS Unicode conversion
-.TP
-.B char *xwcstombs(const wchar_t *wcs)
-Convert a wide-character string to UTF-8. Caller must free.
+#### Convert File Descriptor to FILE*
 
-.TP
-.B wchar_t *xmbstowcs(const char *mbs)
-Convert a UTF-8 multibyte string to wide characters. Caller must free.
+.BR FILE* fdno(int fd)
+Creates a `FILE*` stream from a file descriptor `fd` using `fdopen(dup(fd))`.
 
-.SS System execution (UTF-8 aware)
-.TP
-.B int wsystem(const wchar_t *command)
-Wide-character version of system(). On POSIX systems converts to UTF-8.
+.BR FILE* fdno_unlocked(int fd)
+Same as `fdno()`, but locks the resulting `FILE*` stream using `flockfile()` or `_lock_file()` for thread safety.
 
-.SS Formatted system() helpers (char)
-.B vnxsystem, nxsystem, vxsystem, xsystem
-Format a command via printf-style rules, allocate memory, and pass it to
-system().
+#### Full File Read
 
-.SS Formatted system() helpers (wide)
-.B vnxwsystem, nxwsystem, vxwsystem, xwsystem
-Wide-character versions of the above.
+.BR void* furead(FILE *fp, size_t *out_size)
+Reads the entire content of a `FILE*` into memory, preserving the original file position. Returns a pointer to the buffer and sets `*out_size` to the number of bytes read.
 
-.SS perror() wrappers
-Provides formatted versions of perror() for both char and wide
-character types:
+.BR void* fduread(int fd, size_t *out_size)
+Reads all data from a file descriptor until EOF. Returns a pointer to the buffer and sets `*out_size` to the number of bytes read.
 
-.B vnxperror, nxperror, vxperror, xperror
-.B vnxwperror, nxwperror, vxwperror, xwperror
+#### Dynamic String Builders (Formatted Allocation)
 
-.SS Child-process execution
-.TP
-.B int csystem(const char *cmd)
-Execute a command using a child process:
-.RS
-• Windows: _spawnlp()
-• POSIX: fork/exec combined
-.RE
-Return value normalized to shell conventions.
+.BR char* vcprintf(const char *fmt, va_list ap)
+Equivalent to `vsprintf()`, but returns a newly allocated string in UTF-8 format.
 
-.TP
-.B int wcsystem(const wchar_t *cmd)
-Wide-character wrapper for csystem().
+.BR char* cprintf(const char *fmt, ...)
+Similar to `sprintf()`, but returns a dynamically allocated string in UTF-8 format.
 
-.SS Formatted child-process execution
-.B vnxcsystem, nxcsystem, vxcsystem, xcsystem
-.B vnxwcsystem, nxwcsystem, vxwcsystem, xwcsystem
+.BR wchar_t* vwcprintf(const wchar_t *fmt, va_list ap)
+Similar to `vcprintf()`, but returns a wide-character (UTF-16/UTF-32) formatted string.
 
-These format a command, allocate memory, and pass it to csystem().
+.BR wchar_t* wcprintf(const wchar_t *fmt, ...)
+Similar to `cprintf()`, but returns a wide-character (UTF-16/UTF-32) formatted string.
 
-.SH RETURN VALUES
-Most system wrappers return:
-.RS
-• exit code (0–255)
-• 128 + signal_number (if killed by a signal)
-• −1 on failure
-.RE
+.BR char* vwccprintf(const wchar_t *fmt, va_list ap)
+Converts wide-character formatted strings to UTF-8.
 
-.SH ERRORS
-EINVAL, ENOMEM, or system-level errno values may be set.
+.BR char* wccprintf(const wchar_t *fmt, ...)
+Converts wide-character formatted strings to UTF-8.
+
+#### Unicode File Operations
+
+.BR FILE* wfopen(const wchar_t *filename, const wchar_t *modes)
+Unicode-aware version of `fopen()`. On Windows, it uses `_wfopen()`. On POSIX, it converts the wide-character path to UTF-8 and calls `fopen()`.
+
+.BR int xremove(const char *fmt, ...)
+Formats a UTF-8 file path and removes the file.
+
+.BR int wremove(const wchar_t *s)
+Removes a file using a wide-character filename.
+
+.BR int xwremove(const wchar_t *fmt, ...)
+Formats a wide-character file path and removes the file.
+
+#### Get Directory of Current Executable
+
+.BR char* getcurrentdirectory_size(size_t n)
+Retrieves the directory of the current executable in UTF-8 format, using a buffer of size `n`.
+
+.BR char* getcurrentdirectory(void)
+Retrieves the directory of the current executable in UTF-8 format, using a default buffer size.
+
+.BR wchar_t* wgetcurrentdirectory_size(size_t n)
+Retrieves the directory of the current executable in wide-character format, using a buffer of size `n`.
+
+.BR wchar_t* wgetcurrentdirectory(void)
+Retrieves the directory of the current executable in wide-character format, using a default buffer size.
+
+.SH ERROR HANDLING
+Most functions in `xstdio.h` will set `errno` on failure. Common errors include:
+
+- **`ENOMEM`**: Memory allocation failure.
+- **`EINVAL`**: Invalid argument.
+- **`ENAMETOOLONG`**: Path name too long.
+- **`ENOENT`**: No such file or directory.
+
+Functions that allocate memory will return `NULL` in the event of an error.
+
+.SH MEMORY MANAGEMENT
+All returned buffers from these functions must be freed by the caller:
+
+- `cprintf()`, `wcprintf()`
+- `furead()`, `fduread()`
+- `vwccprintf()`, `wccprintf()`
+
+Use `free()` to release the memory once it is no longer needed.
+
+.SH THREAD SAFETY
+- **`fdno_unlocked()`** explicitly locks the resulting `FILE*` to ensure thread safety.
+- All other functions follow the OS stdio thread safety rules.
+
+.SH CROSS-PLATFORM NOTES
+- **Windows**: Functions like `wfopen()` use Windows-specific APIs (`_wfopen()` and `_lock_file()`).
+- **POSIX systems**: Wide-character strings are converted to UTF-8 before passing to `fopen()` and similar functions.
 
 .SH SEE ALSO
-system(3), perror(3), exec(3), fork(2), wchar_t(3)
+- `xstdlib.h` - Unicode wrappers for system calls, error handling extensions, and conversions.
+- `xstring.h` - Length calculators used by this module.
+- `man 3 fopen` - Details on the standard `fopen()` function.
+- `man 3 read` - Details on the standard `read()` function.
+- `man 3 printf` - Details on the standard `printf()` function.
 
-.SH AUTHOR
-Written by MrR736.
+.SH LICENSE
+This library is distributed under the **GNU GPLv3 or later**.
 
-.SH COPYRIGHT
-Copyright 2025.
-Licensed under the GNU GPL v3 or later.

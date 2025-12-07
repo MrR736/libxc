@@ -1,13 +1,14 @@
 .\" XSTRING(3) Manual Page
 .TH XSTRING 3 "2025" "Extern Library" "Programmer's Manual"
 .SH NAME
-xstrlen, vxstrlen \- compute the length of a formatted narrow string
+xstrlen, vxstrlen, xstrcmp \- compute formatted string length and compare strings against an array
 .SH SYNOPSIS
 .nf
 #include <xstring.h>
 
 size_t vxstrlen(const char *restrict fmt, va_list ap);
 size_t xstrlen(const char *restrict fmt, ...);
+int xstrcmp(const char * __s1, const char ** __s2, size_t n);
 .fi
 
 .SH DESCRIPTION
@@ -23,7 +24,7 @@ vxstrlen() returns the number of characters that would be produced by
 formatting the string described by \fIfmt\fP with the argument list
 \fIap\fP.
 
-On Windows systems, the function wraps _vscprintf(), which returns the
+On Windows systems, the function wraps \fB_vscprintf()\fP, which returns the
 required buffer length.
 
 On POSIX systems, the function uses:
@@ -41,19 +42,33 @@ returns 0.
 xstrlen() is a convenience function wrapping vxstrlen(), accepting a
 variadic argument list.
 
-.SH RETURN VALUES
-Both functions return the number of characters, excluding the terminating
-NUL, or 0 if a formatting error occurred or \fIfmt\fP is NULL.
+.SH xstrcmp()
+xstrcmp() compares a single string (\fI__s1\fP) against an array of strings (\fI__s2\fP)
+containing \fIn\fP elements. Returns 1 if a match is found, 0 otherwise.
 
-These functions do not set errno.
+Both \fI__s1\fP and array entries may be \fINULL\fP:
+
+.IP "- Matching rules:"
+.TP
+* If both \fI__s1\fP and an array entry are NULL, it counts as a match.
+* If only one is NULL, it is skipped.
+* Otherwise, normal strcmp() comparison is used.
+
+.SH RETURN VALUES
+vxstrlen() and xstrlen() return the number of characters, excluding the
+terminating NUL, or 0 if a formatting error occurred or \fIfmt\fP is NULL.
+
+xstrcmp() returns 1 if \fI__s1\fP matches any element of \fI__s2\fP, 0 otherwise.
+
+None of these functions set errno.
 
 .SH ERRORS
 Formatting errors result in a return value of 0. No additional error
 information is provided.
 
 .SH PORTABILITY
-Windows uses the native _vscprintf() routine.
-POSIX uses vsnprintf(NULL,0,...).
+Windows uses the native \fB_vscprintf()\fP routine.
+POSIX uses \fBvsnprintf(NULL,0,...)\fP.
 The interface is portable across Windows, Linux, BSD, and macOS.
 
 .SH EXAMPLES
@@ -61,10 +76,18 @@ The interface is portable across Windows, Linux, BSD, and macOS.
 size_t len = xstrlen("%s %d", "value", 10);
 char *buf = malloc(len + 1);
 sprintf(buf, "%s %d", "value", 10);
+
+const char *arr[] = {"fff", "333", NULL};
+int result;
+
+result = xstrcmp("fff", arr, 3);   // returns 1
+result = xstrcmp("abc", arr, 3);   // returns 0
+result = xstrcmp(NULL, arr, 3);    // returns 0
+result = xstrcmp(NULL, (const char*[]){NULL, "foo"}, 2); // returns 1
 .fi
 
 .SH SEE ALSO
-snprintf(3), vsnprintf(3), strlen(3)
+snprintf(3), vsnprintf(3), strlen(3), strcmp(3)
 
 .SH AUTHOR
 Written by MrR736.

@@ -8,104 +8,97 @@
 
 ## Overview
 
-`xwchar.h` provides two functions:
+`xwchar.h` provides three primary functions:
 
 * **`vxwcslen()`** — Computes the length of a wide-formatted string using a `va_list`.
-* **`xwcslen()`** — Wrapper using variadic arguments.
+* **`xwcslen()`** — Variadic wrapper for convenience.
+* **`xwcscmp()`** — Compares a wide string against an array of wide strings and returns a boolean-style match result.
 
-The API is comparable to `vsnprintf`/`snprintf` but for wide characters, returning only the *required length*, not writing the formatted string.
+These functions are comparable to `vswprintf()`/`swprintf()` but **do not write output**, returning only the length needed.
 
-The implementation is portable between:
+Portable across:
 
-* POSIX systems that use `vswprintf(NULL,0,...)` support
-* Older or non-POSIX systems where buffer probing must be performed
-* Windows systems using `_vscwprintf()`
+* Windows (`_vscwprintf()`)
+* POSIX systems supporting `vswprintf(NULL, 0, ...)`
+* Older/non-POSIX systems with fallback buffer probing
 
 ---
 
-# 1. Function Summary
+## 1. Function Summary
 
 ```c
 size_t vxwcslen(const wchar_t *restrict fmt, va_list ap);
 size_t xwcslen(const wchar_t *restrict fmt, ...);
+int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
 ```
 
-Both functions return:
-
-* the number of **wide characters** needed to format the string
-* **0** on failure (also sets `errno` where appropriate)
-
-Neither function writes output to a caller buffer.
+* `vxwcslen` / `xwcslen`: return the number of **wide characters** required to format a string.
+* `xwcscmp`: returns `1` if `__s1` matches any element in `__s2`, `0` otherwise.
 
 ---
 
-# 2. Detailed Function Behavior
+## 2. Detailed Function Behavior
 
----
+### `vxwcslen()`
 
-## `vxwcslen()`
+#### Windows
 
-### Windows behavior
+Uses `_vscwprintf(fmt, ap)` to return the number of wide characters required (excluding NUL).
+Returns `0` on failure.
 
-On Windows, the implementation uses:
+#### POSIX
 
-```c
-_vscwprintf(fmt, ap)
-```
-
-which directly returns the number of wide characters needed (excluding NUL).
-
-Failure → returns 0.
-
----
-
-### POSIX behavior
-
-POSIX allows probing:
+Uses:
 
 ```c
 vswprintf(NULL, 0, fmt, ap)
 ```
 
-If supported, the code takes this fast path.
+* If unsupported or negative → fallback allocation loop:
 
-If unsupported or returning a negative value, the implementation enters the **fallback expansion loop**:
+  1. Start with 256 `wchar_t` buffer
+  2. Double until formatting succeeds, memory fails, or a safety limit (¼ of `SIZE_MAX`) is reached
 
-1. Start with a buffer of 256 wchar_t.
-2. Double the buffer until:
+* Failure conditions:
 
-   * formatting succeeds, or
-   * it reaches the safety limit (¼ of `SIZE_MAX`), or
-   * memory allocation fails.
+  * Allocation failure → `errno = ENOMEM`
+  * Length exceeds limit → `errno = EOVERFLOW`
 
-On failure:
-
-* `errno = ENOMEM` if allocation failed
-* `errno = EOVERFLOW` if bounds exceeded
-
-The returned length does **not** include the terminating NUL.
+Return value excludes the terminating NUL.
 
 ---
 
-## `xwcslen()`
+### `xwcslen()`
 
-A simple variadic wrapper:
+Convenience wrapper:
 
 ```c
+va_list ap;
 va_start(ap, fmt);
 len = vxwcslen(fmt, ap);
 va_end(ap);
 ```
 
-Useful for quick one-shot formatting length determination:
+---
+
+### `xwcscmp()`
+
+**Null-safe** wide string matcher:
+
+* Both `__s1` and an element of `__s2` NULL → match
+* One NULL → skip
+* Otherwise, compares with `wcscmp()`
+
+Returns `1` if a match is found, `0` otherwise.
 
 ```c
-size_t needed = xwcslen(L"%ls %d", L"hello", 42);
+const wchar_t *arr[] = {L"foo", L"bar", NULL};
+int result = xwcscmp(L"bar", arr, 3); // returns 1
 ```
 
 ---
 
-# 3. Error Handling
+## 3. Error Handling
 
 | Condition                     | Return | errno                                  |
 | ----------------------------- | ------ | -------------------------------------- |
@@ -114,20 +107,22 @@ size_t needed = xwcslen(L"%ls %d", L"hello", 42);
 | Required length exceeds limit | 0      | `EOVERFLOW`                            |
 | Windows `_vscwprintf` fails   | 0      | unchanged (Windows does not set errno) |
 
----
-
-# 4. Portability Notes
-
-* The Windows path is fast and reliable, using the platform’s native probing routine.
-* The POSIX fallback ensures compatibility with libc versions where
-  `vswprintf(NULL,0,...)` is unsupported (Solaris, older glibc).
-* The safety limit ensures no undefined overflow when probing required size.
+`xwcscmp()` returns `0` on no match or if array pointer is `NULL`.
 
 ---
 
-# 5. Example Usage
+## 4. Portability Notes
 
-### Basic formatted length query
+* Windows path uses `_vscwprintf()` — fast and reliable.
+* POSIX path uses `vswprintf(NULL, 0, ...)` or fallback loop.
+* Safe for older libc versions or non-POSIX systems.
+* Safety limit prevents integer overflow when probing length.
+
+---
+
+## 5. Example Usage
+
+### Wide formatted length
 
 ```c
 size_t len = xwcslen(L"%ls = %d", L"count", 123);
@@ -135,7 +130,7 @@ wchar_t *buf = malloc((len + 1) * sizeof(wchar_t));
 swprintf(buf, len + 1, L"%ls = %d", L"count", 123);
 ```
 
-### Using the `va_list` version
+### Using `vxwcslen()`
 
 ```c
 size_t format_and_measure(const wchar_t *fmt, ...) {
@@ -147,8 +142,15 @@ size_t format_and_measure(const wchar_t *fmt, ...) {
 }
 ```
 
+### Wide string array comparison
+
+```c
+const wchar_t *arr[] = {L"foo", L"bar", NULL};
+int result = xwcscmp(L"bar", arr, 3); // returns 1
+```
+
 ---
 
-# 6. License
+## 6. License
 
 This library is distributed under the **GNU GPL v3 or later**.

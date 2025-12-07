@@ -104,6 +104,14 @@ Formats a filename and removes it.
 #### **`int wremove(const wchar_t *s);`**
 #### **`int xwremove(const wchar_t *fmt, ...);`**
 
+### Get Directory of Current Executable
+
+#### **`char* getcurrentdirectory_size(size_t);`**
+#### **`char* getcurrentdirectory(void);`**
+
+#### **`wchar_t* wgetcurrentdirectory_size(size_t);`**
+#### **`wchar_t* wgetcurrentdirectory(void);`**
+
 ---
 
 ## Error Handling
