@@ -29,9 +29,40 @@
 extern "C" {
 #endif
 
+/**
+ * vxstrlen:
+ * Calculates the length of the formatted string for a va_list.
+ *
+ * @param __s  Format string
+ * @param ap   va_list of arguments
+ * @return     Length of the resulting formatted string, or -1 on error
+ */
 XSTDDEF_IMPORT_API size_t vxwcslen(const wchar_t *__restrict __s, va_list ap);
 
+/**
+ * xwcslen:
+ * Calculates the length of the formatted string with variadic arguments.
+ *
+ * @param __s  Format string
+ * @param ...  Variadic arguments
+ * @return     Length of the resulting formatted string, or -1 on error
+ */
 XSTDDEF_IMPORT_API size_t xwcslen(const wchar_t *__restrict __s, ...);
+
+/**
+ * xwcscmp:
+ * Compares a string against an array of strings and returns a boolean-style result.
+ *
+ * This function is null-safe:
+ * - If both __s1 and an array element are NULL, it counts as a match.
+ * - If only one is NULL, that element is skipped.
+ *
+ * @param __s1  The string to compare. Can be NULL.
+ * @param __s2  Array of string pointers. Can contain NULL entries. Must not be NULL to perform comparison.
+ * @param n     Number of elements in the array __s2.
+ * @return      1 if a match is found, 0 otherwise
+ */
+XSTDDEF_IMPORT_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
 
 #ifdef __cplusplus
 }

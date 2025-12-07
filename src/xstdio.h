@@ -161,20 +161,23 @@ XSTDDEF_INLINE_API void *fduread(int __fd, size_t *out_size) {
 
 XSTDDEF_INLINE_API char* vcprintf(const char *__restrict fmt, va_list ap) {
 	if (!fmt) return NULL;
-	va_list apc, apf;
-	va_copy(apc, ap);
-	size_t len = vxstrlen(fmt, apc);
-	va_end(apc);
+	va_list apc;
+
+	size_t len = vxstrlen(fmt, ap);
 	if (len == (size_t)-1) return NULL;
+
 	char *s = (char*)malloc(len + 1);
 	if (!s) return NULL;
-	va_copy(apf, ap);
-	int written = vsnprintf(s, len + 1, fmt, apf);
-	va_end(apf);
+
+	va_copy(apc, ap);
+	int written = vsnprintf(s, len + 1, fmt, apc);
+	va_end(apc);
+
 	if (written < 0) {
 		free(s);
 		return NULL;
 	}
+
 	return s;
 }
 
@@ -306,6 +309,105 @@ XSTDDEF_INLINE_API int xwremove(const wchar_t *__restrict fmt, ...) {
 	int ret = vxwremove(fmt,ap);
 	va_end(ap);
 	return ret;
+}
+
+XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
+	char *abs_path = (char*)malloc(n);
+	if (!abs_path) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	size_t current_size = n;
+	size_t len;
+#ifdef _WIN32
+	DWORD result = 0;
+	while (1) {
+		result = GetModuleFileNameA(NULL, abs_path, (DWORD)current_size);
+		if (result == 0) {
+			free(abs_path);
+			errno = EINVAL;
+			return NULL;
+		}
+		if (result < current_size)
+			break;
+		current_size *= 2;
+		abs_path = (char*)realloc(abs_path, current_size);
+		if (!abs_path) {
+			errno = ENOMEM;
+			return NULL;
+		}
+	}
+
+#else
+	ssize_t result = 0;
+	while (1) {
+		result = readlink("/proc/self/exe", abs_path, current_size - 1);
+		if (result == -1) {
+			free(abs_path);
+			return NULL;
+		}
+
+		if (result < current_size - 1)
+			break;
+
+		current_size *= 2;
+		abs_path = (char*)realloc(abs_path, current_size);
+		if (!abs_path) {
+			errno = ENOMEM;
+			return NULL;
+		}
+	}
+#endif
+	abs_path[result] = '\0';
+	char *last_sep = strrchr(abs_path, '/');
+#ifdef _WIN32
+	char *last_win = strrchr(abs_path, '\\');
+	if (last_win && (!last_sep || last_win > last_sep))
+		last_sep = last_win;
+#endif
+	if (!last_sep) {
+		free(abs_path);
+		char *dot = (char*)malloc(2);
+		if (!dot) {
+			errno = ENOMEM;
+			return NULL;
+		}
+		strcpy(dot, ".");
+		return dot;
+	}
+	size_t dir_len = (size_t)(last_sep - abs_path);
+	char *dir = (char*)malloc(dir_len + 1);
+	if (!dir) {
+		free(abs_path);
+		errno = ENOMEM;
+		return NULL;
+	}
+	memcpy(dir, abs_path, dir_len);
+	dir[dir_len] = '\0';
+	free(abs_path);
+	return dir;
+}
+
+XSTDDEF_INLINE_API char* getcurrentdirectory(void) {
+	return getcurrentdirectory_size(XPATH_MAX + 1);
+}
+
+XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory_size(size_t n) {
+	char *s = getcurrentdirectory_size(n);
+	if (!s) return NULL;
+	wchar_t* ws = xmbstowcs(s);
+	if (!ws) return NULL;
+	free(s);
+	return ws;
+}
+
+XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory(void) {
+	char *s = getcurrentdirectory();
+	if (!s) return NULL;
+	wchar_t* ws = xmbstowcs(s);
+	if (!ws) return NULL;
+	free(s);
+	return ws;
 }
 
 #ifdef __cplusplus

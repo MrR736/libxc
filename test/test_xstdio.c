@@ -85,5 +85,19 @@ int main() {
 		perror("xwremove");
 	}
 
+	// ---------- Test 8: getcurrentdirectory ----------
+	char* dc = getcurrentdirectory();
+	if (dc) {
+		fprintf(stdout, "Current Executable: \"%s\"\n", dc);
+		free(dc);
+	}
+
+	// ---------- Test 9: wgetcurrentdirectory ----------
+	wchar_t* wdc = wgetcurrentdirectory();
+	if (wdc) { // Fix: Check if 'wdc' is not NULL
+		fwprintf(stdout, L"Current Executable: L\"%ls\"\n", wdc);
+		free(wdc);
+	}
+
 	return 0;
 }

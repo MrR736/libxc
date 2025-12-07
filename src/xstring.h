@@ -52,6 +52,23 @@ XSTDDEF_INLINE_API size_t xstrlen(const char *__restrict __s, ...) {
 	return len;
 }
 
+XSTDDEF_INLINE_API int xstrcmp(const char * __s1, const char ** __s2, size_t n) {
+    if (!__s2) return 0;  // array pointer itself is NULL
+
+    for (size_t i = 0; i < n; ++i) {
+	const char *s2_str = __s2[i];
+	if (__s1 == NULL && s2_str == NULL)
+		return 1;
+	else if (__s1 == NULL || s2_str == NULL)
+		continue;
+
+	if (strcmp(__s1, s2_str) == 0)
+		return 1;
+    }
+
+    return 0; // no match
+}
+
 #ifdef __cplusplus
 }
 #endif

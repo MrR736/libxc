@@ -68,6 +68,14 @@ XSTDDEF_IMPORT_API int vxwremove(const wchar_t *__restrict fmt, va_list ap);
 
 XSTDDEF_IMPORT_API int xwremove(const wchar_t *__restrict fmt, ...);
 
+XSTDDEF_IMPORT_API char* getcurrentdirectory_size(size_t);
+
+XSTDDEF_IMPORT_API char* getcurrentdirectory(void);
+
+XSTDDEF_IMPORT_API wchar_t* wgetcurrentdirectory_size(size_t);
+
+XSTDDEF_IMPORT_API wchar_t* wgetcurrentdirectory(void);
+
 #ifdef __cplusplus
 }
 #endif

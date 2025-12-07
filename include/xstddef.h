@@ -28,10 +28,50 @@
 #include <wchar.h>
 #include <sys/types.h>
 
+#ifndef __libxc_types_compatible_p
+#ifdef __cplusplus
+extern "C++" {
+template <typename t1, typename t2>
+struct __libxc_types_compatible_p {
+	static const bool result = false;
+};
+
+template <typename t1>
+struct __libxc_types_compatible_p<t1, t1> {
+	static const bool result = true;
+};
+
+template <typename t1>
+struct __libxc_types_compatible_p<const t1, t1> {
+	static const bool result = true;
+};
+
+template <typename t1>
+struct __libxc_types_compatible_p<t1, const t1> {
+	static const bool result = true;
+};
+}
+
+#define __libxc_types_compatible_p(t1, t2) __libxc_types_compatible_p<t1,t2>::result
+#else
+#define __libxc_types_compatible_p(t1, t2) __builtin_types_compatible_p(t1,t2)
+#endif
+#endif /* !__libxc_types_compatible_p */
+
+#define xsizeof(x) (sizeof(x) / sizeof((x)[0]))
+
+#define xcountof(a) (sizeof(a) / sizeof((a)[0]) + \
+		     0 * sizeof(struct { int _ : ((void*)(a) == (void*)&(a)[0]); }))
+
+#define countof(a) \
+	(0 * sizeof(struct { \
+		int _type_check: \
+			!__libxc_types_compatible_p(typeof(a), typeof(&(a)[0])); \
+	}) + (sizeof(a) / sizeof((a)[0])))
+
 #if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(inline)
 #define inline __inline
 #endif
-
 
 #if defined(__GNUC__) || defined(__clang__)
 #define __xattribute__(V) __attribute__( V )

@@ -31,5 +31,33 @@ int main() {
 
     printf("Test 3: xstrlen formatted \"%s\" -> length: %zu\n", formatted, len3);
 
+    fprintf(stderr, "\nTest: Matching strings\n");
+    // Test case 1: Matching strings
+    const char *str2[] = {"world", "Hello, World!", "foo"};
+    fprintf(stderr, "Test 1: %s\n", xstrcmp(str1, str2, 3) == 1 ? "Passed" : "Failed");
+
+    // Test case 2: Non-matching strings
+    const char *str3[] = {"goodbye", "hello", "foo"};
+    fprintf(stderr, "Test 2: %s\n", xstrcmp(str1, str3, 3) == 0 ? "Passed" : "Failed");
+
+    // Test case 3: NULL in __s2 array, non-matching strings
+    const char *str4[] = {NULL, "hello", "foo"};
+    fprintf(stderr, "Test 3: %s\n", xstrcmp(str1, str4, 3) == 0 ? "Passed" : "Failed");
+
+    // Test case 4: NULL __s1, matching NULL in __s2
+    const char *str5 = NULL;
+    const char *str6[] = {NULL, "hello", "foo"};
+    fprintf(stderr, "Test 4: %s\n", xstrcmp(str5, str6, 3) == 1 ? "Passed" : "Failed");
+
+    // Test case 5: NULL __s1 and NULL in __s2, no match
+    const char *str7 = NULL;
+    const char *str8[] = {NULL, NULL};
+    fprintf(stderr, "Test 5: %s\n", xstrcmp(str7, str8, 2) == 1 ? "Passed" : "Failed");
+
+    // Test case 6: NULL __s1 and NULL in __s2, all elements are NULL
+    const char *str9 = NULL;
+    const char *str10[] = {NULL, NULL, NULL};
+    fprintf(stderr, "Test 6: %s\n", xstrcmp(str9, str10, 3) == 1 ? "Passed" : "Failed");
+
     return 0;
 }

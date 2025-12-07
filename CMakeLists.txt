@@ -1,71 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(xc VERSION 1.0.0 LANGUAGES C CXX)
+project(xc VERSION 1.0.1 LANGUAGES C CXX)
 
 include(CMakePackageConfigHelpers)
-
-option(BUILD_WINDOWS "Use Windows" OFF)
-
-if(BUILD_WINDOWS OR WIN32)
-include(Platform/Windows)
-include(Platform/Windows-windres)
-
-if(CMAKE_C_COMPILER_LINKER_ID STREQUAL "GNU"
-   OR CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
-	include(Platform/Windows-GNU-C)
-	include(Platform/Linker/Windows-GNU-C)
-else()
-	include(Platform/Windows-MSVC-C)
-	include(Platform/Linker/Windows-MSVC-C)
-endif()
-
-if(CMAKE_CXX_COMPILER_LINKER_ID STREQUAL "GNU"
-   OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
-	include(Platform/Windows-GNU-CXX)
-	include(Platform/Linker/Windows-GNU-CXX)
-else()
-	include(Platform/Windows-MSVC-CXX)
-	include(Platform/Linker/Windows-MSVC-CXX)
-endif()
-
-# --- Setup cross compilation ---
-set(CMAKE_SYSTEM_NAME Windows)
-
-if(NOT DEFINED CMAKE_SIZEOF_VOID_P)
-    message(WARNING "CMAKE_SIZEOF_VOID_P not defined; assuming 64-bit build.")
-    set(CMAKE_SIZEOF_VOID_P 8)
-endif()
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(CROSS_PREFIX i686-w64-mingw32)
-elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(CROSS_PREFIX x86_64-w64-mingw32)
-endif()
-
-set(CMAKE_RC_COMPILER  ${CROSS_PREFIX}-windres)
-set(CMAKE_C_COMPILER   ${CROSS_PREFIX}-gcc)
-set(CMAKE_CXX_COMPILER ${CROSS_PREFIX}-g++)
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-set(CMAKE_C_COMPILER "${CROSS_PREFIX}-gcc")
-set(CMAKE_CXX_COMPILER "${CROSS_PREFIX}-g++")
-set(CMAKE_CXX_COMPILER_AR "${CROSS_PREFIX}-gcc-ar")
-set(CMAKE_CXX_COMPILER_RANLIB "${CROSS_PREFIX}-gcc-ranlib")
-# set(CMAKE_CXX_COMPILER_LINKER "${CROSS_PREFIX}-ld")
-set(CMAKE_AR "${CROSS_PREFIX}-ar")
-set(CMAKE_RANLIB "${CROSS_PREFIX}-ranlib")
-set(CMAKE_OBJDUMP "${CROSS_PREFIX}-objdump")
-set(CMAKE_OBJCOPY "${CROSS_PREFIX}-objcopy")
-set(CMAKE_READELF "${CROSS_PREFIX}-readelf")
-set(CMAKE_NM "${CROSS_PREFIX}-nm")
-# set(CMAKE_LINKER "${CROSS_PREFIX}-ld")
-set(CMAKE_STRIP "${CROSS_PREFIX}-strip")
-set(CMAKE_ADDR2LINE "${CROSS_PREFIX}-addr2line")
-set(CMAKE_DLLTOOL "${CROSS_PREFIX}-dlltool")
-set(CMAKE_DLLWRAP "${CROSS_PREFIX}-dllwrap")
-set(CMAKE_RC_COMPILER "${CROSS_PREFIX}-windres")
-
-set(CMAKE_EXE_LINKER_FLAGS "")
-set(CMAKE_SHARED_LINKER_FLAGS "")
-endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
@@ -83,7 +19,7 @@ file(MAKE_DIRECTORY "${LIBS_OUTPUT_DIR}" "${TEST_OUTPUT_DIR}")
 
 # Build shared library
 add_library(${PROJECT_NAME} SHARED ${CMAKE_SOURCE_DIR}/src/libxc.cc)
-if(BUILD_WINDOWS OR WIN32)
+if(WIN32)
     target_link_options(${PROJECT_NAME} PRIVATE -static -static-libgcc -static-libstdc++)
 endif()
 
@@ -106,64 +42,85 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    EXPORT_NAME ${PROJECT_NAME}
+
+add_library(${PROJECT_NAME}-static STATIC ${CMAKE_SOURCE_DIR}/src/libxc.cc)
+target_link_options(${PROJECT_NAME}-static PRIVATE -static -static-libgcc -static-libstdc++)
+set_target_properties(${PROJECT_NAME}-static PROPERTIES
+    OUTPUT_NAME "xc"
+    ARCHIVE_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
+    LIBRARY_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
+    RUNTIME_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
+)
+target_include_directories(${PROJECT_NAME}-static PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME}-static PUBLIC pthread)
+
+set_target_properties(${PROJECT_NAME}-static PROPERTIES
+    EXPORT_NAME ${PROJECT_NAME}-static
 )
 
-# -------------------
-# Install Targets
-# -------------------
+if(NOT WIN32)
+    # -------------------
+    # Install Targets
+    # -------------------
 
-# Install library
-install(TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}Targets
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-)
+    # Install library
+    install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-static
+        EXPORT ${PROJECT_NAME}Targets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+    )
 
-# Install headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h"
-)
+    # Install headers
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+    )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
-    DESTINATION share/man/man3
-    FILES_MATCHING PATTERN "*.3"
-)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
+        DESTINATION share/man/man3
+        FILES_MATCHING PATTERN "*.3"
+    )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
-    DESTINATION share/doc/${PROJECT_NAME}
-    FILES_MATCHING PATTERN "*.md"
-)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
+        DESTINATION share/doc/${PROJECT_NAME}
+        FILES_MATCHING PATTERN "*.md"
+    )
 
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY AnyNewerVersion
+    )
 
-configure_package_config_file(
-    "${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
-)
+    configure_package_config_file(
+        "${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+    )
 
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-    DESTINATION lib/cmake/${PROJECT_NAME}
-)
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        DESTINATION lib/cmake/${PROJECT_NAME}
+    )
 
-export(TARGETS ${PROJECT_NAME} FILE ${PROJECT_NAME}Targets.cmake)
+    export(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-static FILE ${PROJECT_NAME}Targets.cmake)
 
-# Optional: install CMake config for find_package()
-install(EXPORT ${PROJECT_NAME}Targets
-    FILE ${PROJECT_NAME}Targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION lib/cmake/${PROJECT_NAME}
-)
+    # Optional: install CMake config for find_package()
+    install(EXPORT ${PROJECT_NAME}Targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION lib/cmake/${PROJECT_NAME}
+    )
+
+    if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake")
+        add_custom_target(uninstall
+            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake
+            COMMENT "Uninstalling ${PROJECT_NAME}"
+        )
+    endif()
+endif()
 
 # -------------------
 # Tests
@@ -200,7 +157,7 @@ foreach(test_src ${TEST_FILES})
     add_test(NAME ${target_name} COMMAND ${target_name})
 endforeach()
 
-if(BUILD_WINDOWS OR WIN32)
+if(WIN32)
     set_target_properties(test_xmap_cc PROPERTIES LINKER_LANGUAGE CXX)
     target_link_libraries(test_xmap_cc PRIVATE stdc++)
 endif()

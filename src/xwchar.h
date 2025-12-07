@@ -38,7 +38,7 @@ XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
 #if defined(_WIN32) || defined(_WIN64)
 	int len = _vscwprintf(fmt, apc);
 	va_end(apc);
-	return (len < 0) ? 0 : (size_t)len;
+	return (len < 0) ? (size_t)-1 : (size_t)len;
 #else
 	int len = vswprintf(NULL, 0, fmt, apc);
 	va_end(apc);
@@ -53,7 +53,7 @@ XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
 		wchar_t*buf = (wchar_t*)malloc(bufSize * sizeof(wchar_t));
 		if (!buf) {
 			errno = ENOMEM;
-			return 0;
+			return (size_t)-1;
 		}
 
 		va_list ap2;
@@ -68,14 +68,14 @@ XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
 
 		if (bufSize > LIMIT / 2) {
 			errno = EOVERFLOW;
-			return 0;
+			return (size_t)-1;
 		}
 
 		bufSize *= 2;
 	}
 
 	errno = EOVERFLOW;
-	return 0;
+	return (size_t)-1;
 #endif
 }
 
@@ -85,6 +85,23 @@ XSTDDEF_INLINE_API size_t xwcslen(const wchar_t *__restrict fmt, ...) {
 	size_t len = vxwcslen(fmt, ap);
 	va_end(ap);
 	return len;
+}
+
+XSTDDEF_INLINE_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n) {
+    if (!__s2) return 0;  // array pointer itself is NULL
+
+    for (size_t i = 0; i < n; ++i) {
+	const wchar_t *s2_str = __s2[i];
+	if (__s1 == NULL && s2_str == NULL)
+		return 1;
+	else if (__s1 == NULL || s2_str == NULL)
+		continue;
+
+	if (wcscmp(__s1, s2_str) == 0)
+		return 1;
+    }
+
+    return 0; // no match
 }
 
 #ifdef __cplusplus

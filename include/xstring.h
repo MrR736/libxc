@@ -24,7 +24,7 @@
 #define __XSTRING_H__
 
 #include <stdarg.h>
-#include "xstddef.h"  // Use quotes for project headers
+#include <xstddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,7 +36,7 @@ extern "C" {
  *
  * @param __s  Format string
  * @param ap   va_list of arguments
- * @return     Length of the resulting formatted string, or (size_t)-1 on error
+ * @return     Length of the resulting formatted string, or -1 on error
  */
 XSTDDEF_IMPORT_API size_t vxstrlen(const char *__restrict __s, va_list ap);
 
@@ -46,9 +46,24 @@ XSTDDEF_IMPORT_API size_t vxstrlen(const char *__restrict __s, va_list ap);
  *
  * @param __s  Format string
  * @param ...  Variadic arguments
- * @return     Length of the resulting formatted string, or (size_t)-1 on error
+ * @return     Length of the resulting formatted string, or -1 on error
  */
 XSTDDEF_IMPORT_API size_t xstrlen(const char *__restrict __s, ...);
+
+/**
+ * xstrcmp:
+ * Compares a string against an array of strings and returns a boolean-style result.
+ *
+ * This function is null-safe:
+ * - If both __s1 and an array element are NULL, it counts as a match.
+ * - If only one is NULL, that element is skipped.
+ *
+ * @param __s1  The string to compare. Can be NULL.
+ * @param __s2  Array of string pointers. Can contain NULL entries. Must not be NULL to perform comparison.
+ * @param n     Number of elements in the array __s2.
+ * @return      1 if a match is found, 0 otherwise
+ */
+XSTDDEF_IMPORT_API int xstrcmp(const char *__s1, const char **__s2, size_t n);
 
 #ifdef __cplusplus
 }
