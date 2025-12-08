@@ -1,0 +1,153 @@
+.TH XWCTYPE 3 "2025" "GNU General Public License" "Standard C Library"
+.SH NAME
+xwctype \- Utility functions for wide-character string manipulation
+
+.SH SYNOPSIS
+.nf
+#include "xwctype.h"
+
+wchar_t* xtowlower(wchar_t* str);
+wchar_t* xtowupper(wchar_t* str);
+wchar_t* xtowascii(wchar_t* str);
+.fi
+
+.SH DESCRIPTION
+The XWCTYPE library provides utility functions for manipulating wide-character strings.
+The functions operate on strings of type `wchar_t` and provide the following capabilities:
+
+- **xtowlower**: Converts all wide characters in the string to lowercase.
+- **xtowupper**: Converts all wide characters in the string to uppercase.
+- **xtowascii**: Converts all wide characters in the string to their ASCII equivalents. Non-ASCII characters are replaced with a question mark (`?`).
+
+The functions ensure that the original string is not modified by allocating new memory for the result. The caller is responsible for freeing the allocated memory after use.
+
+.SH FUNCTIONS
+
+.TP
+.B xtowlower
+Converts a wide-character string to lowercase.
+
+.PP
+The `xtowlower` function converts each wide character in the input string to its lowercase equivalent using the `towlower` function. If the string is already in lowercase, it remains unchanged.
+
+.PP
+The function allocates memory for the result string, which must be freed by the caller.
+
+.PP
+**Parameters:**
+.TP
+* `str` - A wide-character string to be converted.
+
+**Returns:**
+.TP
+* A new wide-character string with all characters converted to lowercase, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.TP
+.B xtowupper
+Converts a wide-character string to uppercase.
+
+.PP
+The `xtowupper` function converts each wide character in the input string to its uppercase equivalent using the `towupper` function. If the string is already in uppercase, it remains unchanged.
+
+.PP
+The function allocates memory for the result string, which must be freed by the caller.
+
+.PP
+**Parameters:**
+.TP
+* `str` - A wide-character string to be converted.
+
+**Returns:**
+.TP
+* A new wide-character string with all characters converted to uppercase, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.TP
+.B xtowascii
+Converts a wide-character string to ASCII characters, replacing non-ASCII characters with `?`.
+
+.PP
+The `xtowascii` function converts each wide character to an ASCII character if it falls within the ASCII range (0–127). Non-ASCII characters are replaced with `?`.
+
+.PP
+The function allocates memory for the result string, which must be freed by the caller.
+
+.PP
+**Parameters:**
+.TP
+* `str` - A wide-character string to be converted.
+
+**Returns:**
+.TP
+* A new wide-character string containing only ASCII characters, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.SH MEMORY MANAGEMENT
+Each of the functions in the XWCTYPE library allocates memory for the resulting string using `malloc`. The caller is responsible for freeing this memory when it is no longer needed by using the `free()` function. Failure to free the allocated memory will result in a memory leak.
+
+.SH ERROR HANDLING
+All functions return `NULL` and set `errno` to the appropriate error value when an error occurs. The possible error values are:
+
+- `EINVAL`: Invalid argument (if the input string is `NULL`).
+- `ENOMEM`: Out of memory (if memory allocation fails).
+
+Before using the returned string, the caller should always check if the return value is `NULL` to ensure that no errors occurred during the operation.
+
+.SH COMPATIBILITY
+The functions in this library are compatible with both C and C++ compilers. The `#ifdef __cplusplus` ensures that the functions are declared with `extern "C"` linkage in C++ to avoid name mangling.
+
+.SH EXAMPLE
+Here is an example of how to use the XWCTYPE functions:
+
+.nf
+#include <stdlib.h>
+#include "xwctype.h"
+
+wchar_t* str = L"Hello World!";
+wchar_t* lower_str = xtowlower(str);
+wchar_t* upper_str = xtowupper(str);
+wchar_t* ascii_str = xtowascii(str);
+
+// Always check if the result is NULL before using the string
+if (lower_str != NULL) {
+    // Use the result (e.g., print, process)
+    free(lower_str);
+}
+
+if (upper_str != NULL) {
+    free(upper_str);
+}
+
+if (ascii_str != NULL) {
+    free(ascii_str);
+}
+.fi
+
+.SH SEE ALSO
+`malloc(3)`, `free(3)`, `towlower(3)`, `towupper(3)`
+
+.SH BUGS
+No known bugs.
+
+.SH AUTHORS
+MrR736 <MrR736@users.github.com>
+
+.SH LICENSE
+This library is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+---
+
+This man-page format is designed to be easy to understand for users who may need to reference the functions quickly. If you'd like to add any other sections or modify any part of this documentation, feel free to let me know!

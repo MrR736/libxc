@@ -1,0 +1,144 @@
+.\" XCTYPE(3) Manual Page
+.TH XCTYPE 3 "2025" "Extern Library" "Programmer's Manual"
+.SH NAME
+xctype \- Utility functions for character string manipulation
+
+.SH SYNOPSIS
+.nf
+#include "xctype.h"
+
+char* xtolower(char* str);
+char* xtoupper(char* str);
+char* xtoascii(char* str);
+.fi
+
+.SH DESCRIPTION
+The XCTYPE library provides utility functions for manipulating null-terminated C strings (`char*`).
+These functions perform the following operations:
+
+- **xtolower**: Converts all characters in the string to lowercase.
+- **xtoupper**: Converts all characters in the string to uppercase.
+- **xtoascii**: Converts all characters in the string to ASCII characters, replacing non-ASCII characters with `?`.
+
+Each function allocates a new string for the result, and the caller is responsible for freeing the allocated memory once it is no longer needed.
+
+.SH FUNCTIONS
+
+.TP
+.B xtolower
+Converts a string to lowercase.
+
+.PP
+The `xtolower` function converts each character in the input string to its lowercase equivalent using the `tolower` function. If the string is already in lowercase, it remains unchanged.
+
+.PP
+**Parameters:**
+.TP
+* `str` - A pointer to a null-terminated string to be converted.
+
+**Returns:**
+.TP
+* A new string with all characters converted to lowercase, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.TP
+.B xtoupper
+Converts a string to uppercase.
+
+.PP
+The `xtoupper` function converts each character in the input string to its uppercase equivalent using the `toupper` function. If the string is already in uppercase, it remains unchanged.
+
+.PP
+**Parameters:**
+.TP
+* `str` - A pointer to a null-terminated string to be converted.
+
+**Returns:**
+.TP
+* A new string with all characters converted to uppercase, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.TP
+.B xtoascii
+Converts a string to ASCII characters, replacing non-ASCII characters with `?`.
+
+.PP
+The `xtoascii` function converts each character in the input string to an ASCII character if it falls within the ASCII range (0–127). Any non-ASCII characters are replaced with the question mark character (`?`).
+
+.PP
+**Parameters:**
+.TP
+* `str` - A pointer to a null-terminated string to be converted.
+
+**Returns:**
+.TP
+* A new string containing only ASCII characters, or `NULL` if an error occurs.
+
+**Errors:**
+.TP
+* `EINVAL` - Invalid argument (if `str` is `NULL`).
+* `ENOMEM` - Out of memory (if memory allocation fails).
+
+.SH MEMORY MANAGEMENT
+Each of the functions in the XCTYPE library allocates memory for the resulting string using `malloc`. The caller is responsible for freeing this memory using the `free()` function once the string is no longer needed to avoid memory leaks.
+
+.SH ERROR HANDLING
+The functions return `NULL` and set the `errno` variable to indicate the type of error when one occurs. The possible error values are:
+
+- `EINVAL`: Invalid argument (if `str` is `NULL`).
+- `ENOMEM`: Out of memory (if memory allocation fails).
+
+Before using the returned string, the caller should always check if the return value is `NULL` to ensure that no errors occurred during the operation.
+
+.SH EXAMPLE
+Here is an example of how to use the provided functions:
+
+.nf
+#include <stdlib.h>
+#include "xctype.h"
+
+int main() {
+    char* str = "Hello World!";
+    char* lower_str = xtolower(str);
+    char* upper_str = xtoupper(str);
+    char* ascii_str = xtoascii(str);
+
+    // Always check if the result is NULL before using the string
+    if (lower_str != NULL) {
+        printf("Lowercase: %s\n", lower_str);
+        free(lower_str);
+    }
+
+    if (upper_str != NULL) {
+        printf("Uppercase: %s\n", upper_str);
+        free(upper_str);
+    }
+
+    if (ascii_str != NULL) {
+        printf("ASCII: %s\n", ascii_str);
+        free(ascii_str);
+    }
+
+    return 0;
+}
+.fi
+
+.SH LICENSE
+This library is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+.SH SEE ALSO
+`malloc(3)`, `free(3)`, `tolower(3)`, `toupper(3)`
+
+.SH BUGS
+No known bugs.
+
+.SH AUTHORS
+MrR736 <MrR736@users.github.com>

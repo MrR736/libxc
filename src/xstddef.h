@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stddef.h>
+#include <ctype.h>
+#include <wctype.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -34,7 +36,6 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <dirent.h>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <process.h>

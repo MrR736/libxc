@@ -5,3 +5,5 @@
 #include "xstring.h"
 #include "xwchar.h"
 #include "xmap.h"
+#include "xctype.h"
+#include "xwctype.h"

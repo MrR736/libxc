@@ -15,15 +15,17 @@ It is designed to complement the C standard library with convenient, safe, and p
 
 ## Modules
 
-| Module  | Description                        | Markdown                     | Man page                     |
-| ------- | ---------------------------------- | ---------------------------- | ---------------------------- |
-| xstddef | Extended standard types and macros | [xstddef.md](doc/xstddef.md) | [xstddef.3](doc/xstddef.3)   |
-| xstdlib | Memory and utility helpers         | [xstdlib.md](doc/xstdlib.md) | [xstdlib.3](doc/xstdlib.3)   |
-| xstring | String manipulation helpers        | [xstring.md](doc/xstring.md) | [xstring.3](doc/xstring.3)   |
-| xwchar  | Wide-character utilities           | [xwchar.md](doc/xwchar.md)   | [xwchar.3](doc/xwchar.3)     |
-| xstdio  | File I/O helpers and safer printf  | [xstdio.md](doc/xstdio.md)   | [xstdio.3](doc/xstdio.3)     |
-| xlocale | Locale-related utilities           | [xlocale.md](doc/xlocale.md) | [xlocale.3](doc/xlocale.3)   |
-| xmap    | Map / associative array utilities  | [xmap.md](doc/xmap.md)       | [xmap.3](doc/xmap.3)         |
+| Module  | Description                             | Markdown                     | Man page                     |
+| ------- | --------------------------------------- | ---------------------------- | ---------------------------- |
+| xstddef | Extended standard types and macros      | [xstddef.md](doc/xstddef.md) | [xstddef.3](doc/xstddef.3)   |
+| xstdlib | Memory and utility helpers              | [xstdlib.md](doc/xstdlib.md) | [xstdlib.3](doc/xstdlib.3)   |
+| xstring | String manipulation helpers             | [xstring.md](doc/xstring.md) | [xstring.3](doc/xstring.3)   |
+| xwchar  | Wide-Character utilities                | [xwchar.md](doc/xwchar.md)   | [xwchar.3](doc/xwchar.3)     |
+| xstdio  | File I/O helpers and safer printf       | [xstdio.md](doc/xstdio.md)   | [xstdio.3](doc/xstdio.3)     |
+| xlocale | Locale-related utilities                | [xlocale.md](doc/xlocale.md) | [xlocale.3](doc/xlocale.3)   |
+| xmap    | Map / associative array utilities       | [xmap.md](doc/xmap.md)       | [xmap.3](doc/xmap.3)         |
+| xctype  | Extended Character Type Utilities       | [xctype.md](doc/xctype.md)   | [xctype.3](doc/xctype.3)     |
+| xwctype | Extended Wide-Character Type Utilities  | [xwctype.md](doc/xwctype.md) | [xwctype.3](doc/xwctype.3)   |
 
 ---
 

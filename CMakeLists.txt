@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(xc VERSION 1.0.1 LANGUAGES C CXX)
+project(xc VERSION 1.0.2 LANGUAGES C CXX)
 
 include(CMakePackageConfigHelpers)
 
@@ -135,6 +135,8 @@ set(TEST_FILES
     ${CMAKE_SOURCE_DIR}/test/test_xstdlib.c
     ${CMAKE_SOURCE_DIR}/test/test_xstring.c
     ${CMAKE_SOURCE_DIR}/test/test_xwchar.c
+    ${CMAKE_SOURCE_DIR}/test/test_xctype.c
+    ${CMAKE_SOURCE_DIR}/test/test_xwctype.c
 )
 
 # Add executables for each test
