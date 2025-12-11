@@ -1,5 +1,5 @@
 /**
- * xstddef.h: Extern Library
+ * xstddef.h: Extern stddef.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *
@@ -48,6 +48,18 @@
 #endif
 
 #define XPATH_MAX 32767
+
+#ifndef __LIBXC_VERSION_MAJOR
+#define __LIBXC_VERSION_MAJOR 1
+#endif
+#ifndef __LIBXC_VERSION_MINOR
+#define __LIBXC_VERSION_MINOR 0
+#endif
+#ifndef __LIBXC_VERSION_PATCH
+#define __LIBXC_VERSION_PATCH 3
+#endif
+
+#define __LIBXC_VERSION ((__LIBXC_VERSION_MAJOR * 1000) + (__LIBXC_VERSION_MINOR * 100) + __LIBXC_VERSION_PATCH)
 
 #ifndef __libxc_types_compatible_p
 #ifdef __cplusplus

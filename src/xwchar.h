@@ -1,5 +1,5 @@
 /**
- * xwchar.h: Extern Library
+ * xwchar.h: Extern wchar.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *

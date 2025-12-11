@@ -1,5 +1,5 @@
 /**
- * xlocale.h: Extern Library
+ * xlocale.h: Extern locale.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *

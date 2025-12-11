@@ -1,5 +1,5 @@
 /**
- * xctype.h: Extern Library
+ * xctype.h: Extern ctype.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *

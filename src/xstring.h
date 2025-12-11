@@ -1,5 +1,5 @@
 /**
- * xstring.h: Extern Library
+ * xstring.h: Extern string.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *
@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 XSTDDEF_INLINE_API size_t vxstrlen(const char *__restrict fmt, va_list ap) {
-	if (!fmt) return 0;
+	if (fmt == NULL) return 0;
 	va_list apc;
 	int len = 0;
 	va_copy(apc, ap);

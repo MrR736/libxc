@@ -1,5 +1,5 @@
 /**
- * xstdlib.h: Extern Library
+ * xstdlib.h: Extern stdlib.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *
@@ -40,7 +40,7 @@ XSTDDEF_INLINE_API void* xrand(size_t __size, unsigned int __flags) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	srand((unsigned int)time(NULL));
+	srand((unsigned int)clock());
 	for (size_t i = 0; i < __size; i++)
 		((unsigned char*)ret)[i] = (unsigned char)(rand() % __flags);
 	return ret;
@@ -55,28 +55,21 @@ XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
 	int len = WideCharToMultiByte(CP_UTF8, 0, wcs, -1, NULL, 0, NULL, NULL);
 	if (len <= 0) return NULL;
 
-	char *mbs = (char*)malloc(len);
+	char *mbs = (char*)malloc((size_t)len);
 	if (!mbs) return NULL;
 
 	WideCharToMultiByte(CP_UTF8, 0, wcs, -1, mbs, len, NULL, NULL);
 	return mbs;
 
 #else
-	// -------- Linux/Unix UTF-8 conversion --------
-	// Caller should set the locale ONCE globally (NOT inside conversion):
-	//	 setlocale(LC_CTYPE, "");
 	size_t len = wcstombs(NULL, wcs, 0);
-	if (len == (size_t)-1) return NULL;
-
+	if (len <= 0) return NULL;
 	char *mbs = (char*)malloc(len + 1);
 	if (!mbs) return NULL;
-
 	wcstombs(mbs, wcs, len + 1);
 	return mbs;
 #endif
 }
-
-
 
 // Convert UTF-8 multi-byte string (char*) to wide character string (wchar_t*)
 XSTDDEF_INLINE_API wchar_t* xmbstowcs(const char *mbs) {

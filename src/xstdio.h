@@ -1,5 +1,5 @@
 /**
- * xstdio.h: Extern Library
+ * xstdio.h: Extern stdio.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *
@@ -50,7 +50,7 @@ XSTDDEF_INLINE_API FILE* fdno_unlocked(int __fd) {
 	if (__fd < 0) return NULL;
 	FILE *fp = fdno(__fd);
 	if (!fp) return NULL;
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	_lock_file(fp);
 #else
 	flockfile(fp);
@@ -130,13 +130,11 @@ XSTDDEF_INLINE_API void *fduread(int __fd, size_t *out_size) {
 		// read chunk
 		ssize_t n = read(__fd, buf + len, cap - len);
 		if (n < 0) {
-			if (errno == EINTR)
-				continue;  // retry
+			if (errno == EINTR) continue; // retry
 			free(buf);
 			return NULL;  // real error
 		}
-		if (n == 0)
-			break;
+		if (n == 0) break;
 		len += (size_t)n;
 	}
 
@@ -145,14 +143,6 @@ XSTDDEF_INLINE_API void *fduread(int __fd, size_t *out_size) {
 		unsigned char *new_buf = (unsigned char *)realloc(buf, len);
 		if (new_buf) buf = new_buf;  // ignore shrink failure
 	}
-
-	// Uncomment if you want NUL-termination to match furead():
-	// {
-	//	 unsigned char *new_buf = realloc(buf, len + 1);
-	//	 if (!new_buf) { free(buf); return NULL; }
-	//	 buf = new_buf;
-	//	 buf[len] = '\0';
-	// }
 
 	if (out_size)
 		*out_size = len;
@@ -190,8 +180,14 @@ XSTDDEF_INLINE_API char* cprintf(const char *__restrict fmt, ...) {
 }
 
 XSTDDEF_INLINE_API wchar_t* vcwprintf(const char *__restrict fmt, va_list ap) {
-	wchar_t* ret = xmbstowcs(vcprintf(fmt,ap));
-	if (!ret) return NULL;
+	char* s = vcprintf(fmt,ap);
+	if (!s) return NULL;
+	wchar_t* ret = xmbstowcs(s);
+	if (!ret) {
+		free(s);
+		return NULL;
+	}
+	free(s);
 	return ret;
 }
 
@@ -232,8 +228,14 @@ XSTDDEF_INLINE_API wchar_t* wcprintf(const wchar_t *__restrict fmt, ...) {
 }
 
 XSTDDEF_INLINE_API char* vwccprintf(const wchar_t *__restrict fmt, va_list ap) {
-	char* ret = xwcstombs(vwcprintf(fmt, ap));
-	if (!ret) return NULL;
+	wchar_t* s = vwcprintf(fmt, ap);
+	if (!s) return NULL;
+	char* ret = xwcstombs(s);
+	if (!ret) {
+		free(s);
+		return NULL;
+	}
+	free(s);
 	return ret;
 }
 
@@ -246,7 +248,7 @@ XSTDDEF_INLINE_API char* wccprintf(const wchar_t *__restrict fmt, ...) {
 }
 
 XSTDDEF_INLINE_API FILE* wfopen(const wchar_t *__restrict __filename, const wchar_t *__restrict __modes) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	return _wfopen(__filename, __modes);
 #else
 	char *filename = xwcstombs(__filename);
@@ -264,12 +266,16 @@ XSTDDEF_INLINE_API FILE* wfopen(const wchar_t *__restrict __filename, const wcha
 }
 
 XSTDDEF_INLINE_API int wremove(const wchar_t *__restrict fmt) {
+#ifdef _WIN32
+	return _wremove(fmt);
+#else
 	if (!fmt) return -1;
 	char *s = xwcstombs(fmt);
 	if (!s) return -1;
 	int ret = remove(s);
 	free(s);
 	return ret;
+#endif
 }
 
 XSTDDEF_INLINE_API int vxremove(const char *__restrict fmt, va_list ap) {
@@ -402,12 +408,7 @@ XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory_size(size_t n) {
 }
 
 XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory(void) {
-	char *s = getcurrentdirectory();
-	if (!s) return NULL;
-	wchar_t* ws = xmbstowcs(s);
-	if (!ws) return NULL;
-	free(s);
-	return ws;
+	return wgetcurrentdirectory_size(XPATH_MAX + 1);
 }
 
 #ifdef __cplusplus

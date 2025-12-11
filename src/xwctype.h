@@ -1,5 +1,5 @@
 /**
- * xwctype.h: Extern Library
+ * xwctype.h: Extern wctype.h
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *
@@ -24,6 +24,7 @@
 #define __XWCTYPE_H__
 
 #include "xstddef.h"
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +44,7 @@ XSTDDEF_INLINE_API wchar_t* xtowlower(wchar_t* str) {
 	}
 
 	for (size_t i = 0; i < len; i++)
-		ret[i] = towlower((wint_t)str[i]);
+		ret[i] = (wchar_t)towlower((wint_t)str[i]);
 
 	ret[len] = L'\0';
 	return ret;
@@ -63,7 +64,7 @@ XSTDDEF_INLINE_API wchar_t* xtowupper(wchar_t* str) {
 	}
 
 	for (size_t i = 0; i < len; i++)
-		ret[i] = towupper((wint_t)str[i]);
+		ret[i] = (wchar_t)towupper((wint_t)str[i]);
 
 	ret[len] = L'\0';
 	return ret;
