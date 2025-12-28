@@ -24,7 +24,6 @@
 #define __EXTSTDIO_H__
 
 #include "xstdlib.h"
-#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {
