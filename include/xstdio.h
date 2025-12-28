@@ -38,7 +38,11 @@ XSTDDEF_IMPORT_API FILE* fdno_unlocked(int __fd);
 
 XSTDDEF_IMPORT_API FILE* wfopen(const wchar_t *__restrict __filename, const wchar_t *__restrict __modes);
 
+XSTDDEF_IMPORT_API size_t fpsize(FILE *fp);
+
 XSTDDEF_IMPORT_API void *furead(FILE *fp, size_t *out_size);
+
+XSTDDEF_IMPORT_API size_t fdsize(int fd);
 
 XSTDDEF_IMPORT_API void *fduread(int __fd, size_t *out_size);
 
