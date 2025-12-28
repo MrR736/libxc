@@ -24,6 +24,7 @@
 #define __EXTSTDIO_H__
 
 #include "xstdlib.h"
+#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,94 +59,157 @@ XSTDDEF_INLINE_API FILE* fdno_unlocked(int __fd) {
 	return fp;
 }
 
-// full read
+XSTDDEF_INLINE_API size_t fpsize(FILE *fp) {
+	if (!fp) {
+		errno = EINVAL;
+		return (size_t)-1;
+	}
+
+	long original_pos = ftell(fp);
+	if (original_pos < 0)
+		return (size_t)-1;
+
+	if (fseek(fp, 0, SEEK_END) != 0)
+		return (size_t)-1;
+
+	long end_pos = ftell(fp);
+	if (end_pos < 0) {
+		fseek(fp, original_pos, SEEK_SET);
+		return (size_t)-1;
+	}
+
+	if (fseek(fp, original_pos, SEEK_SET) != 0)
+		return (size_t)-1;
+
+	if (end_pos < original_pos) {
+		errno = EIO;
+		return (size_t)-1;
+	}
+
+	long diff = end_pos - original_pos;
+	if (diff < 0 || (unsigned long)diff > SIZE_MAX) {
+		errno = EOVERFLOW;
+		return (size_t)-1;
+	}
+
+	return (size_t)diff;
+}
+
+/* full read */
 XSTDDEF_INLINE_API void *furead(FILE *fp, size_t *out_size) {
 	if (!fp) {
 		errno = EINVAL;
 		return NULL;
 	}
 
-	long original_pos = ftell(fp);
-	if (original_pos < 0)
-		return NULL; // non-seekable stream
-
-	if (fseek(fp, 0, SEEK_END) != 0)
+	size_t size = fpsize(fp);
+	if (size == (size_t)-1)
 		return NULL;
-
-	long end = ftell(fp);
-	if (fseek(fp, original_pos, SEEK_SET) != 0)
-		return NULL;
-
-	if (end < 0 || end < original_pos) {
-		errno = EIO;
-		return NULL;
-	}
-
-	size_t size = (size_t)(end - original_pos);
 
 	if (size == SIZE_MAX) {
 		errno = EOVERFLOW;
 		return NULL;
 	}
 
-	void *data = malloc(size + 1);
+	unsigned char *data = (unsigned char *)malloc(size + 1);
 	if (!data)
 		return NULL;
 
-	size_t read = fread(data, 1, size, fp);
-	((char *)data)[read] = '\0';
+	size_t nread = fread(data, 1, size, fp);
+	if (nread != size && ferror(fp)) {
+		free(data);
+		return NULL;
+	}
+
+	data[nread] = '\0';
 
 	if (out_size)
-		*out_size = read;
+		*out_size = nread;
 
-	fseek(fp, original_pos, SEEK_SET);
 	return data;
 }
 
-XSTDDEF_INLINE_API void *fduread(int __fd, size_t *out_size) {
-	const size_t initial_cap = 4096;
-	size_t cap = initial_cap;
-	size_t len = 0;
+XSTDDEF_INLINE_API size_t fdsize(int fd) {
+	if (fd < 0) {
+		errno = EINVAL;
+		return (size_t)-1;
+	}
+
+	off_t original_pos = lseek(fd, 0, SEEK_CUR);
+	if (original_pos == (off_t)-1)
+		return (size_t)-1;
+
+	off_t end_pos = lseek(fd, 0, SEEK_END);
+	if (end_pos == (off_t)-1) {
+		lseek(fd, original_pos, SEEK_SET);
+		return (size_t)-1;
+	}
+
+	if (lseek(fd, original_pos, SEEK_SET) == (off_t)-1)
+		return (size_t)-1;
+
+	if (end_pos < original_pos) {
+		errno = EIO;
+		return (size_t)-1;
+	}
+
+	off_t diff = end_pos - original_pos;
+	if (diff < 0 || (unsigned long long)diff > SIZE_MAX) {
+		errno = EOVERFLOW;
+		return (size_t)-1;
+	}
+
+	return (size_t)diff;
+}
+
+XSTDDEF_INLINE_API void *fduread(int fd, size_t *out_size) {
+	if (fd < 0) {
+		errno = EINVAL;
+		return NULL;
+	}
 
 	if (out_size)
 		*out_size = 0;
 
-	unsigned char *buf = (unsigned char *)malloc(cap);
+	size_t cap = fdsize(fd);
+	if (cap == (size_t)-1)
+		return NULL;
+
+	if (cap == SIZE_MAX) {
+		errno = EOVERFLOW;
+		return NULL;
+	}
+
+	unsigned char *buf = (unsigned char *)malloc(cap + 1);
 	if (!buf)
 		return NULL;
 
-	for (;;) {
-		// grow if needed
-		if (len == cap) {
-			size_t new_cap = cap * 2;
-			unsigned char *new_buf = (unsigned char *)realloc(buf, new_cap);
-			if (!new_buf) {
-				free(buf);
-				return NULL;  // realloc failed
-			}
-			buf = new_buf;
-			cap = new_cap;
-		}
-
-		// read chunk
-		ssize_t n = read(__fd, buf + len, cap - len);
+	size_t len = 0;
+	while (len < cap) {
+		ssize_t n = read(fd, buf + len, cap - len);
 		if (n < 0) {
-			if (errno == EINTR) continue; // retry
+			if (errno == EINTR)
+				continue;
 			free(buf);
-			return NULL;  // real error
+			return NULL;
 		}
-		if (n == 0) break;
+		if (n == 0)
+			break; /* EOF */
 		len += (size_t)n;
 	}
 
-	// final shrink (optional)
-	if (len != cap) {
-		unsigned char *new_buf = (unsigned char *)realloc(buf, len);
-		if (new_buf) buf = new_buf;  // ignore shrink failure
+	buf[len] = '\0'; /* optional NUL terminator */
+
+	/* optional shrink */
+	if (len < cap) {
+		unsigned char *tmp = (unsigned char *)realloc(buf, len + 1);
+		if (tmp)
+			buf = tmp;
 	}
 
 	if (out_size)
 		*out_size = len;
+
 	return buf;
 }
 

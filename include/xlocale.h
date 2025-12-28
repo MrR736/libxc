@@ -1,5 +1,5 @@
 /**
- * xstring.h: Extern Library
+ * xlocale.h: Extern Library
  *
  * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
  *

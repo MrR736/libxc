@@ -25,6 +25,7 @@
 
 #include "xstring.h"
 #include "xwchar.h"
+#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {
@@ -322,9 +323,9 @@ XSTDDEF_INLINE_API int csystem(const char *__restrict cmd) {
 	if (pid == 0) {
 		/* Child process */
 #ifdef __ANDROID__
-		execl("/system/bin/sh", "sh", "-c", cmd, (char*)0);
+		execl("/system/bin/sh","sh","-c",cmd,NULL);
 #else
-		execl("/bin/sh", "sh", "-c", cmd, (char*)0);
+		execl("/bin/sh","sh","-c",cmd,NULL);
 #endif
 		perror("csystem: execl failed");
 		_exit(127);
@@ -336,10 +337,13 @@ XSTDDEF_INLINE_API int csystem(const char *__restrict cmd) {
 		perror("csystem: waitpid failed");
 		return -1;
 	}
+
 	if (WIFEXITED(status))
 		return WEXITSTATUS(status);
+
 	if (WIFSIGNALED(status))
 		return 128 + WTERMSIG(status);
+
 	return status;
 #endif /* _WIN32 */
 }

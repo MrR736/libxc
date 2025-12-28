@@ -23,7 +23,6 @@
 #ifndef __XSTRING_H__
 #define __XSTRING_H__
 
-#include <stdarg.h>
 #include <xstddef.h>
 
 #ifdef __cplusplus

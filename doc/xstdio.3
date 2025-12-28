@@ -10,7 +10,9 @@ xstdio \- Extended STDIO Utilities for safe and Unicode-aware I/O operations
 .BR int fdputs(const char *s, int fd);
 .BR FILE* fdno(int fd);
 .BR FILE* fdno_unlocked(int fd);
+.BR size_t fpsize(FILE *fp);
 .BR void* furead(FILE *fp, size_t *out_size);
+.BR size_t fdsize(int fd);
 .BR void* fduread(int fd, size_t *out_size);
 .BR char* vcprintf(const char *fmt, va_list ap);
 .BR char* cprintf(const char *fmt, ...);
@@ -48,8 +50,15 @@ Same as `fdno()`, but locks the resulting `FILE*` stream using `flockfile()` or 
 
 #### Full File Read
 
+.BR size_t fpsize(FILE *fp)
+Reads entire `FILE*` into memory, preserving original file position.
+
 .BR void* furead(FILE *fp, size_t *out_size)
 Reads the entire content of a `FILE*` into memory, preserving the original file position. Returns a pointer to the buffer and sets `*out_size` to the number of bytes read.
+
+.BR size_t fdsize(int fd)
+Retrieves the size of a file associated with a file descriptor (fd), typically used in lower-level file operations.
+It calculates the file size by moving the file pointer to the end, then returning it to the original position.
 
 .BR void* fduread(int fd, size_t *out_size)
 Reads all data from a file descriptor until EOF. Returns a pointer to the buffer and sets `*out_size` to the number of bytes read.

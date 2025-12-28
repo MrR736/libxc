@@ -44,6 +44,21 @@ Same as `fdno()`, but locks the stream (`flockfile()` or `_lock_file()`).
 
 ---
 
+### ### Get File Size
+
+#### **`size_t fpsize(FILE *fp);`**
+Reads entire `FILE*` into memory, preserving original file position.
+
+Returns:
+- The size of the file in bytes.
+
+#### **`size_t fdsize(int fd);`**
+Retrieves the size of a file associated with a file descriptor (fd), typically used in lower-level file operations.
+It calculates the file size by moving the file pointer to the end, then returning it to the original position.
+
+Returns:
+- The size of the file in bytes.
+
 ### ### Full File Read
 
 #### **`void *furead(FILE *fp, size_t *out_size);`**
