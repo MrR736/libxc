@@ -18,6 +18,9 @@
 
   * **`xstrcmp()`** — boolean-style matcher
 
+* Combining strings safely:
+  * **`xstrcmb()`** — concatenates two strings into a newly allocated buffer
+
 These functions are **portable** and safe across platforms:
 
 * Windows: uses `_vscprintf()`
@@ -33,6 +36,7 @@ They do **not allocate memory** and **do not write output**, making them suitabl
 size_t vxstrlen(const char *restrict fmt, va_list ap);
 size_t xstrlen(const char *restrict fmt, ...);
 int xstrcmp(const char * __s1, const char ** __s2, size_t n);
+char * xstrcmb(const char * s1, const char * s2);
 ```
 
 | Function   | Purpose                                                                 |
@@ -40,6 +44,7 @@ int xstrcmp(const char * __s1, const char ** __s2, size_t n);
 | `vxstrlen` | Returns length of formatted output using `va_list`                      |
 | `xstrlen`  | Convenience variadic wrapper around `vxstrlen`                          |
 | `xstrcmp`  | Checks if a string matches any entry in a string array (returns 0 or 1) |
+| `xstrcmb`  | Concatenates two C-style strings into a newly allocated string          |
 
 ---
 
@@ -160,6 +165,30 @@ size_t format_and_measure(const char *fmt, ...) {
     size_t len = vxstrlen(fmt, ap);
     va_end(ap);
     return len;
+}
+```
+
+### String concatenation using `xstrcmb()`
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "xstring.h"
+
+int main(void) {
+    char *s;
+
+    s = xstrcmb("hello", "world");
+    if (s) {
+        printf("%s\n", s);  // helloworld
+        free(s);
+    }
+
+    s = xstrcmb(NULL, "fallback");
+    printf("%s\n", s);      // fallback
+    free(s);
+
+    return 0;
 }
 ```
 

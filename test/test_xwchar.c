@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "xlocale.h"
 #include "xwchar.h"
 
@@ -46,7 +47,27 @@ int main(void) {
     // Test case 6: NULL __s1 and NULL in __s2, all elements are NULL
     const wchar_t *str9 = NULL;
     const wchar_t *str10[] = {NULL, NULL, NULL};
-    fwprintf(stderr, L"Test 6: %ls\n", xwcscmp(str9, str10, xsizeof(str10)) == 1 ? L"Passed" : L"Failed");
+    fwprintf(stderr, L"Test 6: %ls\n\n", xwcscmp(str9, str10, xsizeof(str10)) == 1 ? L"Passed" : L"Failed");
+
+    wchar_t *s;
+
+    s = xwcscmb(L"hello",L"world");
+    if (s) {
+        fwprintf(stderr,L"[xwcscmb] Test 1: %ls\n", s);  // helloworld
+        free(s);
+    }
+
+    s = xwcscmb(NULL,L"fallback");
+    fwprintf(stderr,L"[xwcscmb] Test 2: %ls\n", s);      // fallback
+    free(s);
+
+    // xwcscmb edge cases
+    fwprintf(stderr, L"Both NULL: %ls\n",xwcscmb(NULL, NULL) == NULL ? L"Passed" : L"Failed");
+
+    // Empty strings
+    s = xwcscmb(L"", L"");
+    fwprintf(stderr, L"Empty concat: \"%ls\"\n", s);
+    free(s);
 
     return 0;
 }

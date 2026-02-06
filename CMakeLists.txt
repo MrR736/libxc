@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
-project(xc VERSION 1.0.3 LANGUAGES C CXX)
+project(xc VERSION 1.0.5 LANGUAGES C CXX)
 
 include(CMakePackageConfigHelpers)
+
+option(LIBXC_BUILD_STATIC "Build static library" ON)
+option(LIBXC_BUILD_TESTS "Build xc tests" OFF)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
@@ -10,12 +13,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-
-# Output directories
-set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/build/${CMAKE_SYSTEM_PROCESSOR}")
-set(LIBS_OUTPUT_DIR "${OUTPUT_DIR}/lib")
-set(TEST_OUTPUT_DIR "${OUTPUT_DIR}/test")
-file(MAKE_DIRECTORY "${LIBS_OUTPUT_DIR}" "${TEST_OUTPUT_DIR}")
 
 # Build shared library
 add_library(${PROJECT_NAME} SHARED ${CMAKE_SOURCE_DIR}/src/libxc.cc)
@@ -31,135 +28,147 @@ if(NOT WIN32 AND NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
     )
 endif()
 
-# Set output directories
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-)
-
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(${PROJECT_NAME} PUBLIC pthread)
 
+if (LIBXC_BUILD_STATIC)
+    add_library(${PROJECT_NAME}-static STATIC ${CMAKE_SOURCE_DIR}/src/libxc.cc)
+    target_link_options(${PROJECT_NAME}-static PRIVATE -static -static-libgcc -static-libstdc++)
+    set_target_properties(${PROJECT_NAME}-static PROPERTIES
+        OUTPUT_NAME "xc"
+    )
+    target_include_directories(${PROJECT_NAME}-static PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(${PROJECT_NAME}-static PUBLIC pthread)
+    if(WIN32)
+        target_link_options(${PROJECT_NAME}-static PRIVATE -static -static-libgcc -static-libstdc++)
+    endif()
 
-add_library(${PROJECT_NAME}-static STATIC ${CMAKE_SOURCE_DIR}/src/libxc.cc)
-target_link_options(${PROJECT_NAME}-static PRIVATE -static -static-libgcc -static-libstdc++)
-set_target_properties(${PROJECT_NAME}-static PROPERTIES
-    OUTPUT_NAME "xc"
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-    RUNTIME_OUTPUT_DIRECTORY ${LIBS_OUTPUT_DIR}
-)
-target_include_directories(${PROJECT_NAME}-static PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(${PROJECT_NAME}-static PUBLIC pthread)
+    set_target_properties(${PROJECT_NAME}-static PROPERTIES
+        EXPORT_NAME ${PROJECT_NAME}-static
+    )
+endif()
 
-set_target_properties(${PROJECT_NAME}-static PROPERTIES
-    EXPORT_NAME ${PROJECT_NAME}-static
-)
+# -------------------
+# Install Targets
+# -------------------
 
-if(NOT WIN32)
-    # -------------------
-    # Install Targets
-    # -------------------
-
-    # Install library
+# Install library
+if (LIBXC_BUILD_STATIC)
     install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-static
         EXPORT ${PROJECT_NAME}Targets
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
     )
-
-    # Install headers
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h"
+else()
+    install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
     )
+endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
-        DESTINATION share/man/man3
-        FILES_MATCHING PATTERN "*.3"
-    )
+# Install headers
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+)
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
-        DESTINATION share/doc/${PROJECT_NAME}
-        FILES_MATCHING PATTERN "*.md"
-    )
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
+    DESTINATION share/man/man3
+    FILES_MATCHING PATTERN "*.3"
+)
 
-    write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY AnyNewerVersion
-    )
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/
+    DESTINATION share/doc/${PROJECT_NAME}
+    FILES_MATCHING PATTERN "*.md"
+)
 
-    configure_package_config_file(
-        "${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
-    )
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
 
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION lib/cmake/${PROJECT_NAME}
-    )
+configure_package_config_file(
+    "${CMAKE_SOURCE_DIR}/cmake/Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
+)
 
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+
+if (LIBXC_BUILD_STATIC)
     export(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}-static FILE ${PROJECT_NAME}Targets.cmake)
+else()
+    export(TARGETS ${PROJECT_NAME} FILE ${PROJECT_NAME}Targets.cmake)
+endif()
 
-    # Optional: install CMake config for find_package()
-    install(EXPORT ${PROJECT_NAME}Targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION lib/cmake/${PROJECT_NAME}
+# Optional: install CMake config for find_package()
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake")
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake
+        COMMENT "Uninstalling ${PROJECT_NAME}"
     )
-
-    if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake")
-        add_custom_target(uninstall
-            COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/uninstall.cmake
-            COMMENT "Uninstalling ${PROJECT_NAME}"
-        )
-    endif()
 endif()
 
 # -------------------
 # Tests
 # -------------------
-enable_testing()
+if (LIBXC_BUILD_TESTS)
 
-# List of test files
-set(TEST_FILES
-    ${CMAKE_SOURCE_DIR}/test/test_xlocale.c
-    ${CMAKE_SOURCE_DIR}/test/test_xmap.cc
-    ${CMAKE_SOURCE_DIR}/test/test_xstdio.c
-    ${CMAKE_SOURCE_DIR}/test/test_xstdlib.c
-    ${CMAKE_SOURCE_DIR}/test/test_xstring.c
-    ${CMAKE_SOURCE_DIR}/test/test_xwchar.c
-    ${CMAKE_SOURCE_DIR}/test/test_xctype.c
-    ${CMAKE_SOURCE_DIR}/test/test_xwctype.c
-)
+    set(TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/build/${CMAKE_SYSTEM_PROCESSOR}/test")
+    file(MAKE_DIRECTORY "${TEST_OUTPUT_DIR}")
 
-# Add executables for each test
-foreach(test_src ${TEST_FILES})
-    get_filename_component(test_name ${test_src} NAME_WE)
-    get_filename_component(ext ${test_src} EXT)
-    # Replace '.' in extension with '_' and append
-    string(REPLACE "." "_" ext_suffix ${ext})
-    set(target_name "${test_name}${ext_suffix}")
+    enable_testing()
 
-    add_executable(${target_name} ${test_src})
-    target_include_directories(${target_name} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(${target_name} PRIVATE ${PROJECT_NAME} pthread)
-    # Set output directories
-    set_target_properties(${target_name} PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
+    # List of test files
+    set(TEST_FILES
+        ${CMAKE_SOURCE_DIR}/test/test_xlocale.c
+        ${CMAKE_SOURCE_DIR}/test/test_xmap.cc
+        ${CMAKE_SOURCE_DIR}/test/test_xstdio.c
+        ${CMAKE_SOURCE_DIR}/test/test_xstdlib.c
+        ${CMAKE_SOURCE_DIR}/test/test_xstring.c
+        ${CMAKE_SOURCE_DIR}/test/test_xwchar.c
+        ${CMAKE_SOURCE_DIR}/test/test_xctype.c
+        ${CMAKE_SOURCE_DIR}/test/test_xwctype.c
     )
-    add_test(NAME ${target_name} COMMAND ${target_name})
-endforeach()
 
-if(WIN32)
-    set_target_properties(test_xmap_cc PROPERTIES LINKER_LANGUAGE CXX)
-    target_link_libraries(test_xmap_cc PRIVATE stdc++)
+    # Add executables for each test
+    foreach(test_src ${TEST_FILES})
+        get_filename_component(test_name ${test_src} NAME_WE)
+        get_filename_component(ext ${test_src} EXT)
+        # Replace '.' in extension with '_' and append
+        string(REPLACE "." "_" ext_suffix ${ext})
+        set(target_name "${test_name}${ext_suffix}")
+
+        add_executable(${target_name} ${test_src})
+        target_include_directories(${target_name} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+        target_link_libraries(${target_name} PRIVATE ${PROJECT_NAME} pthread)
+        # Set output directories
+        set_target_properties(${target_name} PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
+            LIBRARY_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
+            RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIR}
+        )
+        add_test(NAME ${target_name} COMMAND ${target_name})
+    endforeach()
+
+    if(WIN32)
+        set_target_properties(test_xmap_cc PROPERTIES LINKER_LANGUAGE CXX)
+        target_link_libraries(test_xmap_cc PRIVATE stdc++)
+    endif()
 endif()

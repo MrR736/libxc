@@ -1,7 +1,7 @@
 .\" XSTRING(3) Manual Page
 .TH XSTRING 3 "2025" "Extern Library" "Programmer's Manual"
 .SH NAME
-xstrlen, vxstrlen, xstrcmp \- compute formatted string length and compare strings against an array
+xstrlen, vxstrlen, xstrcmp, xstrcmb \- compute formatted string length, compare strings, and concatenate strings
 .SH SYNOPSIS
 .nf
 #include <xstring.h>
@@ -9,6 +9,7 @@ xstrlen, vxstrlen, xstrcmp \- compute formatted string length and compare string
 size_t vxstrlen(const char *restrict fmt, va_list ap);
 size_t xstrlen(const char *restrict fmt, ...);
 int xstrcmp(const char * __s1, const char ** __s2, size_t n);
+char *xstrcmb(const char *s1, const char *s2);
 .fi
 
 .SH DESCRIPTION
@@ -18,6 +19,9 @@ without allocating memory.
 
 These functions parallel the behavior of snprintf(3) and vsnprintf(3)
 when called with a NULL buffer and a size of zero.
+
+The library also provides a safe string concatenation helper that
+allocates a new buffer for the combined result.
 
 .SH vxstrlen()
 vxstrlen() returns the number of characters that would be produced by
@@ -54,17 +58,39 @@ Both \fI__s1\fP and array entries may be \fINULL\fP:
 * If only one is NULL, it is skipped.
 * Otherwise, normal strcmp() comparison is used.
 
+.SH xstrcmb()
+xstrcmb() concatenates two C-style strings into a newly allocated string.
+
+The returned buffer is allocated using malloc(3) and must be freed by the
+caller using free(3).
+
+Both input strings may be \fINULL\fP.
+
+.IP "- Behavior:"
+.TP
+* If both \fIs1\fP and \fIs2\fP are NULL, the function returns NULL.
+* If one argument is NULL, a duplicate of the other string is returned.
+* If both arguments are non-NULL, the result contains \fIs1\fP followed by \fIs2\fP.
+* On allocation failure, NULL is returned.
+
+The function never modifies its input strings.
+
 .SH RETURN VALUES
 vxstrlen() and xstrlen() return the number of characters, excluding the
 terminating NUL, or 0 if a formatting error occurred or \fIfmt\fP is NULL.
 
 xstrcmp() returns 1 if \fI__s1\fP matches any element of \fI__s2\fP, 0 otherwise.
 
+xstrcmb() returns a pointer to a newly allocated string, or NULL on error
+or if both input strings are NULL.
+
 None of these functions set errno.
 
 .SH ERRORS
 Formatting errors result in a return value of 0. No additional error
 information is provided.
+
+xstrcmb() reports allocation failure by returning NULL.
 
 .SH PORTABILITY
 Windows uses the native \fB_vscprintf()\fP routine.
@@ -84,10 +110,16 @@ result = xstrcmp("fff", arr, 3);   // returns 1
 result = xstrcmp("abc", arr, 3);   // returns 0
 result = xstrcmp(NULL, arr, 3);    // returns 0
 result = xstrcmp(NULL, (const char*[]){NULL, "foo"}, 2); // returns 1
+
+char *s = xstrcmb("hello", "world");
+if (s) {
+    printf("%s\n", s);
+    free(s);
+}
 .fi
 
 .SH SEE ALSO
-snprintf(3), vsnprintf(3), strlen(3), strcmp(3)
+snprintf(3), vsnprintf(3), strlen(3), strcmp(3), malloc(3), free(3)
 
 .SH AUTHOR
 Written by MrR736.

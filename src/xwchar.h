@@ -104,6 +104,33 @@ XSTDDEF_INLINE_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size
     return 0; // no match
 }
 
+
+XSTDDEF_INLINE_API wchar_t *xwcscmb(const wchar_t *s1, const wchar_t *s2) {
+	if (!s1 && !s2) return NULL;
+	if (!s1) {
+		size_t len = wcslen(s2);
+		wchar_t *dup = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
+		if (!dup) return NULL;
+		wcscpy(dup, s2);
+		return dup;
+	}
+	if (!s2) {
+		size_t len = wcslen(s1);
+		wchar_t *dup = (wchar_t *)malloc((len + 1) * sizeof(wchar_t));
+		if (!dup) return NULL;
+		wcscpy(dup, s1);
+		return dup;
+	}
+	size_t len1 = wcslen(s1);
+	size_t len2 = wcslen(s2);
+	wchar_t *result = (wchar_t *)malloc((len1 + len2 + 1) * sizeof(wchar_t));
+	if (!result) return NULL;
+	memcpy(result, s1, len1 * sizeof(wchar_t));
+	memcpy(result + len1, s2, len2 * sizeof(wchar_t));
+	result[len1 + len2] = L'\0';
+	return result;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,7 +1,7 @@
 .\" XWCHAR(3) Manual Page
 .TH XWCHAR 3 "2025" "Extern Library" "Programmer's Manual"
 .SH NAME
-xwcslen, vxwcslen, xwcscmp \- compute the length of a formatted wide string or compare wide strings
+xwcslen, vxwcslen, xwcscmp, xwcscmb \- compute formatted wide string length, compare wide strings, and concatenate wide strings
 .SH SYNOPSIS
 .nf
 #include <xwchar.h>
@@ -10,18 +10,24 @@ size_t vxwcslen(const wchar_t *restrict fmt, va_list ap);
 size_t xwcslen(const wchar_t *restrict fmt, ...);
 
 int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
+wchar_t *xwcscmb(const wchar_t *s1, const wchar_t *s2);
 .fi
+
 .SH DESCRIPTION
 The xwchar library provides portable routines for wide-character string manipulation.
 
 These functions allow:
 
 .IP "\\fIxwcslen(), vxwcslen()\\fP"
-Computing the number of wide characters required to format a string without producing output or allocating memory.
+Computing the number of wide characters required to format a string without producing output.
+Memory is only allocated internally when required for probing.
 
 .IP "\\fIxwcscmp()\\fP"
 Comparing a single wide string against an array of wide strings, returning a boolean-style result.
 It is null-safe: a match occurs if both the target and array element are NULL, otherwise NULL elements are skipped.
+
+.IP "\\fIxwcscmb()\\fP"
+Concatenating two wide-character strings into a newly allocated wide string.
 
 .SH vxwcslen()
 Computes the number of wide characters required to format the string described by \fIfmt\fP with arguments in \fIap\fP.
@@ -64,6 +70,22 @@ Null-safety behavior:
 .IP
 - Otherwise, compared using \fIwcscmp()\fP
 
+.SH xwcscmb()
+Concatenates two wide-character strings into a newly allocated wide-character string.
+
+The returned buffer is allocated using malloc(3) and must be freed by the caller using free(3).
+
+Both input strings may be NULL.
+
+.IP "- Behavior:"
+.TP
+* If both \fIs1\fP and \fIs2\fP are NULL, returns NULL.
+* If one argument is NULL, returns a duplicate of the other.
+* If both arguments are non-NULL, the result contains \fIs1\fP followed by \fIs2\fP.
+* On allocation failure, NULL is returned.
+
+The function never modifies its input strings.
+
 .SH RETURN VALUES
 vxwcslen(), xwcslen() return the number of wide characters required, excluding the terminating NUL.
 On error, return 0; vxwcslen() sets errno to:
@@ -77,8 +99,13 @@ Required buffer size exceeds internal limits.
 
 xwcscmp() returns 1 if a match is found, 0 otherwise.
 
+xwcscmb() returns a pointer to a newly allocated wide string, or NULL on error
+or if both input strings are NULL.
+
 .SH ERRORS
 vxwcslen() may set errno as described above. Windows does not set errno on failure.
+
+xwcscmb() reports allocation failure by returning NULL.
 
 .SH PORTABILITY
 These functions are portable across Windows, Linux, BSD, and other POSIX systems.
@@ -92,10 +119,16 @@ swprintf(buf, len + 1, L"%ls %d", L"hello", 42);
 
 const wchar_t *arr[] = {L"foo", L"bar", NULL};
 int result = xwcscmp(L"bar", arr, 3); // returns 1
+
+wchar_t *s = xwcscmb(L"wide", L"string");
+if (s) {
+    wprintf(L"%ls\n", s);
+    free(s);
+}
 .fi
 
 .SH SEE ALSO
-swprintf(3), vswprintf(3), wcslen(3), wcscmp(3)
+swprintf(3), vswprintf(3), wcslen(3), wcscmp(3), malloc(3), free(3)
 
 .SH AUTHOR
 Written by MrR736.

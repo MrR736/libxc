@@ -24,6 +24,7 @@
 #define __XSTRING_H__
 
 #include "xstddef.h"
+#include <cstring>
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,6 +68,20 @@ XSTDDEF_INLINE_API int xstrcmp(const char * __s1, const char ** __s2, size_t n) 
     }
 
     return 0; // no match
+}
+
+XSTDDEF_INLINE_API char * xstrcmb(const char * s1, const char * s2) {
+	if (!s1 && !s2) return NULL;
+	if (!s1) return strdup(s2);
+	if (!s2) return strdup(s1);
+	size_t len1 = strlen(s1);
+	size_t len2 = strlen(s2);
+	char *result = (char *)malloc(len1 + len2 + 1);
+	if (!result) return NULL;
+	memcpy(result, s1, len1);
+	memcpy(result + len1, s2, len2);
+	result[len1 + len2] = '\0';
+	return result;
 }
 
 #ifdef __cplusplus

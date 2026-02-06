@@ -8,19 +8,29 @@
 
 ## Overview
 
-`xwchar.h` provides three primary functions:
+`xwchar.h` provides helper functions for wide-character string handling:
 
-* **`vxwcslen()`** — Computes the length of a wide-formatted string using a `va_list`.
-* **`xwcslen()`** — Variadic wrapper for convenience.
-* **`xwcscmp()`** — Compares a wide string against an array of wide strings and returns a boolean-style match result.
+* Measuring the length of wide-formatted strings **without producing output**:
 
-These functions are comparable to `vswprintf()`/`swprintf()` but **do not write output**, returning only the length needed.
+  * **`vxwcslen()`** — computes length using a `va_list`
+  * **`xwcslen()`** — variadic convenience wrapper
+
+* Comparing wide strings against an array of wide strings:
+
+  * **`xwcscmp()`** — boolean-style matcher
+
+* Combining wide-character strings safely:
+
+  * **`xwcscmb()`** — concatenates two wide strings into a newly allocated buffer
+
+The formatted-length utilities behave similarly to `vswprintf()` /
+`swprintf()` when called with a NULL buffer, but **do not write output**.
 
 Portable across:
 
 * Windows (`_vscwprintf()`)
 * POSIX systems supporting `vswprintf(NULL, 0, ...)`
-* Older/non-POSIX systems with fallback buffer probing
+* Older or non-POSIX systems via fallback buffer probing
 
 ---
 
@@ -30,6 +40,7 @@ Portable across:
 size_t vxwcslen(const wchar_t *restrict fmt, va_list ap);
 size_t xwcslen(const wchar_t *restrict fmt, ...);
 int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
+wchar_t *xwcscmb(const wchar_t *s1, const wchar_t *s2);
 ```
 
 * `vxwcslen` / `xwcslen`: return the number of **wide characters** required to format a string.
@@ -98,6 +109,35 @@ int result = xwcscmp(L"bar", arr, 3); // returns 1
 
 ---
 
+### `xwcscmb()`
+
+Concatenates two wide-character C-style strings into a newly allocated
+wide-character string.
+
+The returned buffer is allocated using `malloc()` and must be freed by
+the caller using `free()`.
+
+#### Parameters
+
+| Parameter | Type              | Description                        |
+| --------- | ----------------- | ---------------------------------- |
+| `s1`      | `const wchar_t *` | First string. May be `NULL`.       |
+| `s2`      | `const wchar_t *` | Second string. May be `NULL`.      |
+
+#### Behavior
+
+* If both `s1` and `s2` are `NULL`, returns `NULL`
+* If one argument is `NULL`, returns a duplicate of the other
+* If both are non-`NULL`, returns a newly allocated string containing
+  `s1` followed by `s2`
+* On allocation failure, returns `NULL`
+
+The function never modifies its input strings.
+
+The allocation size is exactly:
+
+---
+
 ## 3. Error Handling
 
 | Condition                     | Return | errno                                  |
@@ -147,6 +187,16 @@ size_t format_and_measure(const wchar_t *fmt, ...) {
 ```c
 const wchar_t *arr[] = {L"foo", L"bar", NULL};
 int result = xwcscmp(L"bar", arr, 3); // returns 1
+```
+
+### Wide string concatenation using `xwcscmb()`
+
+```c
+wchar_t *s = xwcscmb(L"wide", L"string");
+if (s) {
+    wprintf(L"%ls\n", s);
+    free(s);
+}
 ```
 
 ---

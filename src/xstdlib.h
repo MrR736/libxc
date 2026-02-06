@@ -25,7 +25,6 @@
 
 #include "xstring.h"
 #include "xwchar.h"
-#include <cstddef>
 
 #ifdef __cplusplus
 extern "C" {

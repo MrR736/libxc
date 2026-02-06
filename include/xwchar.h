@@ -64,6 +64,31 @@ XSTDDEF_IMPORT_API size_t xwcslen(const wchar_t *__restrict __s, ...);
  */
 XSTDDEF_IMPORT_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n);
 
+/**
+ * @brief Concatenates two wide-character C-style strings into a newly allocated string.
+ *
+ * This function creates a new wide-character string by appending `s2` to `s1`.
+ * The returned string is allocated using `malloc()` and must be freed by the caller
+ * using `free()`.
+ *
+ * @param s1 First input wide string. Can be NULL.
+ * @param s2 Second input wide string. Can be NULL.
+ *
+ * @return A pointer to the newly allocated concatenated wide string.
+ *         - If both `s1` and `s2` are NULL, returns NULL.
+ *         - If one of the strings is NULL, returns a duplicate of the other.
+ *         - On allocation failure, returns NULL.
+ *
+ * @note The caller is responsible for freeing the returned string.
+ *       Example:
+ *       @code
+ *       wchar_t *s = xwcscmb(L"hello", L"world");
+ *       wprintf(L"%ls\n", s);
+ *       free(s);
+ *       @endcode
+ */
+XSTDDEF_IMPORT_API wchar_t *xwcscmb(const wchar_t *s1, const wchar_t *s2);
+
 #ifdef __cplusplus
 }
 #endif
