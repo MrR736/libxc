@@ -24,7 +24,6 @@
 #define __XSTRING_H__
 
 #include "xstddef.h"
-#include <cstring>
 
 #ifdef __cplusplus
 extern "C" {
