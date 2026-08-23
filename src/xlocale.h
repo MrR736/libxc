@@ -1,7 +1,7 @@
 /**
  * xlocale.h: Extern locale.h
  *
- * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 #define XLC_MIN			XLC_ALL
 #define XLC_MAX			XLC_TIME
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 typedef _locale_t xlocale_t;
 
 #define XLC_ALL_MASK			XLC_ALL
@@ -76,7 +76,7 @@ extern "C" {
 #endif
 
 XSTDDEF_INLINE_API wchar_t *wsetlocale(int category, const wchar_t *req_locale) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	return _wsetlocale(category, req_locale);
 #else
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
@@ -171,7 +171,7 @@ XSTDDEF_INLINE_API wchar_t *xwsetlocale(int category, const wchar_t *req_locale)
 
 XSTDDEF_INLINE_API void xfreelocale(xlocale_t loc) {
 	if (!loc) return;
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	_free_locale(loc);
 #else
 	freelocale(loc);
@@ -181,7 +181,7 @@ XSTDDEF_INLINE_API void xfreelocale(xlocale_t loc) {
 XSTDDEF_INLINE_API xlocale_t xnewlocale(int category_mask,const char *req_locale,xlocale_t base) {
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	/* Windows path ----------------------------------------------------- */
 
 	/* 1. Try user-provided locale first */
@@ -226,7 +226,7 @@ XSTDDEF_INLINE_API xlocale_t xnewlocale(int category_mask,const char *req_locale
 }
 
 XSTDDEF_INLINE_API void xinit_console_utf8(void) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	static int console_utf8_initialized = 0;
 	if (console_utf8_initialized) return;
 	console_utf8_initialized = 1;
@@ -238,7 +238,7 @@ XSTDDEF_INLINE_API void xinit_console_utf8(void) {
 }
 
 XSTDDEF_INLINE_API void xinit_console_wutf(void) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	static int console_wutf_initialized = 0;
 	if (console_wutf_initialized) return;
 	console_wutf_initialized = 1;

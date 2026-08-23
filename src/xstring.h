@@ -1,7 +1,7 @@
 /**
  * xstring.h: Extern string.h
  *
- * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ XSTDDEF_INLINE_API size_t vxstrlen(const char *__restrict fmt, va_list ap) {
 	va_list apc;
 	int len = 0;
 	va_copy(apc, ap);
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	len = _vscprintf(fmt, apc);
 #else
 	len = vsnprintf(NULL, 0, fmt, apc);
@@ -53,20 +53,20 @@ XSTDDEF_INLINE_API size_t xstrlen(const char *__restrict __s, ...) {
 }
 
 XSTDDEF_INLINE_API int xstrcmp(const char * __s1, const char ** __s2, size_t n) {
-    if (!__s2) return 0;  // array pointer itself is NULL
+	if (!__s2) return 0;  // array pointer itself is NULL
 
-    for (size_t i = 0; i < n; ++i) {
-	const char *s2_str = __s2[i];
-	if (__s1 == NULL && s2_str == NULL)
-		return 1;
-	else if (__s1 == NULL || s2_str == NULL)
-		continue;
+	for (size_t i = 0; i < n; ++i) {
+		const char *s2_str = __s2[i];
+		if (__s1 == NULL && s2_str == NULL)
+			return 1;
+		else if (__s1 == NULL || s2_str == NULL)
+			continue;
 
-	if (strcmp(__s1, s2_str) == 0)
-		return 1;
-    }
+		if (strcmp(__s1, s2_str) == 0)
+			return 1;
+	}
 
-    return 0; // no match
+	return 0; // no match
 }
 
 XSTDDEF_INLINE_API char * xstrcmb(const char * s1, const char * s2) {

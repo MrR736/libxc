@@ -1,5 +1,5 @@
 /**
- * xstddef.h: Extern stddef.h
+ * xstddef.h: Extern Library
  *
  * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
@@ -23,29 +23,10 @@
 #ifndef __XSTDDEF_H__
 #define __XSTDDEF_H__
 
-#include <errno.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <ctype.h>
-#include <wctype.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 #include <wchar.h>
-#include <time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-
-#ifdef _WIN32
-#include <process.h>
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#include <sys/wait.h>
-#endif
 
 #define XPATH_MAX 32767
 
@@ -189,35 +170,35 @@ extern "C++" {
 #  else
 template <typename T1, typename T2>
 struct __xjni_types_compatible_impl {
-	static const bool value = false;
+    static const bool value = false;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<T, T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<const T, T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<T, const T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<volatile T, T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<T, volatile T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<const volatile T, T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 template <typename T>
 struct __xjni_types_compatible_impl<T, const volatile T> {
-	static const bool value = true;
+    static const bool value = true;
 };
 #   define __libxc_types_compatible_p(t1, t2) __xjni_types_compatible_impl<t1, t2>::value
 #  endif
@@ -234,7 +215,7 @@ struct __xjni_types_compatible_impl<T, const volatile T> {
 #define xsizeof(x) (sizeof(x) / sizeof((x)[0]))
 
 #define xcountof(a) (sizeof(a) / sizeof((a)[0]) + \
-			0 * sizeof(struct { int _ : ((void*)(a) == (void*)&(a)[0]); }))
+		     0 * sizeof(struct { int _ : ((void*)(a) == (void*)&(a)[0]); }))
 
 #define countof(a) \
 	(0 * sizeof(struct { \

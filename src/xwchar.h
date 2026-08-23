@@ -1,7 +1,7 @@
 /**
  * xwchar.h: Extern wchar.h
  *
- * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
 	va_list apc;
 	va_copy(apc, ap);
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	int len = _vscwprintf(fmt, apc);
 	va_end(apc);
 	return (len < 0) ? (size_t)-1 : (size_t)len;
@@ -88,20 +88,20 @@ XSTDDEF_INLINE_API size_t xwcslen(const wchar_t *__restrict fmt, ...) {
 }
 
 XSTDDEF_INLINE_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n) {
-    if (!__s2) return 0;  // array pointer itself is NULL
+	if (!__s2) return 0;  // array pointer itself is NULL
 
-    for (size_t i = 0; i < n; ++i) {
-	const wchar_t *s2_str = __s2[i];
-	if (__s1 == NULL && s2_str == NULL)
-		return 1;
-	else if (__s1 == NULL || s2_str == NULL)
-		continue;
+	for (size_t i = 0; i < n; ++i) {
+		const wchar_t *s2_str = __s2[i];
+		if (__s1 == NULL && s2_str == NULL)
+			return 1;
+		else if (__s1 == NULL || s2_str == NULL)
+			continue;
 
-	if (wcscmp(__s1, s2_str) == 0)
-		return 1;
-    }
+		if (wcscmp(__s1, s2_str) == 0)
+			return 1;
+	}
 
-    return 0; // no match
+	return 0; // no match
 }
 
 

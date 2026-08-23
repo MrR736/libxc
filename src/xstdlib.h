@@ -1,7 +1,7 @@
 /**
  * xstdlib.h: Extern stdlib.h
  *
- * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ XSTDDEF_INLINE_API void* xrand(size_t __size, unsigned int __flags) {
 XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
 	if (!wcs) return NULL;
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	// -------- Windows UTF-8 conversion --------
 	int len = WideCharToMultiByte(CP_UTF8, 0, wcs, -1, NULL, 0, NULL, NULL);
 	if (len <= 0) return NULL;
@@ -75,7 +75,7 @@ XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
 XSTDDEF_INLINE_API wchar_t* xmbstowcs(const char *mbs) {
 	if (!mbs) return NULL;
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	// -------- Windows UTF-8 conversion --------
 	int len = MultiByteToWideChar(CP_UTF8, 0, mbs, -1, NULL, 0);
 	if (len <= 0) return NULL;
@@ -100,7 +100,7 @@ XSTDDEF_INLINE_API wchar_t* xmbstowcs(const char *mbs) {
 }
 
 XSTDDEF_INLINE_API int wsystem(const wchar_t *__restrict __command) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	return _wsystem(__command);
 #else
 	char *mbs = xwcstombs(__command);
@@ -117,7 +117,7 @@ XSTDDEF_INLINE_API int wsystem(const wchar_t *__restrict __command) {
 }
 
 XSTDDEF_INLINE_API void wperror(const wchar_t *__restrict __s) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	_wperror(__s);
 #else
 	char *mbs = xwcstombs(__s);
@@ -348,7 +348,7 @@ XSTDDEF_INLINE_API int csystem(const char *__restrict cmd) {
 }
 
 XSTDDEF_INLINE_API int wcsystem(const wchar_t *__restrict __command) {
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	return _wsystem(__command);
 #else
 	char *mbs = xwcstombs(__command);
