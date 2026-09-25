@@ -1,5 +1,5 @@
 /**
- * xstddef.h: Extern stddef.h
+ * xstddef.h: Extern Library
  *
  * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
@@ -23,33 +23,14 @@
 #ifndef __XSTDDEF_H__
 #define __XSTDDEF_H__
 
-#include <errno.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <ctype.h>
-#include <wctype.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 #include <wchar.h>
 #include <fcntl.h>
-#include <time.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 
 #ifdef _WIN32
-#include <process.h>
-#include <aclapi.h>
-#include <synchapi.h>
 #include <windows.h>
-#include <io.h>
-#include <bcrypt.h>
-
-#pragma comment(lib, "bcrypt.lib")
-#else
-#include <unistd.h>
-#include <sys/wait.h>
 #endif
 
 #ifndef O_BINARY
@@ -350,14 +331,6 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 
 #ifndef XSTDDEF_INLINE_API
 #define XSTDDEF_INLINE_API	static inline
-#endif
-
-#if defined(XSTDAPI_BUILD) && defined(XSTDAPI_STATIC_BUILD)
-# error "XSTDAPI_BUILD and XSTDAPI_STATIC_BUILD cannot both be defined."
-#endif
-
-#if !defined(XSTDAPI_BUILD) && !defined(XSTDAPI_STATIC_BUILD)
-# define XSTDAPI_STATIC_BUILD
 #endif
 
 #ifndef XSTDAPI

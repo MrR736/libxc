@@ -50,11 +50,7 @@ static void test_newlocale(void) {
     printf("=== newlocale / freelocale tests ===\n");
 
     xlocale_t loc = xnewlocale(
-        XLC_CTYPE_MASK | XLC_NUMERIC_MASK,
-        "C.UTF-8",
-        NULL
-    );
-
+        XLC_CTYPE_MASK | XLC_NUMERIC_MASK,"C.UTF-8",NULL);
     if (!loc) {
         printf("xnewlocale failed\n");
     } else {

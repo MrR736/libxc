@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API size_t vxstrlen(const char *__restrict fmt, va_list ap) {
+XSTDAPI size_t XCALLAPI vxstrlen(const char *xrestrict fmt, va_list ap) {
 	if (fmt == NULL) return 0;
 	va_list apc;
 	int len = 0;
@@ -40,11 +40,10 @@ XSTDDEF_INLINE_API size_t vxstrlen(const char *__restrict fmt, va_list ap) {
 	len = vsnprintf(NULL, 0, fmt, apc);
 #endif
 	va_end(apc);
-
 	return len < 0 ? (size_t)-1 : (size_t)len;
 }
 
-XSTDDEF_INLINE_API size_t xstrlen(const char *__restrict __s, ...) {
+XSTDAPI size_t XCALLAPI xstrlen(const char *xrestrict __s, ...) {
 	va_list ap;
 	va_start(ap,__s);
 	size_t len = vxstrlen(__s, ap);
@@ -52,24 +51,20 @@ XSTDDEF_INLINE_API size_t xstrlen(const char *__restrict __s, ...) {
 	return len;
 }
 
-XSTDDEF_INLINE_API int xstrcmp(const char * __s1, const char ** __s2, size_t n) {
+XSTDAPI int XCALLAPI xstrcmp(const char * __s1, const char ** __s2, size_t n) {
 	if (!__s2) return 0;  // array pointer itself is NULL
 
 	for (size_t i = 0; i < n; ++i) {
 		const char *s2_str = __s2[i];
-		if (__s1 == NULL && s2_str == NULL)
-			return 1;
-		else if (__s1 == NULL || s2_str == NULL)
-			continue;
-
-		if (strcmp(__s1, s2_str) == 0)
-			return 1;
+		if (__s1 == NULL && s2_str == NULL) return 1;
+		else if (__s1 == NULL || s2_str == NULL) continue;
+		if (strcmp(__s1, s2_str) == 0) return 1;
 	}
 
 	return 0; // no match
 }
 
-XSTDDEF_INLINE_API char * xstrcmb(const char * s1, const char * s2) {
+XSTDAPI char* XCALLAPI xstrcmb(const char * s1, const char * s2) {
 	if (!s1 && !s2) return NULL;
 	if (!s1) return strdup(s2);
 	if (!s2) return strdup(s1);

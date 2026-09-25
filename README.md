@@ -15,17 +15,19 @@ It is designed to complement the C standard library with convenient, safe, and p
 
 ## Modules
 
-| Module  | Description                             | Markdown                     | Man page                     |
-| ------- | --------------------------------------- | ---------------------------- | ---------------------------- |
-| xstddef | Extended standard types and macros      | [xstddef.md](doc/xstddef.md) | [xstddef.3](doc/xstddef.3)   |
-| xstdlib | Memory and utility helpers              | [xstdlib.md](doc/xstdlib.md) | [xstdlib.3](doc/xstdlib.3)   |
-| xstring | String manipulation helpers             | [xstring.md](doc/xstring.md) | [xstring.3](doc/xstring.3)   |
-| xwchar  | Wide-Character utilities                | [xwchar.md](doc/xwchar.md)   | [xwchar.3](doc/xwchar.3)     |
-| xstdio  | File I/O helpers and safer printf       | [xstdio.md](doc/xstdio.md)   | [xstdio.3](doc/xstdio.3)     |
-| xlocale | Locale-related utilities                | [xlocale.md](doc/xlocale.md) | [xlocale.3](doc/xlocale.3)   |
-| xmap    | Map / associative array utilities       | [xmap.md](doc/xmap.md)       | [xmap.3](doc/xmap.3)         |
-| xctype  | Extended Character Type Utilities       | [xctype.md](doc/xctype.md)   | [xctype.3](doc/xctype.3)     |
-| xwctype | Extended Wide-Character Type Utilities  | [xwctype.md](doc/xwctype.md) | [xwctype.3](doc/xwctype.3)   |
+| Module  | Description                              | Markdown                     | Man page                          |
+| ------- | ---------------------------------------- | ---------------------------- | --------------------------------- |
+| xstddef | Extended standard types and macros       | [xstddef.md](doc/xstddef.md) | [xstddef.3](doc/man3/xstddef.3)   |
+| xstdlib | Memory and utility helpers               | [xstdlib.md](doc/xstdlib.md) | [xstdlib.3](doc/man3/xstdlib.3)   |
+| xstring | String manipulation helpers              | [xstring.md](doc/xstring.md) | [xstring.3](doc/man3/xstring.3)   |
+| xwchar  | Wide-Character utilities                 | [xwchar.md](doc/xwchar.md)   | [xwchar.3](doc/man3/xwchar.3)     |
+| xstdio  | File I/O helpers and safer printf        | [xstdio.md](doc/xstdio.md)   | [xstdio.3](doc/man3/xstdio.3)     |
+| xlocale | Locale-related utilities                 | [xlocale.md](doc/xlocale.md) | [xlocale.3](doc/man3/xlocale.3)   |
+| xmap    | Map / associative array utilities        | [xmap.md](doc/xmap.md)       | [xmap.3](doc/man3/xmap.3)         |
+| xctype  | Extended Character Type Utilities        | [xctype.md](doc/xctype.md)   | [xctype.3](doc/man3/xctype.3)     |
+| xwctype | Extended Wide-Character Type Utilities   | [xwctype.md](doc/xwctype.md) | [xwctype.3](doc/man3/xwctype.3)   |
+| xdlfcn  | Cross-Platform Dynamic Library Utilities | [xdlfcn.md](doc/xdlfcn.md)   | [xdlfcn.3](doc/man3/xdlfcn.3)     |
+| xstat   | Cross-Platform Directory Operations      | [xstat.md](doc/xstat.md)     | [xstat.3](doc/man3/xstat.3)       |
 
 ---
 

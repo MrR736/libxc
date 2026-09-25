@@ -1,0 +1,461 @@
+." Manpage for xdlfcn.h
+.TH XDLFCN 3 "2026" "Extern Library" "Programmer's Manual"
+
+.SH NAME
+xdlfcn - cross-platform dynamic library loading and symbol lookup
+
+.SH SYNOPSIS
+.B #include "xdlfcn.h"
+
+.BR "char *xdllibpath(const char *dir, const char *name);"
+.br
+.BR "int xdladdr(const void *addr, XDl_info *info);"
+.br
+.BR "HMODULE xdlopen(const char *file, int mode);"
+.br
+.BR "HMODULE xwdlopen(const wchar_t *file, int mode);"
+.br
+.BR "FARPROC xdlsym(HMODULE handle, const char *name);"
+.br
+.BR "FARPROC xwdlsym(HMODULE handle, const wchar_t *name);"
+.br
+.BR "char *xdlerror(void);"
+.br
+.BR "wchar_t *xwdlerror(void);"
+.br
+.BR "int xdlclose(HMODULE handle);"
+.br
+.BR "FARPROC GetProcAddressA(HMODULE hModule, LPCSTR lpProcName);"
+.br
+.BR "FARPROC GetProcAddressW(HMODULE hModule, LPCWSTR lpProcName);"
+
+.SH DESCRIPTION
+The
+.B xdlfcn.h
+library provides a cross-platform interface for dynamically loading
+shared libraries, looking up exported symbols, reporting loader errors,
+and unloading libraries.
+
+On POSIX systems, the interface wraps the standard
+.BR dlopen (3),
+.BR dlsym (3),
+.BR dlerror (3),
+and
+.BR dlclose (3)
+interfaces.
+
+On Windows, the interface uses the Windows dynamic-loader APIs
+.BR LoadLibraryA (),
+.BR LoadLibraryW (),
+.BR GetProcAddress (),
+.BR GetModuleHandleA (),
+.BR GetModuleHandleW (),
+and
+.BR FreeLibrary ().
+
+.SS LOADER FLAGS
+
+The header defines portable
+.B XRTLD_*
+constants corresponding to dynamic-loader flags.
+
+.TP
+.B XRTLD_LAZY
+Resolve symbols lazily where supported.
+
+On Windows, there is no distinct equivalent because symbol resolution
+follows normal Windows PE loader behavior.
+
+.TP
+.B XRTLD_NOW
+Resolve required symbols when the library is loaded.
+
+There is no distinct Windows equivalent.
+
+.TP
+.B XRTLD_BINDING_MASK
+Mask for dynamic-loader binding flags.
+
+.TP
+.B XRTLD_NOLOAD
+Do not load a new library. Obtain a handle to an already loaded library.
+
+On Windows this is implemented using
+.BR GetModuleHandleA ()
+or
+.BR GetModuleHandleW ().
+
+.TP
+.B XRTLD_DEEPBIND
+Request deep symbol binding where supported.
+
+There is no direct Windows equivalent.
+
+.TP
+.B XRTLD_NODELETE
+Request that a loaded library remain mapped after unloading where
+supported.
+
+.TP
+.B XRTLD_LOCAL
+Do not make symbols from the loaded library globally available.
+
+.TP
+.B XRTLD_GLOBAL
+Make symbols from the loaded library globally available where supported.
+
+.TP
+.B XRTLD_FIRST
+Request first-level symbol lookup where supported.
+
+.TP
+.B XRTLD_NEXT
+Special symbol lookup handle corresponding to
+.BR RTLD_NEXT
+where supported.
+
+.TP
+.B XRTLD_DEFAULT
+Special symbol lookup handle corresponding to
+.BR RTLD_DEFAULT
+where supported.
+
+.SS xdlopen()
+
+.BR "HMODULE xdlopen(const char *file, int mode);"
+
+Loads a dynamic library using a narrow-character filename.
+
+On Windows, the function uses
+.BR LoadLibraryA ().
+
+When
+.B XRTLD_NOLOAD
+is specified, the function uses
+.BR GetModuleHandleA ()
+instead of loading a new module.
+
+On POSIX systems, the function calls
+.BR dlopen (3).
+
+The
+.I mode
+argument is a combination of
+.B XRTLD_*
+flags.
+
+Returns a module handle on success and
+.BR NULL
+on failure.
+
+.SS xwdlopen()
+
+.BR "HMODULE xwdlopen(const wchar_t *file, int mode);"
+
+Wide-character equivalent of
+.BR xdlopen ().
+
+On Windows, the function uses
+.BR LoadLibraryW ().
+
+When
+.B XRTLD_NOLOAD
+is specified, it uses
+.BR GetModuleHandleW ().
+
+On POSIX systems, the filename is converted using
+.BR xwcstombs ()
+and passed to
+.BR dlopen (3).
+
+Returns a module handle on success and
+.BR NULL
+on failure.
+
+.SS xdlsym()
+
+.BR "FARPROC xdlsym(HMODULE handle, const char *name);"
+
+Looks up an exported symbol in a loaded dynamic library.
+
+On Windows, the function uses
+.BR GetProcAddress ().
+
+On POSIX systems, it uses
+.BR dlsym (3).
+
+The
+.I handle
+argument must identify a loaded module, and
+.I name
+must contain the symbol name.
+
+Returns the address of the symbol on success and
+.BR NULL
+on failure.
+
+.SS xwdlsym()
+
+.BR "FARPROC xwdlsym(HMODULE handle, const wchar_t *name);"
+
+Wide-character equivalent of
+.BR xdlsym ().
+
+The symbol name is converted to the platform's multibyte representation
+before performing the lookup.
+
+On Windows, the converted name is passed to
+.BR GetProcAddress ().
+
+On POSIX systems, it is passed to
+.BR dlsym (3).
+
+Returns the address of the symbol on success and
+.BR NULL
+on failure.
+
+.SS xdlerror()
+
+.BR "char *xdlerror(void);"
+
+Returns a description of the most recent dynamic-loader error.
+
+On Windows, the function obtains the error code using
+.BR GetLastError ()
+and converts it into a human-readable string using
+.BR FormatMessageA ().
+
+The Windows error buffer is thread-local.
+
+On POSIX systems, the function directly returns the result of
+.BR dlerror (3).
+
+Returns
+.BR NULL
+when no error is available.
+
+On Windows, calling
+.BR xdlerror ()
+consumes the current error by resetting it to
+.BR ERROR_SUCCESS .
+
+.SS xwdlerror()
+
+.BR "wchar_t *xwdlerror(void);"
+
+Wide-character equivalent of
+.BR xdlerror ().
+
+On Windows, the error message is generated using
+.BR FormatMessageW ()
+and stored in a thread-local buffer.
+
+On POSIX systems, the result of
+.BR dlerror (3)
+is converted to a wide-character string using
+.BR xmbstowcs ().
+
+Returns a pointer to an error message or
+.BR NULL
+when no error is available.
+
+.SS xdlclose()
+
+.BR "int xdlclose(HMODULE handle);"
+
+Unloads a previously loaded dynamic library.
+
+On Windows, the function uses
+.BR FreeLibrary ().
+
+On POSIX systems, it uses
+.BR dlclose (3).
+
+Returns zero on success and
+.BR -1
+on failure.
+
+.SH WINDOWS-COMPATIBLE WRAPPERS
+
+.SS GetProcAddressA()
+
+.BR "FARPROC GetProcAddressA(HMODULE hModule, LPCSTR lpProcName);"
+
+Looks up an exported symbol using a narrow-character symbol name.
+
+On Windows, this function calls the native
+.BR GetProcAddress ()
+API.
+
+On POSIX systems, it is implemented using
+.BR xdlsym ().
+
+.SS GetProcAddressW()
+
+.BR "FARPROC GetProcAddressW(HMODULE hModule, LPCWSTR lpProcName);"
+
+Wide-character version of
+.BR GetProcAddressA ().
+
+On Windows, the wide-character symbol name is converted before calling
+the native
+.BR GetProcAddress ()
+API.
+
+On POSIX systems, it is implemented using
+.BR xwdlsym ().
+
+.SS POSIX COMPATIBILITY WRAPPERS
+
+On non-Windows systems, the header provides the following Windows-style
+interfaces:
+
+.BR "HMODULE GetModuleHandleA(const char *lpModuleName);"
+.br
+.BR "HMODULE GetModuleHandleW(const wchar_t *lpModuleName);"
+.br
+.BR "HMODULE LoadLibraryA(const char *lpLibFileName);"
+.br
+.BR "HMODULE LoadLibraryW(const wchar_t *lpLibFileName);"
+.br
+.BR "FARPROC GetProcAddress(HMODULE hModule, LPCSTR lpProcName);"
+
+.BR GetModuleHandleA ()
+is implemented using
+.BR xdlopen ()
+with
+.BR XRTLD_NOLOAD.
+
+.BR GetModuleHandleW ()
+is implemented using
+.BR xwdlopen ()
+with
+.BR XRTLD_NOLOAD.
+
+.BR LoadLibraryA ()
+is implemented using
+.BR xdlopen ()
+with
+.BR XRTLD_LAZY.
+
+.BR LoadLibraryW ()
+is implemented using
+.BR xwdlopen ()
+with
+.BR XRTLD_LAZY.
+
+.BR GetProcAddress ()
+is implemented using
+.BR GetProcAddressA ().
+
+.SH EXAMPLE
+
+.nf
+#include <stdio.h>
+#include "xdlfcn.h"
+
+int main(void)
+{
+HMODULE handle;
+FARPROC symbol;
+
+```
+handle = xdlopen("libexample.so", XRTLD_NOW);
+
+if (!handle) {
+    char *error = xdlerror();
+
+    if (error)
+        fprintf(stderr, "xdlopen: %s\\n", error);
+
+    return 1;
+}
+
+symbol = xdlsym(handle, "example_function");
+
+if (!symbol) {
+    char *error = xdlerror();
+
+    if (error)
+        fprintf(stderr, "xdlsym: %s\\n", error);
+
+    xdlclose(handle);
+    return 1;
+}
+
+/*
+ * Convert/use symbol according to its known function type.
+ */
+
+xdlclose(handle);
+return 0;
+```
+
+}
+.fi
+
+.SH ERROR HANDLING
+
+On Windows, dynamic-loader errors are obtained from
+.BR GetLastError ().
+
+.BR xdlerror ()
+and
+.BR xwdlerror ()
+convert Windows error codes into human-readable messages.
+
+On POSIX systems, dynamic-loader errors are reported through
+.BR dlerror (3).
+
+.SH THREAD SAFETY
+
+On Windows,
+.BR xdlerror ()
+and
+.BR xwdlerror ()
+use thread-local buffers.
+
+On POSIX systems, error handling follows the guarantees of the
+underlying dynamic-loader implementation.
+
+A module must not be unloaded while another thread may still execute
+code or access symbols originating from that module.
+
+.SH CROSS-PLATFORM NOTES
+
+.TS
+tab(@);
+l l.
+Feature@Implementation
+Narrow library loading@LoadLibraryA() / dlopen()
+Wide library loading@LoadLibraryW() / xwcstombs() + dlopen()
+Symbol lookup@GetProcAddress() / dlsym()
+Library unloading@FreeLibrary() / dlclose()
+Error reporting@GetLastError() / dlerror()
+No-load lookup@GetModuleHandle*() / RTLD_NOLOAD
+.TE
+
+The Windows loader does not provide direct equivalents for all POSIX
+dynamic-loader flags. In particular,
+.BR XRTLD_LAZY ,
+.BR XRTLD_NOW ,
+and
+.BR XRTLD_DEEPBIND
+do not have distinct Windows loader semantics.
+
+.SH SEE ALSO
+
+.BR dlopen (3),
+.BR dlsym (3),
+.BR dlerror (3),
+.BR dlclose (3),
+.BR LoadLibraryA (3),
+.BR LoadLibraryW (3),
+.BR GetProcAddress (3),
+.BR FreeLibrary (3)
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+GPLv3 or later.

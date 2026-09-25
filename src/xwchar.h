@@ -29,9 +29,8 @@
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
+XSTDAPI size_t XCALLAPI vxwcslen(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return 0;
-
 	va_list apc;
 	va_copy(apc, ap);
 
@@ -79,7 +78,7 @@ XSTDDEF_INLINE_API size_t vxwcslen(const wchar_t *__restrict fmt, va_list ap) {
 #endif
 }
 
-XSTDDEF_INLINE_API size_t xwcslen(const wchar_t *__restrict fmt, ...) {
+XSTDAPI size_t XCALLAPI xwcslen(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	size_t len = vxwcslen(fmt, ap);
@@ -87,25 +86,18 @@ XSTDDEF_INLINE_API size_t xwcslen(const wchar_t *__restrict fmt, ...) {
 	return len;
 }
 
-XSTDDEF_INLINE_API int xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n) {
+XSTDAPI int XCALLAPI xwcscmp(const wchar_t * __s1, const wchar_t ** __s2, size_t n) {
 	if (!__s2) return 0;  // array pointer itself is NULL
-
 	for (size_t i = 0; i < n; ++i) {
 		const wchar_t *s2_str = __s2[i];
-		if (__s1 == NULL && s2_str == NULL)
-			return 1;
-		else if (__s1 == NULL || s2_str == NULL)
-			continue;
-
-		if (wcscmp(__s1, s2_str) == 0)
-			return 1;
+		if (__s1 == NULL && s2_str == NULL) return 1;
+		else if (__s1 == NULL || s2_str == NULL) continue;
+		if (wcscmp(__s1, s2_str) == 0) return 1;
 	}
-
 	return 0; // no match
 }
 
-
-XSTDDEF_INLINE_API wchar_t *xwcscmb(const wchar_t *s1, const wchar_t *s2) {
+XSTDAPI wchar_t* XCALLAPI xwcscmb(const wchar_t *s1, const wchar_t *s2) {
 	if (!s1 && !s2) return NULL;
 	if (!s1) {
 		size_t len = wcslen(s2);

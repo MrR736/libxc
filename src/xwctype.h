@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API wchar_t* xtowlower(wchar_t* str) {
+XSTDAPI wchar_t* XCALLAPI xtowlower(wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -50,7 +50,7 @@ XSTDDEF_INLINE_API wchar_t* xtowlower(wchar_t* str) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API wchar_t* xtowupper(wchar_t* str) {
+XSTDAPI wchar_t* XCALLAPI xtowupper(wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -70,7 +70,7 @@ XSTDDEF_INLINE_API wchar_t* xtowupper(wchar_t* str) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API wchar_t* xtowascii(wchar_t* str) {
+XSTDAPI wchar_t* XCALLAPI xtowascii(wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -85,10 +85,8 @@ XSTDDEF_INLINE_API wchar_t* xtowascii(wchar_t* str) {
 
 	size_t j = 0;
 	for (size_t i = 0; i < len; i++) {
-		if (str[i] >= 0 && str[i] <= UCHAR_MAX)
-			ret[j++] = (wchar_t)str[i];
-		else
-			ret[j++] = L'?';
+		if (str[i] >= 0 && str[i] <= UCHAR_MAX) ret[j++] = (wchar_t)str[i];
+		else ret[j++] = L'?';
 	}
 
 	ret[j] = '\0';

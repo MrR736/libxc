@@ -20,56 +20,209 @@
  * can be found in /usr/share/common-licenses/GPL-3 file.
  */
 
-#ifndef __EXTSTDIO_H__
-#define __EXTSTDIO_H__
+#ifndef __XSTDIO_H__
+#define __XSTDIO_H__
 
+#include "xtypes.h"
 #include "xstdlib.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API int fdputs(const char *__restrict __s, int __fd) {
-	if (!__s) return -1;
-	size_t len   = strlen(__s);
+XSTDAPI int XCALLAPI fdputs(const char *xrestrict s, int fd) {
+	if (!s) {
+		errno = EINVAL;
+		return -1;
+	}
+	size_t len   = strlen(s);
 	size_t total = 0;
 	while (total < len) {
-		ssize_t n = write(__fd, __s + total, len - total);
+		ssize_t n = write(fd, s + total, len - total);
 		if (n <= 0) return -1;  // write failed
 		total += (size_t)n;
 	}
 	return 0;
 }
 
-XSTDDEF_INLINE_API FILE* fdno(int __fd) {
-	if (__fd < 0) return NULL;
-	return fdopen(dup(__fd), "r+");
+XSTDAPI FILE* XCALLAPI fopenm(const char *xrestrict filename, int oflag, ...) {
+	char mode[16];
+	size_t i = 0;
+#ifndef _WIN32
+	xmode_t permissions = 0;
+	if (oflag & O_CREAT) {
+		va_list ap;
+		va_start(ap, oflag);
+		permissions = va_arg(ap, xmode_t);
+		va_end(ap);
+	}
+#endif
+
+	switch (oflag & (O_RDONLY | O_WRONLY | O_RDWR)) {
+		case O_RDONLY:
+			mode[i++] = 'r';
+			break;
+		case O_WRONLY:
+			mode[i++] = (oflag & O_APPEND) ? 'a' : 'w';
+			break;
+		case O_RDWR:
+			mode[i++] = (oflag & O_APPEND) ? 'a' : 'w';
+			mode[i++] = '+';
+			break;
+		default:
+			errno = EINVAL;
+			return NULL;
+	}
+
+	mode[i++] = 'b';
+	mode[i] = '\0';
+
+	/*
+	 * fopen() already provides:
+	 *
+	 *   O_RDONLY             -> "r"
+	 *   O_WRONLY             -> "w"
+	 *   O_RDWR               -> "w+"
+	 *   O_APPEND             -> "a" / "a+"
+	 *   O_TRUNC              -> "w" / "w+"
+	 *   O_CREAT              -> "w" / "w+"
+	 *
+	 * O_EXCL cannot be safely emulated by fopen().
+	 */
+	FILE *fp = fopen(filename, mode);
+	if (!fp) return NULL;
+
+#ifndef _WIN32
+	if (oflag & O_CREAT) {
+		if (fchmod(fileno(fp), permissions) != 0) {
+			int saved_errno = errno;
+			fclose(fp);
+			errno = saved_errno;
+			return NULL;
+		}
+	}
+#endif
+	return fp;
 }
 
-XSTDDEF_INLINE_API FILE* fdno_unlocked(int __fd) {
-	if (__fd < 0) return NULL;
-	FILE *fp = fdno(__fd);
+XSTDAPI FILE* XCALLAPI fdopenm(int fd, int oflag, ...) {
+	char mode[16];
+	size_t i = 0;
+#ifndef _WIN32
+	xmode_t permissions = 0;
+
+	if (oflag & O_CREAT) {
+		va_list ap;
+		va_start(ap, oflag);
+		permissions = (xmode_t)va_arg(ap, int);
+		permissions = va_arg(ap, xmode_t);
+		va_end(ap);
+	}
+#endif
+
+	switch (oflag & (O_RDONLY | O_WRONLY | O_RDWR)) {
+		case O_RDONLY:
+			mode[i++] = 'r';
+			break;
+		case O_WRONLY:
+			mode[i++] = (oflag & O_APPEND) ? 'a' : 'w';
+			break;
+		case O_RDWR:
+			mode[i++] = (oflag & O_APPEND) ? 'a' : 'w';
+			mode[i++] = '+';
+			break;
+		default:
+			errno = EINVAL;
+			return NULL;
+	}
+
+	mode[i++] = 'b';
+	mode[i] = '\0';
+
+	/*
+	 * fopen() already provides:
+	 *
+	 *   O_RDONLY             -> "r"
+	 *   O_WRONLY             -> "w"
+	 *   O_RDWR               -> "w+"
+	 *   O_APPEND             -> "a" / "a+"
+	 *   O_TRUNC              -> "w" / "w+"
+	 *   O_CREAT              -> "w" / "w+"
+	 *
+	 * O_EXCL cannot be safely emulated by fopen().
+	 */
+	FILE *fp = fdopen(fd, mode);
 	if (!fp) return NULL;
+
+#ifndef _WIN32
+	if (oflag & O_CREAT) {
+		if (fchmod(fileno(fp), permissions) != 0) {
+			int saved_errno = errno;
+			fclose(fp);
+			errno = saved_errno;
+			return NULL;
+		}
+	}
+#endif
+	return fp;
+}
+
+XSTDAPI FILE* XCALLAPI fdno(int fd) {
+	if (fd < 0) {
+		errno = EBADF;
+		return NULL;
+	}
+
+	int oflag = 0;
+#ifdef _WIN32
+	intptr_t h = _get_osfhandle(fd);
+	if (h == -1) return NULL;
+	if (_isatty(fd)) oflag |= O_RDWR;
+	else oflag |= O_RDONLY;
+#else
+	oflag = fcntl(fd, F_GETFL);
+#endif
+	if (oflag == -1) return NULL; /* fcntl() already set errno */
+
+	int newfd = dup(fd);
+	if (newfd == -1) return NULL;
+
+	FILE *fp = fdopenm(newfd, oflag);
+	if (!fp) {
+		int saved_errno = errno;
+		close(newfd);
+		errno = saved_errno;
+		return NULL;
+	}
+
+	return fp;
+}
+
+XSTDAPI void XCALLAPI xflockfile(FILE *fp) {
 #ifdef _WIN32
 	_lock_file(fp);
 #else
 	flockfile(fp);
 #endif
+}
+
+XSTDAPI FILE* XCALLAPI fdno_unlocked(int fd) {
+	if (fd < 0) return NULL;
+	FILE *fp = fdno(fd);
+	if (!fp) return NULL;
+	xflockfile(fp);
 	return fp;
 }
 
-XSTDDEF_INLINE_API size_t fpsize(FILE *fp) {
+XSTDAPI size_t XCALLAPI fpsize(FILE *fp) {
 	if (!fp) {
 		errno = EINVAL;
 		return (size_t)-1;
 	}
 
 	long original_pos = ftell(fp);
-	if (original_pos < 0)
-		return (size_t)-1;
-
-	if (fseek(fp, 0, SEEK_END) != 0)
-		return (size_t)-1;
+	if (original_pos < 0) return (size_t)-1;
+	if (fseek(fp, 0, SEEK_END) != 0) return (size_t)-1;
 
 	long end_pos = ftell(fp);
 	if (end_pos < 0) {
@@ -77,8 +230,7 @@ XSTDDEF_INLINE_API size_t fpsize(FILE *fp) {
 		return (size_t)-1;
 	}
 
-	if (fseek(fp, original_pos, SEEK_SET) != 0)
-		return (size_t)-1;
+	if (fseek(fp, original_pos, SEEK_SET) != 0) return (size_t)-1;
 
 	if (end_pos < original_pos) {
 		errno = EIO;
@@ -95,15 +247,14 @@ XSTDDEF_INLINE_API size_t fpsize(FILE *fp) {
 }
 
 /* full read */
-XSTDDEF_INLINE_API void *furead(FILE *fp, size_t *out_size) {
+XSTDAPI void* XCALLAPI furead(FILE *fp, size_t *out_size) {
 	if (!fp) {
 		errno = EINVAL;
 		return NULL;
 	}
 
 	size_t size = fpsize(fp);
-	if (size == (size_t)-1)
-		return NULL;
+	if (size == (size_t)-1) return NULL;
 
 	if (size == SIZE_MAX) {
 		errno = EOVERFLOW;
@@ -111,8 +262,7 @@ XSTDDEF_INLINE_API void *furead(FILE *fp, size_t *out_size) {
 	}
 
 	unsigned char *data = (unsigned char *)malloc(size + 1);
-	if (!data)
-		return NULL;
+	if (!data) return NULL;
 
 	size_t nread = fread(data, 1, size, fp);
 	if (nread != size && ferror(fp)) {
@@ -122,21 +272,19 @@ XSTDDEF_INLINE_API void *furead(FILE *fp, size_t *out_size) {
 
 	data[nread] = '\0';
 
-	if (out_size)
-		*out_size = nread;
+	if (out_size) *out_size = nread;
 
 	return data;
 }
 
-XSTDDEF_INLINE_API size_t fdsize(int fd) {
+XSTDAPI size_t XCALLAPI fdsize(int fd) {
 	if (fd < 0) {
 		errno = EINVAL;
 		return (size_t)-1;
 	}
 
 	off_t original_pos = lseek(fd, 0, SEEK_CUR);
-	if (original_pos == (off_t)-1)
-		return (size_t)-1;
+	if (original_pos == (off_t)-1) return (size_t)-1;
 
 	off_t end_pos = lseek(fd, 0, SEEK_END);
 	if (end_pos == (off_t)-1) {
@@ -144,8 +292,7 @@ XSTDDEF_INLINE_API size_t fdsize(int fd) {
 		return (size_t)-1;
 	}
 
-	if (lseek(fd, original_pos, SEEK_SET) == (off_t)-1)
-		return (size_t)-1;
+	if (lseek(fd, original_pos, SEEK_SET) == (off_t)-1) return (size_t)-1;
 
 	if (end_pos < original_pos) {
 		errno = EIO;
@@ -161,18 +308,16 @@ XSTDDEF_INLINE_API size_t fdsize(int fd) {
 	return (size_t)diff;
 }
 
-XSTDDEF_INLINE_API void *fduread(int fd, size_t *out_size) {
+XSTDAPI void* XCALLAPI fduread(int fd, size_t *out_size) {
 	if (fd < 0) {
 		errno = EINVAL;
 		return NULL;
 	}
 
-	if (out_size)
-		*out_size = 0;
+	if (out_size) *out_size = 0;
 
 	size_t cap = fdsize(fd);
-	if (cap == (size_t)-1)
-		return NULL;
+	if (cap == (size_t)-1) return NULL;
 
 	if (cap == SIZE_MAX) {
 		errno = EOVERFLOW;
@@ -180,20 +325,17 @@ XSTDDEF_INLINE_API void *fduread(int fd, size_t *out_size) {
 	}
 
 	unsigned char *buf = (unsigned char *)malloc(cap + 1);
-	if (!buf)
-		return NULL;
+	if (!buf) return NULL;
 
 	size_t len = 0;
 	while (len < cap) {
 		ssize_t n = read(fd, buf + len, cap - len);
 		if (n < 0) {
-			if (errno == EINTR)
-				continue;
+			if (errno == EINTR) continue;
 			free(buf);
 			return NULL;
 		}
-		if (n == 0)
-			break; /* EOF */
+		if (n == 0) break; /* EOF */
 		len += (size_t)n;
 	}
 
@@ -202,17 +344,14 @@ XSTDDEF_INLINE_API void *fduread(int fd, size_t *out_size) {
 	/* optional shrink */
 	if (len < cap) {
 		unsigned char *tmp = (unsigned char *)realloc(buf, len + 1);
-		if (tmp)
-			buf = tmp;
+		if (tmp) buf = tmp;
 	}
 
-	if (out_size)
-		*out_size = len;
-
+	if (out_size) *out_size = len;
 	return buf;
 }
 
-XSTDDEF_INLINE_API char* vcprintf(const char *__restrict fmt, va_list ap) {
+XSTDAPI char* XCALLAPI vcprintf(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return NULL;
 	va_list apc;
 
@@ -234,7 +373,7 @@ XSTDDEF_INLINE_API char* vcprintf(const char *__restrict fmt, va_list ap) {
 	return s;
 }
 
-XSTDDEF_INLINE_API char* cprintf(const char *__restrict fmt, ...) {
+XSTDAPI char* XCALLAPI cprintf(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	char *s = vcprintf(fmt, ap);
@@ -242,7 +381,7 @@ XSTDDEF_INLINE_API char* cprintf(const char *__restrict fmt, ...) {
 	return s;
 }
 
-XSTDDEF_INLINE_API wchar_t* vcwprintf(const char *__restrict fmt, va_list ap) {
+XSTDAPI wchar_t* XCALLAPI vcwprintf(const char *xrestrict fmt, va_list ap) {
 	char* s = vcprintf(fmt,ap);
 	if (!s) return NULL;
 	wchar_t* ret = xmbstowcs(s);
@@ -254,7 +393,7 @@ XSTDDEF_INLINE_API wchar_t* vcwprintf(const char *__restrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API wchar_t* cwprintf(const char *__restrict fmt, ...) {
+XSTDAPI wchar_t* XCALLAPI cwprintf(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	wchar_t *s = vcwprintf(fmt, ap);
@@ -262,7 +401,7 @@ XSTDDEF_INLINE_API wchar_t* cwprintf(const char *__restrict fmt, ...) {
 	return s;
 }
 
-XSTDDEF_INLINE_API wchar_t* vwcprintf(const wchar_t *__restrict fmt, va_list ap) {
+XSTDAPI wchar_t* XCALLAPI vwcprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return NULL;
 	va_list apc, apf;
 	va_copy(apc, ap);
@@ -281,7 +420,7 @@ XSTDDEF_INLINE_API wchar_t* vwcprintf(const wchar_t *__restrict fmt, va_list ap)
 	return s;
 }
 
-XSTDDEF_INLINE_API wchar_t* wcprintf(const wchar_t *__restrict fmt, ...) {
+XSTDAPI wchar_t* XCALLAPI wcprintf(const wchar_t *xrestrict fmt, ...) {
 	if (!fmt) return NULL;
 	va_list ap;
 	va_start(ap, fmt);
@@ -290,7 +429,7 @@ XSTDDEF_INLINE_API wchar_t* wcprintf(const wchar_t *__restrict fmt, ...) {
 	return s;
 }
 
-XSTDDEF_INLINE_API char* vwccprintf(const wchar_t *__restrict fmt, va_list ap) {
+XSTDAPI char* XCALLAPI vwccprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	wchar_t* s = vwcprintf(fmt, ap);
 	if (!s) return NULL;
 	char* ret = xwcstombs(s);
@@ -302,7 +441,7 @@ XSTDDEF_INLINE_API char* vwccprintf(const wchar_t *__restrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API char* wccprintf(const wchar_t *__restrict fmt, ...) {
+XSTDAPI char* XCALLAPI wccprintf(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	char *s = vwccprintf(fmt, ap);
@@ -310,13 +449,13 @@ XSTDDEF_INLINE_API char* wccprintf(const wchar_t *__restrict fmt, ...) {
 	return s;
 }
 
-XSTDDEF_INLINE_API FILE* wfopen(const wchar_t *__restrict __filename, const wchar_t *__restrict __modes) {
+XSTDAPI FILE* XCALLAPI wfopen(const wchar_t *xrestrict f, const wchar_t *xrestrict m) {
 #ifdef _WIN32
-	return _wfopen(__filename, __modes);
+	return _wfopen(f, m);
 #else
-	char *filename = xwcstombs(__filename);
+	char *filename = xwcstombs(f);
 	if (!filename) return NULL;
-	char *modes = xwcstombs(__modes);
+	char *modes = xwcstombs(m);
 	if (!modes) {
 		free(filename);
 		return NULL;
@@ -328,7 +467,71 @@ XSTDDEF_INLINE_API FILE* wfopen(const wchar_t *__restrict __filename, const wcha
 #endif
 }
 
-XSTDDEF_INLINE_API int wremove(const wchar_t *__restrict fmt) {
+
+XSTDAPI FILE* XCALLAPI wfopenm(const wchar_t *xrestrict filename, int oflag, ...) {
+	wchar_t mode[16];
+	size_t i = 0;
+#ifndef _WIN32
+	xmode_t permissions = 0;
+
+	if (oflag & O_CREAT) {
+		va_list ap;
+		va_start(ap, oflag);
+		permissions = va_arg(ap, xmode_t);
+		va_end(ap);
+	}
+#endif
+	switch (oflag & (O_RDONLY | O_WRONLY | O_RDWR)) {
+		case O_RDONLY:
+			mode[i++] = L'r';
+			break;
+
+		case O_WRONLY:
+			mode[i++] = (oflag & O_APPEND) ? L'a' : L'w';
+			break;
+
+		case O_RDWR:
+			mode[i++] = (oflag & O_APPEND) ? L'a' : L'w';
+			mode[i++] = L'+';
+			break;
+
+		default:
+			errno = EINVAL;
+			return NULL;
+	}
+
+	mode[i++] = L'b';
+	mode[i] = L'\0';
+
+	/*
+	 * fopen() already provides:
+	 *
+	 *   O_RDONLY             -> "r"
+	 *   O_WRONLY             -> "w"
+	 *   O_RDWR               -> "w+"
+	 *   O_APPEND             -> "a" / "a+"
+	 *   O_TRUNC              -> "w" / "w+"
+	 *   O_CREAT              -> "w" / "w+"
+	 *
+	 * O_EXCL cannot be safely emulated by fopen().
+	 */
+	FILE *fp = wfopen(filename, mode);
+	if (!fp) return NULL;
+
+#ifndef _WIN32
+	if (oflag & O_CREAT) {
+		if (fchmod(fileno(fp), permissions) != 0) {
+			int saved_errno = errno;
+			fclose(fp);
+			errno = saved_errno;
+			return NULL;
+		}
+	}
+#endif
+	return fp;
+}
+
+XSTDAPI int XCALLAPI wremove(const wchar_t *xrestrict fmt) {
 #ifdef _WIN32
 	return _wremove(fmt);
 #else
@@ -341,7 +544,7 @@ XSTDDEF_INLINE_API int wremove(const wchar_t *__restrict fmt) {
 #endif
 }
 
-XSTDDEF_INLINE_API int vxremove(const char *__restrict fmt, va_list ap) {
+XSTDAPI int XCALLAPI vxremove(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
 	va_list apc;
 	va_copy(apc,ap);
@@ -353,7 +556,7 @@ XSTDDEF_INLINE_API int vxremove(const char *__restrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xremove(const char *__restrict fmt, ...) {
+XSTDAPI int XCALLAPI xremove(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	int ret = vxremove(fmt, ap);
@@ -361,7 +564,7 @@ XSTDDEF_INLINE_API int xremove(const char *__restrict fmt, ...) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vxwremove(const wchar_t *__restrict fmt, va_list ap) {
+XSTDAPI int XCALLAPI vxwremove(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
 	va_list apc;
 	va_copy(apc, ap);
@@ -372,7 +575,7 @@ XSTDDEF_INLINE_API int vxwremove(const wchar_t *__restrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xwremove(const wchar_t *__restrict fmt, ...) {
+XSTDAPI int XCALLAPI xwremove(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap,fmt);
 	int ret = vxwremove(fmt,ap);
@@ -380,7 +583,7 @@ XSTDDEF_INLINE_API int xwremove(const wchar_t *__restrict fmt, ...) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
+XSTDAPI char* XCALLAPI getcurrentdirectory_size(size_t n) {
 	char *abs_path = (char*)malloc(n);
 	if (!abs_path) {
 		errno = ENOMEM;
@@ -397,16 +600,7 @@ XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
 			errno = EINVAL;
 			return NULL;
 		}
-		if (result < current_size)
-			break;
-		current_size *= 2;
-		abs_path = (char*)realloc(abs_path, current_size);
-		if (!abs_path) {
-			errno = ENOMEM;
-			return NULL;
-		}
-	}
-
+		if (result < current_size) break;
 #else
 	ssize_t result = 0;
 	while (1) {
@@ -415,10 +609,8 @@ XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
 			free(abs_path);
 			return NULL;
 		}
-
-		if (result < current_size - 1)
-			break;
-
+		if (result < current_size - 1) break;
+#endif
 		current_size *= 2;
 		abs_path = (char*)realloc(abs_path, current_size);
 		if (!abs_path) {
@@ -426,13 +618,11 @@ XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
 			return NULL;
 		}
 	}
-#endif
 	abs_path[result] = '\0';
 	char *last_sep = strrchr(abs_path, '/');
 #ifdef _WIN32
 	char *last_win = strrchr(abs_path, '\\');
-	if (last_win && (!last_sep || last_win > last_sep))
-		last_sep = last_win;
+	if (last_win && (!last_sep || last_win > last_sep)) last_sep = last_win;
 #endif
 	if (!last_sep) {
 		free(abs_path);
@@ -457,11 +647,11 @@ XSTDDEF_INLINE_API char* getcurrentdirectory_size(size_t n) {
 	return dir;
 }
 
-XSTDDEF_INLINE_API char* getcurrentdirectory(void) {
+XSTDAPI char* XCALLAPI getcurrentdirectory(void) {
 	return getcurrentdirectory_size(XPATH_MAX + 1);
 }
 
-XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory_size(size_t n) {
+XSTDAPI wchar_t* XCALLAPI wgetcurrentdirectory_size(size_t n) {
 	char *s = getcurrentdirectory_size(n);
 	if (!s) return NULL;
 	wchar_t* ws = xmbstowcs(s);
@@ -470,7 +660,7 @@ XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory_size(size_t n) {
 	return ws;
 }
 
-XSTDDEF_INLINE_API wchar_t* wgetcurrentdirectory(void) {
+XSTDAPI wchar_t* XCALLAPI wgetcurrentdirectory(void) {
 	return wgetcurrentdirectory_size(XPATH_MAX + 1);
 }
 

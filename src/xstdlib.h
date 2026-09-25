@@ -23,6 +23,7 @@
 #ifndef __XSTDLIB_H__
 #define __XSTDLIB_H__
 
+#include "xtypes.h"
 #include "xstring.h"
 #include "xwchar.h"
 
@@ -30,24 +31,48 @@
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API void* xrand(size_t __size, unsigned int __flags) {
-	if (__size <= 0 || __flags == 0) {
+XSTDAPI void* XCALLAPI xrand(size_t size, unsigned int flags) {
+#ifdef _WIN32
+	(void)flags;
+	if (size == 0) {
 		errno = EINVAL;
 		return NULL;
 	}
-	void* ret = malloc(__size);
+	void *ret = malloc(size);
 	if (!ret) {
 		errno = ENOMEM;
 		return NULL;
 	}
-	srand((unsigned int)clock());
-	for (size_t i = 0; i < __size; i++)
-		((unsigned char*)ret)[i] = (unsigned char)(rand() % __flags);
+	if (size > ULONG_MAX) {
+		free(ret);
+		errno = EOVERFLOW;
+		return NULL;
+	}
+	NTSTATUS status = BCryptGenRandom(NULL,(PUCHAR)ret,(ULONG)size,BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+	if (status != 0) {
+		free(ret);
+		errno = EIO;
+		return NULL;
+	}
 	return ret;
+#else
+	if (size == 0 || flags == 0) {
+		errno = EINVAL;
+		return NULL;
+	}
+	void *ret = malloc(size);
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	srand((unsigned int)time(NULL));
+	for (size_t i = 0; i < size; ++i) ((unsigned char *)ret)[i] = (unsigned char)(rand() % flags);
+	return ret;
+#endif
 }
 
 // Convert wide character string (wchar_t*) to UTF-8 multi-byte string (char*)
-XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
+XSTDAPI char* XCALLAPI xwcstombs(const wchar_t *wcs) {
 	if (!wcs) return NULL;
 
 #ifdef _WIN32
@@ -60,7 +85,6 @@ XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
 
 	WideCharToMultiByte(CP_UTF8, 0, wcs, -1, mbs, len, NULL, NULL);
 	return mbs;
-
 #else
 	size_t len = wcstombs(NULL, wcs, 0);
 	if (len <= 0) return NULL;
@@ -72,7 +96,7 @@ XSTDDEF_INLINE_API char* xwcstombs(const wchar_t *wcs) {
 }
 
 // Convert UTF-8 multi-byte string (char*) to wide character string (wchar_t*)
-XSTDDEF_INLINE_API wchar_t* xmbstowcs(const char *mbs) {
+XSTDAPI wchar_t* XCALLAPI xmbstowcs(const char *mbs) {
 	if (!mbs) return NULL;
 
 #ifdef _WIN32
@@ -99,11 +123,11 @@ XSTDDEF_INLINE_API wchar_t* xmbstowcs(const char *mbs) {
 #endif
 }
 
-XSTDDEF_INLINE_API int wsystem(const wchar_t *__restrict __command) {
+XSTDAPI int XCALLAPI wsystem(const wchar_t *xrestrict command) {
 #ifdef _WIN32
-	return _wsystem(__command);
+	return _wsystem(command);
 #else
-	char *mbs = xwcstombs(__command);
+	char *mbs = xwcstombs(command);
 	if (!mbs)
 		return -1;
 	int ret = system(mbs);
@@ -116,24 +140,24 @@ XSTDDEF_INLINE_API int wsystem(const wchar_t *__restrict __command) {
 #endif
 }
 
-XSTDDEF_INLINE_API void wperror(const wchar_t *__restrict __s) {
+XSTDAPI void XCALLAPI wperror(const wchar_t *xrestrict s) {
 #ifdef _WIN32
-	_wperror(__s);
+	_wperror(s);
 #else
-	char *mbs = xwcstombs(__s);
+	char *mbs = xwcstombs(s);
 	if (!mbs) return;
 	perror(mbs);
 	free(mbs);
 #endif
 }
 
-XSTDDEF_INLINE_API int vnxsystem(size_t __len, const char *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vnxsystem(size_t len, const char *xrestrict command, va_list ap) {
 	va_list apc;
-	if (__len == 0) return -1;
-	char *cmd = (char *)malloc(__len);
+	if (len == 0) return -1;
+	char *cmd = (char *)malloc(len);
 	if (!cmd) return -2;
-	int wret = vsnprintf(cmd, __len, command, ap);
-	if (wret < 0 || (size_t)wret > __len) {
+	int wret = vsnprintf(cmd, len, command, ap);
+	if (wret < 0 || (size_t)wret > len) {
 		free(cmd);
 		return -3;
 	}
@@ -142,15 +166,15 @@ XSTDDEF_INLINE_API int vnxsystem(size_t __len, const char *__restrict command, v
 	return ret;
 }
 
-XSTDDEF_INLINE_API int nxsystem(size_t __len,const char *__restrict command, ...) {
+XSTDAPI int XCALLAPI nxsystem(size_t len,const char *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
-	int ret = vnxsystem(__len, command, ap);
+	int ret = vnxsystem(len, command, ap);
 	va_end(ap);
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vxsystem(const char *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vxsystem(const char *xrestrict command, va_list ap) {
 	va_list apc, apf;
 	va_copy(apc,ap);
 	size_t len = vxstrlen(command,apc);
@@ -163,7 +187,7 @@ XSTDDEF_INLINE_API int vxsystem(const char *__restrict command, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xsystem(const char *__restrict command, ...) {
+XSTDAPI int XCALLAPI xsystem(const char *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vxsystem(command,ap);
@@ -171,16 +195,16 @@ XSTDDEF_INLINE_API int xsystem(const char *__restrict command, ...) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vnxwsystem(size_t __len, const wchar_t *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vnxwsystem(size_t len, const wchar_t *xrestrict command, va_list ap) {
 	va_list apc,apf;
-	if (__len <= 0) return -1;
+	if (len <= 0) return -1;
 	// Allocate memory for the formatted command
-	wchar_t *wcmd = (wchar_t *)malloc(__len * sizeof(wchar_t));
+	wchar_t *wcmd = (wchar_t *)malloc(len * sizeof(wchar_t));
 	if (!wcmd) return -2;
 	va_copy(apf, ap);
-	int wret = vswprintf(wcmd, __len, command, apf);
+	int wret = vswprintf(wcmd, len, command, apf);
 	va_end(apf);
-	if (wret < 0 || (size_t)wret >= __len) {
+	if (wret < 0 || (size_t)wret >= len) {
 		free(wcmd);
 		return -3;
 	}
@@ -189,7 +213,7 @@ XSTDDEF_INLINE_API int vnxwsystem(size_t __len, const wchar_t *__restrict comman
 	return ret;
 }
 
-XSTDDEF_INLINE_API int nxwsystem(size_t len,const wchar_t *__restrict command, ...) {
+XSTDAPI int XCALLAPI nxwsystem(size_t len,const wchar_t *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vnxwsystem(len,command,ap);
@@ -197,7 +221,7 @@ XSTDDEF_INLINE_API int nxwsystem(size_t len,const wchar_t *__restrict command, .
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vxwsystem(const wchar_t *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vxwsystem(const wchar_t *xrestrict command, va_list ap) {
 	va_list apc,apf;
 	va_copy(apc,ap);
 	size_t len = vxwcslen(command,apc);
@@ -209,7 +233,7 @@ XSTDDEF_INLINE_API int vxwsystem(const wchar_t *__restrict command, va_list ap) 
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xwsystem(const wchar_t *__restrict command, ...) {
+XSTDAPI int XCALLAPI xwsystem(const wchar_t *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vxwsystem(command,ap);
@@ -217,29 +241,27 @@ XSTDDEF_INLINE_API int xwsystem(const wchar_t *__restrict command, ...) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API void vnxperror(size_t len, const char* __restrict fmt, va_list ap) {
+XSTDAPI void XCALLAPI vnxperror(size_t len, const char* xrestrict fmt, va_list ap) {
 	if (len == 0 || !fmt) return;
 
 	char *buf = (char *)malloc(len);
 	if (!buf) return;
 
 	int n = vsnprintf(buf, len, fmt, ap);
-	if (n < 0)
-		buf[0] = '\0';
-	else if ((size_t)n >= len)
-		buf[len - 1] = '\0';
+	if (n < 0) buf[0] = '\0';
+	else if ((size_t)n >= len) buf[len - 1] = '\0';
 	perror(buf);
 	free(buf);
 }
 
-XSTDDEF_INLINE_API void nxperror(size_t len, const char* __restrict fmt, ...) {
+XSTDAPI void XCALLAPI nxperror(size_t len, const char* xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	vnxperror(len, fmt, ap);
 	va_end(ap);
 }
 
-XSTDDEF_INLINE_API void vxperror(const char* __restrict fmt, va_list ap) {
+XSTDAPI void XCALLAPI vxperror(const char* xrestrict fmt, va_list ap) {
 	if (!fmt) return;
 	va_list apc, apf;
 	va_copy(apc, ap);
@@ -250,7 +272,7 @@ XSTDDEF_INLINE_API void vxperror(const char* __restrict fmt, va_list ap) {
 	va_end(apf);
 }
 
-XSTDDEF_INLINE_API void xperror(const char* __restrict fmt, ...) {
+XSTDAPI void XCALLAPI xperror(const char* xrestrict fmt, ...) {
 	if (!fmt) return;
 	va_list ap;
 	va_start(ap, fmt);
@@ -258,15 +280,15 @@ XSTDDEF_INLINE_API void xperror(const char* __restrict fmt, ...) {
 	va_end(ap);
 }
 
-XSTDDEF_INLINE_API void vnxwperror(size_t __len,const wchar_t *__restrict __s, va_list ap) {
+XSTDAPI void XCALLAPI vnxwperror(size_t len,const wchar_t *xrestrict s, va_list ap) {
 	va_list apc;
-	if (__len <= 0) return;
-	wchar_t *wcmd = (wchar_t*)malloc(__len * sizeof(wchar_t));
+	if (len <= 0) return;
+	wchar_t *wcmd = (wchar_t*)malloc(len * sizeof(wchar_t));
 	if (!wcmd) return;
 	va_copy(apc, ap);
-	int ret = vswprintf(wcmd, __len, __s, apc);
+	int ret = vswprintf(wcmd, len, s, apc);
 	va_end(apc);
-	if (ret < 0 || (size_t)ret >= __len) {
+	if (ret < 0 || (size_t)ret >= len) {
 		free(wcmd);
 		return;
 	}
@@ -274,32 +296,32 @@ XSTDDEF_INLINE_API void vnxwperror(size_t __len,const wchar_t *__restrict __s, v
 	free(wcmd);
 }
 
-XSTDDEF_INLINE_API void nxwperror(size_t __len,const wchar_t *__restrict __s, ...) {
+XSTDAPI void XCALLAPI nxwperror(size_t len,const wchar_t *xrestrict s, ...) {
 	va_list ap;
-	va_start(ap,__s);
-	vnxwperror(__len,__s,ap);
+	va_start(ap,s);
+	vnxwperror(len,s,ap);
 	va_end(ap);
 }
 
-XSTDDEF_INLINE_API void vxwperror(const wchar_t *__restrict __s, va_list ap) {
+XSTDAPI void XCALLAPI vxwperror(const wchar_t *xrestrict s, va_list ap) {
 	va_list apc,apf;
 	va_copy(apc, ap);
-	size_t len = vxwcslen(__s, apc);
+	size_t len = vxwcslen(s, apc);
 	va_end(apc);
 	va_copy(apf, ap);
-	vnxwperror((len + 1),__s,apf);
+	vnxwperror((len + 1),s,apf);
 	va_end(apf);
 }
 
-XSTDDEF_INLINE_API void xwperror(const wchar_t *__restrict __s, ...) {
+XSTDAPI void XCALLAPI xwperror(const wchar_t *xrestrict s, ...) {
 	va_list ap;
-	va_start(ap,__s);
-	vxwperror(__s,ap);
+	va_start(ap,s);
+	vxwperror(s,ap);
 	va_end(ap);
 }
 
 /* child system */
-XSTDDEF_INLINE_API int csystem(const char *__restrict cmd) {
+XSTDAPI int XCALLAPI csystem(const char *xrestrict cmd) {
 	if (!cmd || !*cmd) {
 		errno = EINVAL;
 		perror("csystem: empty command");
@@ -347,11 +369,11 @@ XSTDDEF_INLINE_API int csystem(const char *__restrict cmd) {
 #endif /* _WIN32 */
 }
 
-XSTDDEF_INLINE_API int wcsystem(const wchar_t *__restrict __command) {
+XSTDAPI int XCALLAPI wcsystem(const wchar_t *xrestrict command) {
 #ifdef _WIN32
-	return _wsystem(__command);
+	return _wsystem(command);
 #else
-	char *mbs = xwcstombs(__command);
+	char *mbs = xwcstombs(command);
 	if (!mbs) return -1;
 	int ret = csystem(mbs);
 	free(mbs);
@@ -363,15 +385,15 @@ XSTDDEF_INLINE_API int wcsystem(const wchar_t *__restrict __command) {
 #endif
 }
 
-XSTDDEF_INLINE_API int vnxcsystem(size_t __len, const char *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vnxcsystem(size_t len, const char *xrestrict command, va_list ap) {
 	va_list apc;
-	if (__len == 0) return -1;
-	char *cmd = (char *)malloc(__len);
+	if (len == 0) return -1;
+	char *cmd = (char *)malloc(len);
 	if (!cmd) return -2;
 	va_copy(apc,ap);
-	int wret = vsnprintf(cmd, __len, command, apc);
+	int wret = vsnprintf(cmd, len, command, apc);
 	va_end(apc);
-	if (wret < 0 || (size_t)wret > __len) {
+	if (wret < 0 || (size_t)wret > len) {
 		free(cmd);
 		return -3;
 	}
@@ -380,15 +402,15 @@ XSTDDEF_INLINE_API int vnxcsystem(size_t __len, const char *__restrict command, 
 	return ret;
 }
 
-XSTDDEF_INLINE_API int nxcsystem(size_t __len,const char *__restrict command, ...) {
+XSTDAPI int XCALLAPI nxcsystem(size_t len,const char *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
-	int ret = vnxcsystem(__len, command, ap);
+	int ret = vnxcsystem(len, command, ap);
 	va_end(ap);
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vxcsystem(const char *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vxcsystem(const char *xrestrict command, va_list ap) {
 	va_list apc, apf;
 	va_copy(apc,ap);
 	size_t len = vxstrlen(command,apc);
@@ -401,7 +423,7 @@ XSTDDEF_INLINE_API int vxcsystem(const char *__restrict command, va_list ap) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xcsystem(const char *__restrict command, ...) {
+XSTDAPI int XCALLAPI xcsystem(const char *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vxcsystem(command,ap);
@@ -409,16 +431,16 @@ XSTDDEF_INLINE_API int xcsystem(const char *__restrict command, ...) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vnxwcsystem(size_t __len, const wchar_t *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vnxwcsystem(size_t len, const wchar_t *xrestrict command, va_list ap) {
 	va_list apc,apf;
-	if (__len <= 0) return -1;
+	if (len <= 0) return -1;
 	// Allocate memory for the formatted command
-	wchar_t *wcmd = (wchar_t *)malloc(__len * sizeof(wchar_t));
+	wchar_t *wcmd = (wchar_t *)malloc(len * sizeof(wchar_t));
 	if (!wcmd) return -2;
 	va_copy(apf, ap);
-	int wret = vswprintf(wcmd, __len, command, apf);
+	int wret = vswprintf(wcmd, len, command, apf);
 	va_end(apf);
-	if (wret < 0 || (size_t)wret >= __len) {
+	if (wret < 0 || (size_t)wret >= len) {
 		free(wcmd);
 		return -3;
 	}
@@ -427,7 +449,7 @@ XSTDDEF_INLINE_API int vnxwcsystem(size_t __len, const wchar_t *__restrict comma
 	return ret;
 }
 
-XSTDDEF_INLINE_API int nxwcsystem(size_t len,const wchar_t *__restrict command, ...) {
+XSTDAPI int XCALLAPI nxwcsystem(size_t len,const wchar_t *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vnxwcsystem(len,command,ap);
@@ -435,7 +457,7 @@ XSTDDEF_INLINE_API int nxwcsystem(size_t len,const wchar_t *__restrict command, 
 	return ret;
 }
 
-XSTDDEF_INLINE_API int vxwcsystem(const wchar_t *__restrict command, va_list ap) {
+XSTDAPI int XCALLAPI vxwcsystem(const wchar_t *xrestrict command, va_list ap) {
 	va_list apc,apf;
 	va_copy(apc,ap);
 	size_t len = vxwcslen(command,apc);
@@ -447,7 +469,7 @@ XSTDDEF_INLINE_API int vxwcsystem(const wchar_t *__restrict command, va_list ap)
 	return ret;
 }
 
-XSTDDEF_INLINE_API int xwcsystem(const wchar_t *__restrict command, ...) {
+XSTDAPI int XCALLAPI xwcsystem(const wchar_t *xrestrict command, ...) {
 	va_list ap;
 	va_start(ap,command);
 	int ret = vxwcsystem(command,ap);

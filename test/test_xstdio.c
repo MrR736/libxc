@@ -99,5 +99,123 @@ int main() {
 		free(wdc);
 	}
 
+	// ---------- Test 10: fopenm ----------
+	{
+		const char *filename = "test_fopenm.bin";
+		FILE *fp;
+		/* Create and write. */
+		fp = fopenm(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		fputs("Hello from fopenm()\n", fp);
+		fclose(fp);
+
+		/* Read the file. */
+		fp = fopenm(filename, O_RDONLY);
+
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		char buffer[128];
+
+		if (fgets(buffer, sizeof(buffer), fp)) printf("fopenm read: %s", buffer);
+
+		fclose(fp);
+
+		/* Append. */
+		fp = fopenm(filename, O_WRONLY | O_APPEND);
+
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		fputs("Appended text\n", fp);
+		fclose(fp);
+
+		/* Verify the result. */
+		fp = fopenm(filename, O_RDONLY);
+
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		while (fgets(buffer, sizeof(buffer), fp))
+			printf("%s", buffer);
+
+		fclose(fp);
+
+		/* Remove test file. */
+		if (remove(filename) != 0) {
+			perror("remove");
+			return 1;
+		}
+	}
+
+	// ---------- Test 11: wfopenm ----------
+	{
+		const wchar_t *filename = L"test_fopenm.bin";
+		FILE *fp;
+		/* Create and write. */
+		fp = wfopenm(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (!fp) {
+			perror("wfopenm");
+			return 1;
+		}
+
+		fputs("Hello from wfopenm()\n", fp);
+		fclose(fp);
+
+		/* Read the file. */
+		fp = wfopenm(filename, O_RDONLY);
+
+		if (!fp) {
+			perror("wfopenm");
+			return 1;
+		}
+
+		char buffer[128];
+
+		if (fgets(buffer, sizeof(buffer), fp)) printf("fopenm read: %s", buffer);
+
+		fclose(fp);
+
+		/* Append. */
+		fp = wfopenm(filename, O_WRONLY | O_APPEND);
+
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		fputs("Appended text\n", fp);
+		fclose(fp);
+
+		/* Verify the result. */
+		fp = wfopenm(filename, O_RDONLY);
+
+		if (!fp) {
+			perror("fopenm");
+			return 1;
+		}
+
+		while (fgets(buffer, sizeof(buffer), fp))
+			printf("%s", buffer);
+
+		fclose(fp);
+
+		/* Remove test file. */
+		if (wremove(filename) != 0) {
+			perror("remove");
+			return 1;
+		}
+	}
+
 	return 0;
 }

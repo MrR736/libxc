@@ -23,12 +23,11 @@
 #ifndef __XSEARCH_H__
 #define __XSEARCH_H__
 
-#include <stddef.h>
-#include <string.h>
+#include "xstddef.h"
+
 #include <dirent.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
+#ifdef _WIN32
 #include <pcre.h>
 #else
 #include <regex.h>
@@ -38,26 +37,19 @@
 extern "C" {
 #endif
 
-static inline int xsearch(const char *name, const char *dir, char **out_files, size_t *out_files_count, int use_regex) {
-	if (!name || !dir || !out_files || !out_files_count)
-		return -1;
+XSTDAPI int xsearch(const char *name, const char *dir, char **out_files, size_t *out_files_count, int use_regex) {
+	if (!name || !dir || !out_files || !out_files_count) return -1;
 
 	size_t count = 0;
 	regex_t regex;
 	if (use_regex) {
-		if (regcomp(&regex, name, REG_EXTENDED | REG_NOSUB) != 0)
-			return -4;
+		if (regcomp(&regex, name, REG_EXTENDED | REG_NOSUB) != 0) return -4;
 	}
-
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN32
 	char *search_path = cprintf("%s\\%s", dir, name);
-
 	WIN32_FIND_DATA findFileData;
 	HANDLE hFind = FindFirstFile(search_path, &findFileData);
-
-	if (hFind == INVALID_HANDLE_VALUE)
-		return -2;
-
+	if (hFind == INVALID_HANDLE_VALUE) return -2;
 	do {
 		// Compare using regex or exact match
 		if (use_regex) {
@@ -79,15 +71,12 @@ static inline int xsearch(const char *name, const char *dir, char **out_files, s
 			count++;
 		}
 	} while (FindNextFile(hFind, &findFileData) != 0);
-
 	FindClose(hFind);
 	regfree(&regex);
 	free(search_path);
 #else
 	DIR *d = opendir(dir);
-	if (!d)
-		return -2; // Could not open directory
-
+	if (!d) return -2; // Could not open directory
 	struct dirent *entry;
 	while ((entry = readdir(d)) != NULL) {
 		if (use_regex) {
@@ -109,11 +98,9 @@ static inline int xsearch(const char *name, const char *dir, char **out_files, s
 			count++;
 		}
 	}
-
 	closedir(d);
 	regfree(&regex);
 #endif
-
 	*out_files_count = count;
 	return 0;
 }

@@ -23,22 +23,21 @@
 #ifndef __XLOCALE_H__
 #define __XLOCALE_H__
 
+#include "xtypes.h"
 #include "xstdlib.h"
 #include <locale.h>
 
-#define	XLC_ALL			LC_ALL
-#define XLC_COLLATE		LC_COLLATE
-#define XLC_CTYPE		LC_CTYPE
-#define XLC_MONETARY		LC_MONETARY
-#define XLC_NUMERIC		LC_NUMERIC
-#define XLC_TIME		LC_TIME
+#define	XLC_ALL					LC_ALL
+#define XLC_COLLATE				LC_COLLATE
+#define XLC_CTYPE				LC_CTYPE
+#define XLC_MONETARY			LC_MONETARY
+#define XLC_NUMERIC				LC_NUMERIC
+#define XLC_TIME				LC_TIME
 
-#define XLC_MIN			XLC_ALL
-#define XLC_MAX			XLC_TIME
+#define XLC_MIN					XLC_ALL
+#define XLC_MAX					XLC_TIME
 
 #ifdef _WIN32
-typedef _locale_t xlocale_t;
-
 #define XLC_ALL_MASK			XLC_ALL
 #define XLC_COLLATE_MASK		XLC_COLLATE
 #define XLC_CTYPE_MASK			XLC_CTYPE
@@ -46,36 +45,34 @@ typedef _locale_t xlocale_t;
 #define XLC_NUMERIC_MASK		XLC_NUMERIC
 #define XLC_TIME_MASK			XLC_TIME
 #else
-typedef locale_t xlocale_t;
+#define XLC_MESSAGES			LC_MESSAGES
+#define XLC_PAPER				LC_PAPER
+#define XLC_NAME				LC_NAME
+#define XLC_ADDRESS				LC_ADDRESS
+#define XLC_TELEPHONE			LC_TELEPHONE
+#define XLC_MEASUREMENT			LC_MEASUREMENT
+#define XLC_IDENTIFICATION		LC_IDENTIFICATION
 
-#define XLC_MESSAGES		LC_MESSAGES
-#define XLC_PAPER		LC_PAPER
-#define XLC_NAME		LC_NAME
-#define XLC_ADDRESS		LC_ADDRESS
-#define XLC_TELEPHONE		LC_TELEPHONE
-#define XLC_MEASUREMENT		LC_MEASUREMENT
-#define XLC_IDENTIFICATION	LC_IDENTIFICATION
-
-#define XLC_CTYPE_MASK		LC_CTYPE_MASK
-#define XLC_NUMERIC_MASK	LC_NUMERIC_MASK
-#define XLC_TIME_MASK		LC_TIME_MASK
-#define XLC_COLLATE_MASK	LC_COLLATE_MASK
-#define XLC_MONETARY_MASK	LC_MONETARY_MASK
-#define XLC_MESSAGES_MASK	LC_MESSAGES_MASK
-#define XLC_PAPER_MASK		LC_PAPER_MASK
-#define XLC_NAME_MASK		LC_NAME_MASK
-#define XLC_ADDRESS_MASK	LC_ADDRESS_MASK
-#define XLC_TELEPHONE_MASK	LC_TELEPHONE_MASK
+#define XLC_CTYPE_MASK			LC_CTYPE_MASK
+#define XLC_NUMERIC_MASK		LC_NUMERIC_MASK
+#define XLC_TIME_MASK			LC_TIME_MASK
+#define XLC_COLLATE_MASK		LC_COLLATE_MASK
+#define XLC_MONETARY_MASK		LC_MONETARY_MASK
+#define XLC_MESSAGES_MASK		LC_MESSAGES_MASK
+#define XLC_PAPER_MASK			LC_PAPER_MASK
+#define XLC_NAME_MASK			LC_NAME_MASK
+#define XLC_ADDRESS_MASK		LC_ADDRESS_MASK
+#define XLC_TELEPHONE_MASK		LC_TELEPHONE_MASK
 #define XLC_MEASUREMENT_MASK	LC_MEASUREMENT_MASK
 #define XLC_IDENTIFICATION_MASK	LC_IDENTIFICATION_MASK
-#define XLC_ALL_MASK		LC_ALL_MASK
+#define XLC_ALL_MASK			LC_ALL_MASK
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API wchar_t *wsetlocale(int category, const wchar_t *req_locale) {
+XSTDAPI wchar_t* XCALLAPI wsetlocale(int category, const wchar_t *req_locale) {
 #ifdef _WIN32
 	return _wsetlocale(category, req_locale);
 #else
@@ -119,7 +116,7 @@ XSTDDEF_INLINE_API wchar_t *wsetlocale(int category, const wchar_t *req_locale) 
 
 
 
-XSTDDEF_INLINE_API char *xsetlocale(int category, const char *req_locale) {
+XSTDAPI char* XCALLAPI xsetlocale(int category, const char *req_locale) {
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
 
 	// 1. Try the requested locale first
@@ -144,7 +141,7 @@ XSTDDEF_INLINE_API char *xsetlocale(int category, const char *req_locale) {
 	return setlocale(category, "C");
 }
 
-XSTDDEF_INLINE_API wchar_t *xwsetlocale(int category, const wchar_t *req_locale) {
+XSTDAPI wchar_t* XCALLAPI xwsetlocale(int category, const wchar_t *req_locale) {
 	static const wchar_t *utf8_aliases[] = { L"C.UTF-8",L"en_US.UTF-8",L"UTF-8",L".UTF8",L".utf8",L"utf-8",L".65001",NULL };
 
 	// 1. Try the requested locale first
@@ -169,7 +166,7 @@ XSTDDEF_INLINE_API wchar_t *xwsetlocale(int category, const wchar_t *req_locale)
 	return wsetlocale(category, L"C");
 }
 
-XSTDDEF_INLINE_API void xfreelocale(xlocale_t loc) {
+XSTDAPI void XCALLAPI xfreelocale(xlocale_t loc) {
 	if (!loc) return;
 #ifdef _WIN32
 	_free_locale(loc);
@@ -178,7 +175,7 @@ XSTDDEF_INLINE_API void xfreelocale(xlocale_t loc) {
 #endif
 }
 
-XSTDDEF_INLINE_API xlocale_t xnewlocale(int category_mask,const char *req_locale,xlocale_t base) {
+XSTDAPI xlocale_t XCALLAPI xnewlocale(int category_mask,const char *req_locale,xlocale_t base) {
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
 
 #ifdef _WIN32
@@ -225,7 +222,7 @@ XSTDDEF_INLINE_API xlocale_t xnewlocale(int category_mask,const char *req_locale
 #endif
 }
 
-XSTDDEF_INLINE_API void xinit_console_utf8(void) {
+XSTDAPI void XCALLAPI xinit_console_utf8(void) {
 #ifdef _WIN32
 	static int console_utf8_initialized = 0;
 	if (console_utf8_initialized) return;
@@ -237,7 +234,7 @@ XSTDDEF_INLINE_API void xinit_console_utf8(void) {
 	xsetlocale(XLC_ALL,"C.UTF-8");
 }
 
-XSTDDEF_INLINE_API void xinit_console_wutf(void) {
+XSTDAPI void XCALLAPI xinit_console_wutf(void) {
 #ifdef _WIN32
 	static int console_wutf_initialized = 0;
 	if (console_wutf_initialized) return;

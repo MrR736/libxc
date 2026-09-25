@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-XSTDDEF_INLINE_API char* xtolower(char* str) {
+XSTDAPI char* XCALLAPI xtolower(char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -48,7 +48,7 @@ XSTDDEF_INLINE_API char* xtolower(char* str) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API char* xtoupper(char* str) {
+XSTDAPI char* XCALLAPI xtoupper(char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -67,7 +67,7 @@ XSTDDEF_INLINE_API char* xtoupper(char* str) {
 	return ret;
 }
 
-XSTDDEF_INLINE_API char* xtoascii(char* str) {
+XSTDAPI char* XCALLAPI xtoascii(char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;

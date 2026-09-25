@@ -1,0 +1,468 @@
+." Manpage for xstdio.h
+.TH XSTDIO 3 "2026" "Extern Library" "Programmer's Manual"
+
+.SH NAME
+xstdio - Extended STDIO Utilities for safe and Unicode-aware I/O operations
+
+.SH SYNOPSIS
+.B #include "xstdio.h"
+
+.BR "int fdputs(const char *s, int fd);"
+.br
+.BR "FILE *fopenm(const char *filename, int oflag, ...);"
+.br
+.BR "FILE *fdopenm(int fd, int oflag, ...);"
+.br
+.BR "FILE *wfopenm(const wchar_t *filename, int oflag, ...);"
+.br
+.BR "void xflockfile(FILE *fp);"
+.br
+.BR "FILE *fdno(int fd);"
+.br
+.BR "FILE *fdno_unlocked(int fd);"
+.br
+.BR "size_t fpsize(FILE *fp);"
+.br
+.BR "void *furead(FILE *fp, size_t *out_size);"
+.br
+.BR "size_t fdsize(int fd);"
+.br
+.BR "void *fduread(int fd, size_t *out_size);"
+.br
+.BR "char *vcprintf(const char *fmt, va_list ap);"
+.br
+.BR "char *cprintf(const char *fmt, ...);"
+.br
+.BR "wchar_t *vwcprintf(const wchar_t *fmt, va_list ap);"
+.br
+.BR "wchar_t *wcprintf(const wchar_t *fmt, ...);"
+.br
+.BR "char *vwccprintf(const wchar_t *fmt, va_list ap);"
+.br
+.BR "char *wccprintf(const wchar_t *fmt, ...);"
+.br
+.BR "FILE *wfopen(const wchar_t *filename, const wchar_t *modes);"
+.br
+.BR "int xremove(const char *fmt, ...);"
+.br
+.BR "int wremove(const wchar_t *s);"
+.br
+.BR "int xwremove(const wchar_t *fmt, ...);"
+.br
+.BR "char *getcurrentdirectory_size(size_t n);"
+.br
+.BR "char *getcurrentdirectory(void);"
+.br
+.BR "wchar_t *wgetcurrentdirectory_size(size_t n);"
+.br
+.BR "wchar_t *wgetcurrentdirectory(void);"
+
+.SH DESCRIPTION
+The
+.B xstdio.h
+library provides an extended set of I/O functions that enhance
+POSIX and ISO C standard I/O functionality with additional features
+such as Unicode-aware formatted output, full-file reading, descriptor
+helpers, and dynamically allocated string builders.
+
+Functions that allocate memory return dynamically allocated buffers
+that must be released by the caller using
+.BR free (3).
+
+.SS FILE STREAM LOCKING
+
+.BR "void xflockfile(FILE *fp);"
+
+Locks the
+.B FILE *
+stream for the calling thread.
+
+On Windows, this function uses
+.BR _lock_file ().
+On POSIX systems, it uses
+.BR flockfile ().
+
+The function provides a portable interface for explicitly locking a
+.B FILE *
+stream before performing a sequence of operations that must be protected
+from concurrent access.
+
+The lock remains held until the corresponding unlock operation is called.
+
+.SS FLAG-BASED FILE OPENING
+
+.BR "FILE *fopenm(const char *xrestrict filename, int oflag, ...);"
+
+Opens a filename using
+.BR open (3)-style
+flags and returns a standard C
+.B FILE *
+stream.
+
+The function translates the supported flags into an appropriate
+.BR fopen (3)
+mode and opens the file in binary mode.
+
+Supported flags include:
+
+.IP (bu 2
+.BR O_RDONLY
+.IP (bu 2
+.BR O_WRONLY
+.IP (bu 2
+.BR O_RDWR
+.IP (bu 2
+.BR O_APPEND
+.IP (bu 2
+.BR O_BINARY
+
+.SS MODE MAPPING
+
+The following flag combinations are supported:
+
+.TS
+tab(@);
+l l.
+Flags@fopen() mode
+O_RDONLY@"rb"
+O_WRONLY@"wb"
+O_WRONLY | O_APPEND@"ab"
+O_RDWR@"wb+"
+O_RDWR | O_APPEND@"ab+"
+.TE
+
+On success,
+.BR fopenm ()
+returns a
+.B FILE *
+stream.
+
+On failure, it returns
+.BR NULL .
+
+If an invalid access-mode combination is supplied,
+.BR errno
+is set to
+.BR EINVAL .
+
+.BR O_EXCL
+cannot be safely emulated using
+.BR fopen (3)
+and is not supported by this implementation.
+
+.SS wfopenm()
+
+.BR "FILE *wfopenm(const wchar_t *xrestrict filename, int oflag, ...);"
+
+Wide-character equivalent of
+.BR fopenm ().
+
+On Windows,
+.BR wfopenm ()
+uses
+.BR _wfopen ()
+with a wide-character filename.
+
+On POSIX systems, the filename is converted to the platform's
+multibyte representation before opening the file.
+
+The same
+.BR oflag
+values and mode mapping used by
+.BR fopenm ()
+apply.
+
+.SS EXAMPLE
+
+.nf
+#include <stdio.h>
+#include <fcntl.h>
+#include "xstdio.h"
+
+FILE *fp = fopenm("data.bin", O_RDWR | O_APPEND);
+
+if (!fp) {
+perror("fopenm");
+return 1;
+}
+
+fputs("data\n", fp);
+fclose(fp);
+.fi
+
+A wide-character filename may be opened with
+.BR wfopenm ():
+
+.nf
+FILE *fp = wfopenm(L"data.bin", O_RDWR | O_APPEND);
+
+if (!fp) {
+perror("wfopenm");
+return 1;
+}
+
+fputs("data\n", fp);
+fclose(fp);
+.fi
+
+Both functions provide a flag-based interface while returning a standard
+.B FILE *
+stream suitable for use with normal C stdio functions.
+
+.SS DESCRIPTOR OUTPUT
+
+.BR "int fdputs(const char *s, int fd);"
+
+Writes the string
+.I s
+to the file descriptor
+.IR fd .
+
+Returns zero on success and
+.BR -1
+on failure.
+
+.SS CONVERT FILE DESCRIPTOR TO FILE STREAM
+
+.BR "FILE *fdno(int fd);"
+
+Creates a
+.B FILE *
+stream from the file descriptor
+.IR fd .
+
+The descriptor is duplicated before being associated with the resulting
+stream, allowing the returned stream to be closed independently of the
+original descriptor.
+
+.BR "FILE *fdno_unlocked(int fd);"
+
+Creates a
+.B FILE *
+stream from the file descriptor
+.IR fd
+without applying the stream locking operation used by the corresponding
+locked interface.
+
+The exact locking behavior is implementation-dependent and should not
+be confused with the lifetime or ownership of the underlying file
+descriptor.
+
+.SS FULL FILE READ
+
+.BR "size_t fpsize(FILE *fp);"
+
+Retrieves the size of the file associated with the
+.B FILE *
+stream
+.IR fp .
+
+The original file position is preserved.
+
+.BR "void *furead(FILE *fp, size_t *out_size);"
+
+Reads the entire contents of a
+.B FILE *
+stream into dynamically allocated memory.
+
+The original file position is preserved.
+
+On success, the function returns a pointer to the allocated buffer and
+stores the number of bytes read in
+.IR *out_size .
+
+.BR "size_t fdsize(int fd);"
+
+Retrieves the size of the file associated with the file descriptor
+.IR fd .
+
+The function may temporarily change the descriptor's file position
+while determining the size and restores the original position before
+returning.
+
+.BR "void *fduread(int fd, size_t *out_size);"
+
+Reads all data from the file descriptor
+.IR fd
+until end-of-file.
+
+On success, the function returns a dynamically allocated buffer and
+stores the number of bytes read in
+.IR *out_size .
+
+.SS DYNAMIC STRING BUILDERS
+
+.BR "char *vcprintf(const char *fmt, va_list ap);"
+
+Formats a string according to
+.I fmt
+and returns a newly allocated string.
+
+.BR "char *cprintf(const char *fmt, ...);"
+
+Formats a string according to
+.I fmt
+and returns a dynamically allocated string.
+
+.BR "wchar_t *vwcprintf(const wchar_t *fmt, va_list ap);"
+
+Formats a wide-character string according to
+.I fmt
+and returns a newly allocated wide-character string.
+
+.BR "wchar_t *wcprintf(const wchar_t *fmt, ...);"
+
+Formats a wide-character string according to
+.I fmt
+and returns a dynamically allocated wide-character string.
+
+.BR "char *vwccprintf(const wchar_t *fmt, va_list ap);"
+
+Formats a wide-character string and converts the resulting string to
+UTF-8.
+
+.BR "char *wccprintf(const wchar_t *fmt, ...);"
+
+Formats a wide-character string and converts the resulting string to
+UTF-8.
+
+.SS UNICODE FILE OPERATIONS
+
+.BR "FILE *wfopen(const wchar_t *filename, const wchar_t *modes);"
+
+Unicode-aware version of
+.BR fopen (3).
+
+On Windows, it uses
+.BR _wfopen ().
+On POSIX systems, the wide-character filename is converted to the
+platform's multibyte representation before calling
+.BR fopen (3).
+
+.BR "int xremove(const char *fmt, ...);"
+
+Formats a UTF-8 file path and removes the resulting file.
+
+.BR "int wremove(const wchar_t *s);"
+
+Removes a file using a wide-character filename.
+
+.BR "int xwremove(const wchar_t *fmt, ...);"
+
+Formats a wide-character file path and removes the resulting file.
+
+.SS GET DIRECTORY OF CURRENT EXECUTABLE
+
+.BR "char *getcurrentdirectory_size(size_t n);"
+
+Retrieves the directory of the current executable in UTF-8 format,
+using a buffer size of
+.IR n .
+
+.BR "char *getcurrentdirectory(void);"
+
+Retrieves the directory of the current executable in UTF-8 format
+using the default buffer size.
+
+.BR "wchar_t *wgetcurrentdirectory_size(size_t n);"
+
+Retrieves the directory of the current executable in wide-character
+format, using a buffer size of
+.IR n .
+
+.BR "wchar_t *wgetcurrentdirectory(void);"
+
+Retrieves the directory of the current executable in wide-character
+format using the default buffer size.
+
+.SH ERROR HANDLING
+
+Most functions in
+.B xstdio.h
+set
+.BR errno
+on failure.
+
+Common errors include:
+
+.IP (bu 2
+.BR ENOMEM
+Memory allocation failure.
+
+.IP (bu 2
+.BR EINVAL
+Invalid argument.
+
+.IP (bu 2
+.BR ENAMETOOLONG
+Path name too long.
+
+.IP (bu 2
+.BR ENOENT
+No such file or directory.
+
+Functions that allocate memory generally return
+.BR NULL
+when an error occurs.
+
+.SH MEMORY MANAGEMENT
+
+Functions that return dynamically allocated memory require the caller
+to release the returned buffer with
+.BR free (3).
+
+This includes, among others:
+
+.IP (bu 2
+.BR cprintf ()
+.IP (bu 2
+.BR wcprintf ()
+.IP (bu 2
+.BR furead ()
+.IP (bu 2
+.BR fduread ()
+.IP (bu 2
+.BR vwccprintf ()
+.IP (bu 2
+.BR wccprintf ()
+
+.SH THREAD SAFETY
+
+The standard C stdio functions generally provide implementation-defined
+or implementation-supported internal synchronization.
+
+.BR xflockfile ()
+provides explicit stream locking when a sequence of operations must be
+performed while holding the stream lock.
+
+The caller is responsible for releasing an explicitly acquired stream
+lock using the corresponding unlock operation.
+
+.SH CROSS-PLATFORM NOTES
+
+On Windows, functions such as
+.BR wfopen ()
+use Windows-specific APIs including
+.BR _wfopen ()
+and
+.BR _lock_file ().
+
+On POSIX systems, wide-character filenames are converted to the
+platform's multibyte representation before being passed to functions
+such as
+.BR fopen (3).
+
+.SH SEE ALSO
+
+.BR fopen (3),
+.BR fdopen (3),
+.BR read (2),
+.BR write (2),
+.BR printf (3),
+.BR flockfile (3),
+.BR free (3)
+
+.SH LICENSE
+
+This library is distributed under the
+GNU General Public License, version 3 or later.

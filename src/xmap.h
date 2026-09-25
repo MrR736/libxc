@@ -76,7 +76,7 @@ extern "C" {
 #endif
 
 /* Initialize */
-XSTDDEF_INLINE_API void xmap_init(xmap_t *xm) {
+XSTDAPI void XCALLAPI xmap_init(xmap_t *xm) {
 	xm->map = NULL;
 	xm->str = NULL;
 	xm->wstr = NULL;
@@ -94,7 +94,7 @@ XSTDDEF_INLINE_API void xmap_init(xmap_t *xm) {
    It updates xm->map and xm->capacity atomically (no mutex) — caller
    MUST hold the mutex if concurrent use is possible.
 */
-XSTDDEF_INLINE_API int xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
+XSTDAPI int XCALLAPI xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
 	if (xm->capacity >= mincap) return 1;
 	size_t newcap = (xm->capacity == 0) ? 4 : xm->capacity;
 	while (newcap < mincap) newcap *= 2;
@@ -111,7 +111,7 @@ XSTDDEF_INLINE_API int xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
 }
 
 /* Helpers for str/wstr arrays (caller must hold mutex) */
-XSTDDEF_INLINE_API int xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap) {
+XSTDAPI int XCALLAPI xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap) {
 	if (xm->cstr_capacity >= mincap) return 1;
 	size_t newcap = (xm->cstr_capacity == 0) ? 4 : xm->cstr_capacity;
 	while (newcap < mincap) newcap *= 2;
@@ -125,7 +125,7 @@ XSTDDEF_INLINE_API int xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap
 	return 1;
 }
 
-XSTDDEF_INLINE_API int xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap) {
+XSTDAPI int XCALLAPI xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap) {
 	if (xm->cwstr_capacity >= mincap) return 1;
 	size_t newcap = (xm->cwstr_capacity == 0) ? 4 : xm->cwstr_capacity;
 	while (newcap < mincap) newcap *= 2;
@@ -140,7 +140,7 @@ XSTDDEF_INLINE_API int xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t minca
 }
 
 /* Exists? (thread-safe) */
-XSTDDEF_INLINE_API int xmap_exists(xmap_t *xm, size_t i) {
+XSTDAPI int XCALLAPI xmap_exists(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	int exists = (i < xm->count && xm->map[i] != NULL);
 	pthread_mutex_unlock(&xm->mutex);
@@ -148,7 +148,7 @@ XSTDDEF_INLINE_API int xmap_exists(xmap_t *xm, size_t i) {
 }
 
 /* String/wstring existence by string-index (thread-safe) */
-XSTDDEF_INLINE_API int xmap_strexists(xmap_t *xm, size_t i) {
+XSTDAPI int XCALLAPI xmap_strexists(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -160,7 +160,7 @@ XSTDDEF_INLINE_API int xmap_strexists(xmap_t *xm, size_t i) {
 	return exists;
 }
 
-XSTDDEF_INLINE_API int xmap_wcsexists(xmap_t *xm, size_t i) {
+XSTDAPI int XCALLAPI xmap_wcsexists(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cwstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -173,7 +173,7 @@ XSTDDEF_INLINE_API int xmap_wcsexists(xmap_t *xm, size_t i) {
 }
 
 /* Insert data pointer (thread-safe) */
-XSTDDEF_INLINE_API void xmap_insert(xmap_t *xm, void *data) {
+XSTDAPI void XCALLAPI xmap_insert(xmap_t *xm, void *data) {
 	pthread_mutex_lock(&xm->mutex);
 	if (!xmap_ensure_capacity_nolock(xm, xm->count + 1)) {
 		/* errno set by ensure; leave map unchanged */
@@ -185,14 +185,14 @@ XSTDDEF_INLINE_API void xmap_insert(xmap_t *xm, void *data) {
 }
 
 /* Non-locking insert (caller must hold mutex) */
-XSTDDEF_INLINE_API int xmap_insert_nolock(xmap_t *xm, void *data) {
+XSTDAPI int XCALLAPI xmap_insert_nolock(xmap_t *xm, void *data) {
 	if (!xmap_ensure_capacity_nolock(xm, xm->count + 1)) return 0;
 	xm->map[xm->count++] = data;
 	return 1;
 }
 
 /* String Insert data pointer (thread-safe) */
-XSTDDEF_INLINE_API void xmap_strinsert(xmap_t *xm, const char* str) {
+XSTDAPI void XCALLAPI xmap_strinsert(xmap_t *xm, const char* str) {
 	if (!str) return;
 	char* copy = strdup(str);
 	if (!copy) {
@@ -223,7 +223,7 @@ XSTDDEF_INLINE_API void xmap_strinsert(xmap_t *xm, const char* str) {
 }
 
 /* Non-locking variant: caller must hold mutex */
-XSTDDEF_INLINE_API int xmap_strinsert_nolock(xmap_t *xm, const char* str) {
+XSTDAPI int XCALLAPI xmap_strinsert_nolock(xmap_t *xm, const char* str) {
 	if (!str) return 0;
 	char* copy = strdup(str);
 	if (!copy) {
@@ -245,7 +245,7 @@ XSTDDEF_INLINE_API int xmap_strinsert_nolock(xmap_t *xm, const char* str) {
 }
 
 /* String getter (thread-safe) */
-XSTDDEF_INLINE_API char* xmap_strget(xmap_t *xm, size_t i) {
+XSTDAPI char* XCALLAPI xmap_strget(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -263,7 +263,7 @@ XSTDDEF_INLINE_API char* xmap_strget(xmap_t *xm, size_t i) {
 }
 
 /* Wchar Insert data pointer (thread-safe) */
-XSTDDEF_INLINE_API void xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
+XSTDAPI void XCALLAPI xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
 	if (!str) return;
 	wchar_t *copy = wcsdup(str);
 	if (!copy) {
@@ -293,7 +293,7 @@ XSTDDEF_INLINE_API void xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
 }
 
 /* Wchar getter (thread-safe) */
-XSTDDEF_INLINE_API wchar_t* xmap_wcsget(xmap_t *xm, size_t i) {
+XSTDAPI wchar_t* XCALLAPI xmap_wcsget(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cwstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -311,7 +311,7 @@ XSTDDEF_INLINE_API wchar_t* xmap_wcsget(xmap_t *xm, size_t i) {
 }
 
 /* Generic get (thread-safe) - avoids nested locking by checking directly */
-XSTDDEF_INLINE_API void* xmap_get(xmap_t* xm, size_t i) {
+XSTDAPI void* XCALLAPI xmap_get(xmap_t* xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->count) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -323,7 +323,7 @@ XSTDDEF_INLINE_API void* xmap_get(xmap_t* xm, size_t i) {
 }
 
 /* Erase entry and shift (thread-safe). Frees stored pointer. */
-XSTDDEF_INLINE_API void xmap_erase(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_erase(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->count) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -337,16 +337,14 @@ XSTDDEF_INLINE_API void xmap_erase(xmap_t *xm, size_t i) {
 	free(xm->map[i]);
 
 	/* shift map entries left */
-	for (size_t j = i; j + 1 < xm->count; ++j)
-		xm->map[j] = xm->map[j + 1];
+	for (size_t j = i; j + 1 < xm->count; ++j) xm->map[j] = xm->map[j + 1];
 	xm->map[xm->count - 1] = NULL;
 
 	/* fix str index list */
 	for (size_t k = 0; k < xm->cstr;) {
 		if (xm->str[k] == i) {
 			/* remove this mapping */
-			for (size_t m = k; m + 1 < xm->cstr; ++m)
-				xm->str[m] = xm->str[m + 1];
+			for (size_t m = k; m + 1 < xm->cstr; ++m) xm->str[m] = xm->str[m + 1];
 			xm->cstr--;
 			/* don't increment k: new element at k must be checked */
 			continue;
@@ -358,8 +356,7 @@ XSTDDEF_INLINE_API void xmap_erase(xmap_t *xm, size_t i) {
 	/* fix wstr index list */
 	for (size_t k = 0; k < xm->cwstr;) {
 		if (xm->wstr[k] == i) {
-			for (size_t m = k; m + 1 < xm->cwstr; ++m)
-				xm->wstr[m] = xm->wstr[m + 1];
+			for (size_t m = k; m + 1 < xm->cwstr; ++m) xm->wstr[m] = xm->wstr[m + 1];
 			xm->cwstr--;
 			continue;
 		}
@@ -372,7 +369,7 @@ XSTDDEF_INLINE_API void xmap_erase(xmap_t *xm, size_t i) {
 }
 
 /* Erase entry but do not shift map (thread-safe). Frees pointer and sets slot NULL. */
-XSTDDEF_INLINE_API void xmap_erase_no_shift(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_erase_no_shift(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->count) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -388,7 +385,7 @@ XSTDDEF_INLINE_API void xmap_erase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDDEF_INLINE_API void xmap_strerase(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_strerase(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -398,28 +395,25 @@ XSTDDEF_INLINE_API void xmap_strerase(xmap_t *xm, size_t i) {
 	if (ret < xm->count && xm->map[ret]) {
 		free(xm->map[ret]);
 	}
+
 	/* shift map entries starting at ret */
-	for (size_t j = ret; j + 1 < xm->count; ++j)
-		xm->map[j] = xm->map[j + 1];
+	for (size_t j = ret; j + 1 < xm->count; ++j) xm->map[j] = xm->map[j + 1];
 	xm->map[xm->count - 1] = NULL;
 
 	/* remove str index at i and shift left */
-	for (size_t j = i; j + 1 < xm->cstr; ++j)
-		xm->str[j] = xm->str[j + 1];
+	for (size_t j = i; j + 1 < xm->cstr; ++j) xm->str[j] = xm->str[j + 1];
 	xm->cstr--;
 
 	/* Fix all str/wstr indices that referenced indices after ret */
-	for (size_t k = 0; k < xm->cstr; ++k)
-		if (xm->str[k] > ret) xm->str[k]--;
-	for (size_t k = 0; k < xm->cwstr; ++k)
-		if (xm->wstr[k] > ret) xm->wstr[k]--;
+	for (size_t k = 0; k < xm->cstr; ++k) if (xm->str[k] > ret) xm->str[k]--;
+	for (size_t k = 0; k < xm->cwstr; ++k) if (xm->wstr[k] > ret) xm->wstr[k]--;
 
 	xm->count--;
 	pthread_mutex_unlock(&xm->mutex);
 }
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDDEF_INLINE_API void xmap_wcserase(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_wcserase(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 
 	if (i >= xm->cwstr) {
@@ -460,7 +454,7 @@ XSTDDEF_INLINE_API void xmap_wcserase(xmap_t *xm, size_t i) {
 
 
 /* String erase no shift (thread-safe): free stored string and clear map slot; keep str index list */
-XSTDDEF_INLINE_API void xmap_strerase_no_shift(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_strerase_no_shift(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -475,7 +469,7 @@ XSTDDEF_INLINE_API void xmap_strerase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* Wchar erase no shift (thread-safe) */
-XSTDDEF_INLINE_API void xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
+XSTDAPI void XCALLAPI xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
 	pthread_mutex_lock(&xm->mutex);
 	if (i >= xm->cwstr) {
 		pthread_mutex_unlock(&xm->mutex);
@@ -490,7 +484,7 @@ XSTDDEF_INLINE_API void xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* Destroy: free elements and arrays (thread-safe). After this call xm is unusable. */
-XSTDDEF_INLINE_API void xmap_destroy(xmap_t *xm) {
+XSTDAPI void XCALLAPI xmap_destroy(xmap_t *xm) {
 	pthread_mutex_lock(&xm->mutex);
 	for (size_t i = 0; i < xm->count; ++i) {
 		if (xm->map && xm->map[i]) free(xm->map[i]);
@@ -541,35 +535,35 @@ xmap_iterator<T> xmap_end(xmap_t* xm) { return xmap_iterator<T>(xm, xm->count); 
 
 /* C++ convenience wrappers */
 
-XSTDDEF_INLINE_API void xxmap_strinsert(xmap_t *xm, const std::string& str) {
+XSTDAPI void XCALLAPI xxmap_strinsert(xmap_t *xm, const std::string& str) {
 	xmap_strinsert(xm, str.c_str());
 }
 
-XSTDDEF_INLINE_API int xxmap_strinsert_safe(xmap_t *xm, const std::string& str) {
+XSTDAPI int XCALLAPI xxmap_strinsert_safe(xmap_t *xm, const std::string& str) {
 	/* safe variant name preserved, routing to non-locking is intentionally omitted:
 	   use xmap_strinsert which is thread-safe */
 	xmap_strinsert(xm, str.c_str());
 	return 1;
 }
 
-XSTDDEF_INLINE_API std::string xxmap_strget(xmap_t *xm, size_t i) {
+XSTDAPI std::string XCALLAPI xxmap_strget(xmap_t *xm, size_t i) {
 	char *p = xmap_strget(xm,i);
 	if (!p) return std::string();
 	return std::string(p);
 }
 
-XSTDDEF_INLINE_API int xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str) {
+XSTDAPI int XCALLAPI xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str) {
 	/* safe variant name preserved, routing to non-locking is intentionally omitted:
 	   use xmap_strinsert which is thread-safe */
 	xmap_wcsinsert(xm, str.c_str());
 	return 1;
 }
 
-XSTDDEF_INLINE_API void xxmap_wcsinsert(xmap_t *xm, const std::wstring& str) {
+XSTDAPI void XCALLAPI xxmap_wcsinsert(xmap_t *xm, const std::wstring& str) {
 	xmap_wcsinsert(xm, str.c_str());
 }
 
-XSTDDEF_INLINE_API std::wstring xxmap_wcsget(xmap_t *xm, size_t i) {
+XSTDAPI std::wstring XCALLAPI xxmap_wcsget(xmap_t *xm, size_t i) {
 	wchar_t *p = xmap_wcsget(xm,i);
 	if (!p) return std::wstring();
 	return std::wstring(p);

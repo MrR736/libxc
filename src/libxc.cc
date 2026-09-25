@@ -1,4 +1,4 @@
-#define XSTDDEF_INLINE_API XSTDDEF_EXPORT_API
+#define XSTDAPI_BUILD
 #include "xlocale.h"
 #include "xstdio.h"
 #include "xstdlib.h"
@@ -7,3 +7,5 @@
 #include "xmap.h"
 #include "xctype.h"
 #include "xwctype.h"
+#include "xstat.h"
+#include "xdlfcn.h"
