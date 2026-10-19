@@ -32,7 +32,7 @@ typedef HANDLE xthread_t;
 typedef CRITICAL_SECTION xmutex_t;
 
 typedef struct {
-	void *(XCALLAPI *start_routine)(void *);
+	void *(XCALLAPI *lpStartAddress)(void *);
 	void *lpParameter;
 	void *result;
 } __xthread_t;
@@ -214,11 +214,13 @@ XSTDAPI xthread_result_t XCALLAPI xthread_createw(xthread_t* thread,LPTHREAD_STA
 XSTDAPI xthread_result_t XCALLAPI xthread_join(xthread_t thread, void **retval) {
 #ifdef _WIN32
 	DWORD wait_res = WaitForSingleObject(thread, INFINITE);
-	if (wait_res != WAIT_OBJECT_0) return wait_res;
-	__xthread_t *data;
-	if (!GetExitCodeThread(thread, (LPDWORD)&data)) return GetLastError();
+	if (wait_res != WAIT_OBJECT_0) return (xthread_result_t)(wait_res == WAIT_FAILED ? GetLastError() : ERROR_GEN_FAILURE);
+	DWORD exit_code;
+	if (!GetExitCodeThread(thread, &exit_code)) return (xthread_result_t)GetLastError();
+	if (retval != NULL) *retval = NULL;
+	return 0;
 #else
-	return pthread_join(thread,retval);
+	return pthread_join(thread, retval);
 #endif
 }
 
