@@ -1,0 +1,462 @@
+.TH XDLFCN 3 "2026" "Extern Library" "Programmer's Manual"
+.SH NAME
+xdlfcn - cross-platform dynamic library loading and symbol lookup
+.SH SYNOPSIS
+.nf
+.B #include "xdlfcn.h"
+.PP
+.BI "char *xdllibpath(const char *" dir ", const char *" name ");"
+.BI "wchar_t *xwdllibpath(const wchar_t *" dir ", const wchar_t *" name ");"
+.BI "const char *xcdllibpath(const char *" dir ", const char *" name ");"
+.BI "const wchar_t *xcwdllibpath(const wchar_t *" dir ", const wchar_t *" name ");"
+.PP
+.B "typedef struct {"
+.B "    const char *dli_fname;"
+.B "    void *dli_fbase;"
+.B "    const char *dli_sname;"
+.B "    void *dli_saddr;"
+.B "} XDl_info;"
+.PP
+.BI "int xdladdr(const void *" addr ", XDl_info *" info ");"
+.PP
+.BI "xhandle_t xdlopen(const char *" file ", int " mode ");"
+.BI "xhandle_t xwdlopen(const wchar_t *" file ", int " mode ");"
+.BI "xproc_t xdlsym(xhandle_t " handle ", const char *" name ");"
+.BI "xproc_t xwdlsym(xhandle_t " handle ", const wchar_t *" name ");"
+.B "char *xdlerror(void);"
+.B "wchar_t *xwdlerror(void);"
+.BI "int xdlclose(xhandle_t " handle ");"
+.PP
+.BI "FARPROC GetProcAddressA(HMODULE " hModule ", LPCSTR " lpProcName ");"
+.BI "FARPROC GetProcAddressW(HMODULE " hModule ", LPCWSTR " lpProcName ");"
+.PP
+On non-Windows systems:
+.PP
+.BI "HMODULE GetModuleHandleA(LPCSTR " lpModuleName ");"
+.BI "HMODULE GetModuleHandleW(LPCWSTR " lpModuleName ");"
+.BI "HMODULE LoadLibraryA(LPCSTR " lpLibFileName ");"
+.BI "HMODULE LoadLibraryW(LPCWSTR " lpLibFileName ");"
+.BI "FARPROC GetProcAddress(HMODULE " hModule ", LPCSTR " lpProcName ");"
+.BI "WINBOOL FreeLibrary(HMODULE " hLibModule ");"
+.fi
+.SH DESCRIPTION
+The
+.B xdlfcn.h
+header provides a cross-platform interface for constructing library paths, loading and unloading dynamic libraries, looking up exported symbols, reporting loader errors, and obtaining information about the loaded object associated with an address.
+.PP
+On POSIX systems, the interface uses the standard dynamic-loading facilities declared in
+.BR <dlfcn.h> ,
+including
+.BR dlopen (3),
+.BR dlsym (3),
+.BR dlerror (3),
+and
+.BR dlclose (3).
+On Windows, it uses the Windows dynamic-loader APIs.
+.PP
+The header includes
+.BR "xtypes.h"
+and
+.BR "xstddef.h" ,
+which provide project-specific types and declarations used by the interface.
+.SH LOADER FLAGS
+The
+.B XRTLD_*
+macros define portable names for dynamic-loader flags and symbol-lookup controls. Their definitions and runtime semantics depend on the platform.
+.TP
+.B XRTLD_LAZY
+Request lazy symbol resolution where supported. On POSIX systems, this maps to
+.BR RTLD_LAZY .
+Windows does not provide an equivalent flag with distinct lazy-binding semantics.
+.TP
+.B XRTLD_NOW
+Request symbol resolution when loading the library where supported. On POSIX systems, this maps to
+.BR RTLD_NOW .
+Windows does not provide an equivalent flag with distinct immediate-binding semantics.
+.TP
+.B XRTLD_BINDING_MASK
+Mask for binding-related flags. On POSIX systems, this maps to
+.BR RTLD_BINDING_MASK .
+.TP
+.B XRTLD_NOLOAD
+Request a handle to an already loaded library without loading a new one where supported. On POSIX systems, this maps to
+.B RTLD_NOLOAD
+when available; otherwise, the header defines the fallback value
+.BR 0x00004 .
+On Windows, the header also defines this value as a project-specific flag.
+.TP
+.B XRTLD_DEEPBIND
+Request deep symbol binding where supported. On POSIX systems, this maps to
+.B RTLD_DEEPBIND
+when available; otherwise, the header defines the fallback value
+.BR 0x00008 .
+Windows has no direct equivalent.
+.TP
+.B XRTLD_NODELETE
+Request that a library remain mapped after unloading where supported. On POSIX systems, this maps to
+.B RTLD_NODELETE
+when available; otherwise, the header defines the fallback value
+.BR 0x00010 .
+.TP
+.B XRTLD_LOCAL
+Keep the loaded library's symbols local where supported. On POSIX systems, this maps to
+.BR RTLD_LOCAL .
+The Windows definition is zero.
+.TP
+.B XRTLD_GLOBAL
+Make the loaded library's symbols globally available where supported. On POSIX systems, this maps to
+.BR RTLD_GLOBAL .
+The Windows definition is
+.BR 0x00100 .
+.TP
+.B XRTLD_FIRST
+Request first-level symbol lookup where supported. The header defines this as zero on Windows and maps it to
+.B RTLD_FIRST
+on Apple platforms when available.
+.TP
+.B XRTLD_NEXT
+Special lookup handle for finding the next definition of a symbol after the current object where supported. The header maps this to
+.B RTLD_NEXT
+when available and otherwise defines a fallback handle value.
+.TP
+.B XRTLD_DEFAULT
+Special lookup handle for searching the default symbol scope where supported. The header maps this to
+.B RTLD_DEFAULT
+when available and otherwise defines a platform-specific fallback handle.
+.TP
+.B XRTLD_SELF
+Apple-specific special lookup handle for the current image and its dependencies. Defined only when
+.B **APPLE**
+is set.
+.TP
+.B XRTLD_MAIN_ONLY
+Apple-specific special lookup handle for the main executable only. Defined only when
+.B **APPLE**
+is set.
+.PP
+Fallback constants ensure that macros can be referenced at compile time; they do not guarantee that the underlying platform implements the corresponding runtime behavior. Consult the implementation before relying on a flag whose native definition is unavailable.
+.SH LIBRARY PATH UTILITIES
+.SS xdllibpath()
+.nf
+.BI "char *xdllibpath(const char *" dir ", const char *" name ");"
+.fi
+Constructs a library path from a directory and a library name using narrow-character strings.
+.PP
+Returns a mutable character pointer. The header does not specify the allocation method, ownership rules, path separator behavior, or the lifetime of the returned string.
+.SS xwdllibpath()
+.nf
+.BI "wchar_t *xwdllibpath(const wchar_t *" dir ", const wchar_t *" name ");"
+.fi
+Wide-character counterpart of
+.BR xdllibpath ().
+Constructs a library path using wide-character strings.
+.PP
+Returns a mutable wide-character pointer. Allocation and ownership rules depend on the implementation.
+.SS xcdllibpath()
+.nf
+.BI "const char *xcdllibpath(const char *" dir ", const char *" name ");"
+.fi
+Narrow-character library-path utility returning a pointer to constant character data.
+.PP
+The header does not specify whether the result uses static, cached, or dynamically allocated storage. Consult the implementation for the result's lifetime and thread-safety guarantees.
+.SS xcwdllibpath()
+.nf
+.BI "const wchar_t *xcwdllibpath(const wchar_t *" dir ", const wchar_t *" name ");"
+.fi
+Wide-character counterpart of
+.BR xcdllibpath ().
+Returns a pointer to constant wide-character data. The storage and lifetime of the result depend on the implementation.
+.SH ADDRESS INFORMATION
+.SS xdladdr()
+.nf
+.BI "int xdladdr(const void *" addr ", XDl_info *" info ");"
+.fi
+Attempts to retrieve information about the loaded object and nearest symbol associated with
+.IR addr .
+The result is written to the structure pointed to by
+.IR info .
+.PP
+The
+.B XDl_info
+structure contains the following members:
+.TP
+.B dli_fname
+File name of the object defining the address.
+.TP
+.B dli_fbase
+Load or base address of that object.
+.TP
+.B dli_sname
+Name of the nearest symbol associated with the address, when available.
+.TP
+.B dli_saddr
+Address associated with that symbol, when available.
+.PP
+The header does not specify the function's success and failure return values or guarantee that symbol information is available on every platform. Refer to the implementation for those details.
+.SH LOADING AND UNLOADING
+.SS xdlopen()
+.nf
+.BI "xhandle_t xdlopen(const char *" file ", int " mode ");"
+.fi
+Loads a dynamic library specified by a narrow-character filename.
+.PP
+On POSIX systems, the function uses
+.BR dlopen (3).
+The
+.I mode
+argument accepts the applicable
+.B XRTLD_*
+flags.
+On Windows, the function uses the native library loader. Flags without native Windows equivalents may have no distinct effect or may be handled specially by the implementation.
+.PP
+Returns an
+.B xhandle_t
+handle on success or
+.B NULL
+on failure.
+.SS xwdlopen()
+.nf
+.BI "xhandle_t xwdlopen(const wchar_t *" file ", int " mode ");"
+.fi
+Wide-character counterpart of
+.BR xdlopen ().
+.PP
+On Windows, the function uses wide-character native loader facilities. On POSIX systems, the filename is converted to a multibyte representation using
+.BR xwcstombs ()
+before being passed to
+.BR dlopen (3).
+.PP
+Returns an
+.B xhandle_t
+handle on success or
+.B NULL
+on failure.
+.SS xdlclose()
+.nf
+.BI "int xdlclose(xhandle_t " handle ");"
+.fi
+Releases a reference to a previously loaded dynamic library.
+.PP
+On POSIX systems, the function uses
+.BR dlclose (3).
+On Windows, it uses the native library-unloading API.
+.PP
+Returns an integer status. The precise failure value and error-reporting behavior should be verified against the implementation.
+.SH SYMBOL LOOKUP
+.SS xdlsym()
+.nf
+.BI "xproc_t xdlsym(xhandle_t " handle ", const char *" name ");"
+.fi
+Looks up an exported symbol using a narrow-character name.
+.PP
+On POSIX systems, the function uses
+.BR dlsym (3).
+On Windows, it uses
+.BR GetProcAddress ().
+The
+.I handle
+argument identifies a library or a supported special lookup scope, and
+.I name
+specifies the symbol.
+.PP
+Returns a
+.B xproc_t
+symbol address or a failure value as defined by the implementation.
+.SS xwdlsym()
+.nf
+.BI "xproc_t xwdlsym(xhandle_t " handle ", const wchar_t *" name ");"
+.fi
+Wide-character counterpart of
+.BR xdlsym ().
+The symbol name is converted to the representation required by the underlying lookup API.
+.PP
+On Windows, symbol lookup ultimately uses
+.BR GetProcAddress ().
+On POSIX systems, the converted name is passed to
+.BR dlsym (3).
+.PP
+Returns a
+.B xproc_t
+symbol address or a failure value as defined by the implementation.
+.SH ERROR REPORTING
+.SS xdlerror()
+.nf
+.B "char *xdlerror(void);"
+.fi
+Returns a narrow-character description of a dynamic-loader error.
+.PP
+On POSIX systems, the function uses
+.BR dlerror (3).
+POSIX error handling has its own loader error state; callers should check the result of the preceding operation and retrieve the error when appropriate.
+.PP
+On Windows, the function may obtain an error code through
+.BR GetLastError ()
+and format a human-readable message using
+.BR FormatMessageA ().
+The header does not specify buffer lifetime or whether retrieving the message consumes or resets the underlying error state.
+.SS xwdlerror()
+.nf
+.B "wchar_t *xwdlerror(void);"
+.fi
+Wide-character counterpart of
+.BR xdlerror ().
+.PP
+On Windows, the function may use
+.BR FormatMessageW ()
+to produce a wide-character error message. On POSIX systems, it may convert the result of
+.BR dlerror (3)
+using
+.BR xmbstowcs ().
+.PP
+The header does not specify the lifetime of the returned pointer or the behavior when no error is available.
+.SH WINDOWS-COMPATIBLE WRAPPERS
+.SS GetProcAddressA()
+.nf
+.BI "FARPROC GetProcAddressA(HMODULE " hModule ", LPCSTR " lpProcName ");"
+.fi
+Looks up an exported symbol using a narrow-character name. This function provides a Windows-style narrow-character symbol-lookup interface.
+.SS GetProcAddressW()
+.nf
+.BI "FARPROC GetProcAddressW(HMODULE " hModule ", LPCWSTR " lpProcName ");"
+.fi
+Wide-character symbol-lookup interface. The native Windows
+.B GetProcAddress()
+API accepts narrow-character symbol names, so an implementation must convert the supplied name before performing the lookup.
+.PP
+On non-Windows systems, these functions provide compatibility interfaces implemented by the library.
+.SH POSIX COMPATIBILITY WRAPPERS
+On non-Windows systems, the header declares Windows-style library-management interfaces.
+.SS GetModuleHandleA() and GetModuleHandleW()
+.nf
+.BI "HMODULE GetModuleHandleA(LPCSTR " lpModuleName ");"
+.BI "HMODULE GetModuleHandleW(LPCWSTR " lpModuleName ");"
+.fi
+Provide narrow-character and wide-character interfaces for obtaining a module handle. The compatibility implementation may use the no-load lookup mechanism where supported.
+.SS LoadLibraryA() and LoadLibraryW()
+.nf
+.BI "HMODULE LoadLibraryA(LPCSTR " lpLibFileName ");"
+.BI "HMODULE LoadLibraryW(LPCWSTR " lpLibFileName ");"
+.fi
+Load a library using narrow-character and wide-character filenames, respectively. The compatibility implementation may use
+.B XRTLD_LAZY
+as its default loading mode.
+.SS GetProcAddress()
+.nf
+.BI "FARPROC GetProcAddress(HMODULE " hModule ", LPCSTR " lpProcName ");"
+.fi
+Looks up an exported symbol using a narrow-character name.
+.SS FreeLibrary()
+.nf
+.BI "WINBOOL FreeLibrary(HMODULE " hLibModule ");"
+.fi
+Releases a library handle and returns a
+.B WINBOOL
+result. Its implementation corresponds to the platform's dynamic-library unloading mechanism.
+.PP
+The header defines the generic
+.B GetModuleHandle
+and
+.B LoadLibrary
+names using
+.BR __LIBXC_NAME_AW ,
+which selects the appropriate narrow- or wide-character API according to the project's configuration.
+.SH IMPLEMENTATION CONSTANTS
+The header defines the following constants:
+.TP
+.B XDLFCN_ERROR_BUFFER
+Defined as 512. Intended as an error-buffer size constant.
+.TP
+.B XDLFCN_PATH_BUFFER
+Defined as
+.BR XPATH_MAX .
+Intended as a path-buffer size constant.
+.TP
+.B XDLFCN_MAX_SYM_NAME
+Defined as 2000. Intended as a symbol-name length constant.
+.PP
+These constants are declared by the header. The header alone does not establish whether they impose hard limits on public functions.
+.SH EXAMPLE
+.nf
+#include <stdio.h>
+#include "xdlfcn.h"
+
+int main(void)
+{
+xhandle_t handle;
+xproc_t symbol;
+char *error;
+
+```
+handle = xdlopen("libexample.so", XRTLD_NOW);
+if (handle == NULL) {
+    error = xdlerror();
+    if (error != NULL)
+        fprintf(stderr, "xdlopen: %s\\n", error);
+    return 1;
+}
+
+symbol = xdlsym(handle, "example_function");
+if (symbol == NULL) {
+    error = xdlerror();
+    if (error != NULL)
+        fprintf(stderr, "xdlsym: %s\\n", error);
+    xdlclose(handle);
+    return 1;
+}
+
+/*
+ * Use the symbol according to its known function type.
+ * Converting FARPROC to a function pointer is platform-dependent.
+ */
+
+xdlclose(handle);
+return 0;
+```
+
+}
+.fi
+.SH THREAD SAFETY
+The header does not specify the thread-safety guarantees of the public functions.
+.PP
+Error-state handling, internal buffers, and the lifetime of returned path or error strings depend on the implementation and underlying platform.
+.PP
+A library must not be unloaded while another thread may execute code from it or access symbols whose validity depends on it remaining loaded.
+.SH PORTABILITY NOTES
+The interface uses project-defined types and calling-convention macros, including
+.BR HMODULE ,
+.BR FARPROC ,
+.BR WINBOOL ,
+.BR XSTDAPI ,
+and
+.BR XCALLAPI .
+Programs must include the required project headers and link against the appropriate library implementation.
+.PP
+The POSIX loader flags and Windows loader flags do not have identical semantics. In particular, fallback macro definitions make some names available at compile time without guaranteeing equivalent runtime behavior.
+.PP
+The filename
+.B libexample.so
+in the example is typical of many Unix-like systems. Windows library filenames and extensions differ; applications should supply a filename appropriate for their target platform.
+.SH SEE ALSO
+.BR dlopen (3),
+.BR dlsym (3),
+.BR dlerror (3),
+.BR dlclose (3),
+.BR LoadLibraryA (),
+.BR LoadLibraryW (),
+.BR GetModuleHandleA (),
+.BR GetModuleHandleW (),
+.BR GetProcAddress (),
+.BR FreeLibrary ()
+.SH AUTHOR
+Written by MrR736.
+.SH COPYRIGHT
+Copyright (co 2026 MrR736.
+.PP
+This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+.PP
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+.PP
+If a copy of the GNU General Public License was not distributed with this program, see
+.UR https://www.gnu.org/licenses/
+https://www.gnu.org/licenses/
+.UE

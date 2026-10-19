@@ -1,0 +1,826 @@
+." XLOG(3) Manual Page
+.TH XLOG 3 "2026" "Extern Library" "Programmer's Manual"
+.SH NAME
+xlog_vcprint, xlog_cprint, xlog_print, xlog_vprint, XLOGV, XLOGD, XLOGI, XLOGW, XLOGE, XLOGF - cross-platform logging and diagnostic utilities
+.SH SYNOPSIS
+.nf
+#include "xlog.h"
+
+XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char *file,const char *tag,const char *fmt,va_list ap);
+
+XSTDAPI int XCALLAPI xlog_cprint(int prio,int line,const char *file,const char *tag,const char *fmt,...);
+
+#define xlog_vprint(prio,tag,fmt,ap) \
+xlog_vcprint(prio,**LINE**,**FILE**,tag,fmt,ap)
+
+#define xlog_print(prio,tag,fmt,...) \
+xlog_cprint(prio,**LINE**,**FILE**,tag,fmt,##**VA_ARGS**)
+
+#define XLOGE(tag,fmt,...) \
+xlog_print(XLOG_ERROR,tag,fmt,##**VA_ARGS**)
+
+#define XLOGI(tag,fmt,...) \
+xlog_print(XLOG_INFO,tag,fmt,##**VA_ARGS**)
+
+#define XLOGV(tag,fmt,...) \
+xlog_print(XLOG_VERBOSE,tag,fmt,##**VA_ARGS**)
+
+#define XLOGW(tag,fmt,...) \
+xlog_print(XLOG_WARN,tag,fmt,##**VA_ARGS**)
+
+#define XLOGF(tag,fmt,...) \
+xlog_print(XLOG_FATAL,tag,fmt,##**VA_ARGS**)
+
+#ifdef DEBUG
+# define XLOGD(tag,fmt,...) xlog_print(XLOG_DEBUG,tag,fmt,##__VA_ARGS__)
+#else
+# define XLOGD(tag,fmt,...) 0
+#endif
+.fi
+
+.SH DESCRIPTION
+The
+.B xlog
+library provides a lightweight, cross-platform logging interface for the
+Extern Library.
+
+It provides standardized log priorities, platform-independent logging
+macros, automatic source file and line information, tagged messages,
+variadic and
+.B va_list
+logging interfaces, timestamped output on desktop and POSIX platforms,
+Android Logcat integration, Windows-compatible time handling, debug-only
+logging, and configurable output through
+.B XLOG_STREAM .
+
+The API is designed to provide a single logging interface across Windows,
+POSIX-compatible systems, and Android.
+
+.SH 1. OVERVIEW
+.B xlog.h
+provides the logging and diagnostic interface used by the Extern Library.
+
+The interface includes:
+
+.IP (bu 2
+Standardized log priorities.
+.IP (bu 2
+Platform-independent logging macros.
+.IP (bu 2
+Automatic source file and line information.
+.IP (bu 2
+Tagged log messages.
+.IP (bu 2
+Variadic and
+.B va_list
+logging interfaces.
+.IP (bu 2
+Timestamped output on desktop and POSIX platforms.
+.IP (bu 2
+Android Logcat integration.
+.IP (bu 2
+Windows-compatible time handling.
+.IP (bu 2
+Debug-only logging.
+.IP (bu 2
+Configurable output through
+.BR XLOG_STREAM .
+
+The API is intended to hide platform-specific logging details while
+providing a consistent C interface.
+
+.SH 2. HEADER DEPENDENCIES
+The public header includes:
+
+.nf
+#include <stdio.h>
+#include "xstdio.h"
+.fi
+
+The implementation additionally relies on:
+
+.nf
+#include <stdarg.h>
+#include <time.h>
+.fi
+
+The logging interface uses:
+
+.IP (bu 2
+.B FILE
+and standard streams.
+.IP (bu 2
+.B va_list
+for variadic logging.
+.IP (bu 2
+.B time_t
+and
+.B struct tm
+for timestamps.
+.IP (bu 2
+.BR strftime (3)
+for timestamp formatting.
+
+.SH 3. DEFAULT CONFIGURATION
+The logger provides two configurable defaults:
+
+.nf
+#define XLOG_DEFAULT_TAG "XLOG"
+#define XLOG_STREAM      stderr
+.fi
+
+.SS Default tag
+When a caller supplies a NULL tag, the logger uses:
+
+.nf
+XLOG
+.fi
+
+For example:
+
+.nf
+XLOGI(NULL, "Library initialized");
+.fi
+
+produces output similar to:
+
+.nf
+2026-09-30 18:30:42 [INFO]	XLOG (main.c:42) Library initialized
+.fi
+
+.SS Output stream
+On non-Android platforms, output is written to:
+
+.nf
+stderr
+.fi
+
+through:
+
+.nf
+#define XLOG_STREAM stderr
+.fi
+
+Applications may redefine
+.B XLOG_STREAM
+before including
+.B xlog.h
+if a different
+.B FILE *
+is required.
+
+.SH 4. LOG PRIORITIES
+.B XLogPriority
+defines the available logging levels:
+
+.nf
+typedef enum XLogPriority {
+XLOG_UNKNOWN = 0,
+XLOG_DEFAULT,
+XLOG_VERBOSE,
+XLOG_DEBUG,
+XLOG_INFO,
+XLOG_WARN,
+XLOG_ERROR,
+XLOG_FATAL,
+XLOG_SILENT
+} XLogPriority;
+.fi
+
+.SS Priority meanings
+.TS
+tab(@);
+l l.
+Priority@Purpose
+_
+XLOG_UNKNOWN@Unknown or unsupported priority
+XLOG_DEFAULT@Default logging priority
+XLOG_VERBOSE@Detailed diagnostic information
+XLOG_DEBUG@Developer/debugging information
+XLOG_INFO@General informational messages
+XLOG_WARN@Recoverable problems or warnings
+XLOG_ERROR@Errors requiring attention
+XLOG_FATAL@Fatal conditions or abort scenarios
+XLOG_SILENT@Suppresses output
+.TE
+
+.B XLOG_UNKNOWN ,
+.B XLOG_DEFAULT ,
+and
+.B XLOG_SILENT
+are primarily intended for internal or platform-specific handling.
+
+.SH 5. LOGGING API
+The library exposes two core functions:
+.BR xlog_vcprint ()
+and
+.BR xlog_cprint ().
+
+.SS xlog_vcprint()
+.nf
+XSTDAPI int XCALLAPI xlog_vcprint(
+int prio,
+int line,
+const char *file,
+const char *tag,
+const char *fmt,
+va_list ap
+);
+.fi
+
+.B xlog_vcprint()
+is the
+.B va_list
+implementation of the logging system.
+
+Arguments are:
+
+.IP \fIprio\fP 12
+Log priority.
+.IP \fIline\fP 12
+Source line number.
+.IP \fIfile\fP 12
+Source filename.
+.IP \fItag\fP 12
+Log category or tag.
+.IP \fIfmt\fP 12
+printf-style format string.
+.IP \fIap\fP 12
+Variable argument list.
+
+The function returns the result of the underlying formatted output
+operation.
+
+.SS xlog_cprint()
+.nf
+XSTDAPI int XCALLAPI xlog_cprint(
+int prio,
+int line,
+const char *file,
+const char *tag,
+const char *fmt,
+...
+);
+.fi
+
+.B xlog_cprint()
+is the standard variadic logging entry point.
+
+Example:
+
+.nf
+xlog_cprint(
+XLOG_INFO,
+**LINE**,
+**FILE**,
+"NETWORK",
+"Connected to %s",
+hostname
+);
+.fi
+
+In normal application code, the convenience macros should generally be
+preferred.
+
+.SH 6. AUTOMATIC SOURCE INFORMATION
+The library provides two convenience macros:
+
+.nf
+#define xlog_vprint(prio,tag,fmt,ap) \
+xlog_vcprint(prio,**LINE**,**FILE**,tag,fmt,ap)
+
+#define xlog_print(prio,tag,fmt,...) \
+xlog_cprint(prio,**LINE**,**FILE**,tag,fmt,##**VA_ARGS**)
+.fi
+
+These macros automatically provide:
+
+.nf
+**FILE**
+**LINE**
+.fi
+
+to the logging implementation.
+
+For example:
+
+.nf
+XLOGE("FILE", "Unable to open configuration");
+.fi
+
+can produce:
+
+.nf
+2026-09-30 18:30:42 [ERROR] FILE (config.c:127) Unable to open configuration
+.fi
+
+This eliminates the need for callers to manually provide source-location
+information.
+
+.SH 7. STANDARD LOGGING MACROS
+The library provides level-specific macros:
+
+.nf
+#define XLOGE(tag,fmt,...) \
+xlog_print(XLOG_ERROR,tag,fmt,##**VA_ARGS**)
+
+#define XLOGI(tag,fmt,...) \
+xlog_print(XLOG_INFO,tag,fmt,##**VA_ARGS**)
+
+#define XLOGV(tag,fmt,...) \
+xlog_print(XLOG_VERBOSE,tag,fmt,##**VA_ARGS**)
+
+#define XLOGW(tag,fmt,...) \
+xlog_print(XLOG_WARN,tag,fmt,##**VA_ARGS**)
+
+#define XLOGF(tag,fmt,...) \
+xlog_print(XLOG_FATAL,tag,fmt,##**VA_ARGS**)
+.fi
+
+Example:
+
+.nf
+XLOGI("INIT", "Initializing library");
+XLOGW("CONFIG", "Configuration file not found");
+XLOGE("IO", "Failed to read file: %s", filename);
+XLOGF("CORE", "Fatal initialization failure");
+.fi
+
+.SH 8. DEBUG LOGGING
+Debug logging is conditionally compiled using
+.B DEBUG :
+
+.nf
+#ifdef DEBUG
+# define XLOGD(tag,fmt,...) xlog_print(XLOG_DEBUG,tag,fmt,##__VA_ARGS__)
+#else
+# define XLOGD(tag,fmt,...) 0
+#endif
+.fi
+
+When
+.B DEBUG
+is defined:
+
+.nf
+XLOGD("PARSER", "Token count = %d", count);
+.fi
+
+generates a debug log.
+
+When
+.B DEBUG
+is not defined, the macro expands to:
+
+.nf
+0
+.fi
+
+This allows debug logging to be disabled at compile time.
+
+.SH 9. ANDROID IMPLEMENTATION
+Android uses the native Android logging system rather than
+.BR stderr .
+
+When:
+
+.nf
+**ANDROID**
+.fi
+
+is defined, the logger maps
+.B XLogPriority
+values to Android priorities.
+
+.TS
+tab(@);
+l l.
+XLOG@Android
+_
+XLOG_DEFAULT@ANDROID_LOG_DEFAULT
+XLOG_VERBOSE@ANDROID_LOG_VERBOSE
+XLOG_DEBUG@ANDROID_LOG_DEBUG
+XLOG_INFO@ANDROID_LOG_INFO
+XLOG_WARN@ANDROID_LOG_WARN
+XLOG_ERROR@ANDROID_LOG_ERROR
+XLOG_FATAL@ANDROID_LOG_FATAL
+XLOG_SILENT@ANDROID_LOG_SILENT
+Unknown value@ANDROID_LOG_UNKNOWN
+.TE
+
+Logging is performed through:
+
+.nf
+__android_log_vprint()
+.fi
+
+Android therefore receives native Logcat-compatible output.
+
+Source file and line information are not separately emitted by the
+non-Android formatting path when Android logging is used.
+
+.SH 10. WINDOWS AND POSIX TIME HANDLING
+For non-Android systems,
+.B xlog
+generates a local timestamp.
+
+On Windows:
+
+.nf
+localtime_s(&tm, &now);
+.fi
+
+is used.
+
+On POSIX systems:
+
+.nf
+localtime_r(&now, &tm);
+.fi
+
+is used.
+
+These functions avoid the non-thread-safe
+.BR localtime (3)
+interface.
+
+The timestamp is formatted using:
+
+.nf
+strftime(
+timestamp,
+sizeof(timestamp),
+"%Y-%m-%d %H:%M:%S",
+&tm
+);
+.fi
+
+Example:
+
+.nf
+2026-09-30 18:30:42
+.fi
+
+.SH 11. DESKTOP/POSIX OUTPUT FORMAT
+Non-Android output follows the general structure:
+
+.nf
+TIMESTAMP [PRIORITY] TAG (FILE:LINE) MESSAGE
+.fi
+
+For example:
+
+.nf
+2026-09-30 18:30:42 [INFO] XLOG (main.c:42) Library initialized
+.fi
+
+If no source location is available:
+
+.nf
+2026-09-30 18:30:42 [INFO] XLOG Library initialized
+.fi
+
+The logger terminates every message with a newline and flushes the
+configured output stream:
+
+.nf
+fputc('\en', XLOG_STREAM);
+fflush(XLOG_STREAM);
+.fi
+
+This ensures that log messages are immediately delivered to the
+configured stream.
+
+.SH 12. SILENT LOGGING
+.B XLOG_SILENT
+disables output:
+
+.nf
+if (prio == XLOG_SILENT) {
+...
+return 0;
+}
+.fi
+
+It can therefore be used to explicitly suppress a logging operation.
+
+Android maps this priority to:
+
+.nf
+ANDROID_LOG_SILENT
+.fi
+
+.SH 13. VARIADIC ARGUMENT HANDLING
+The logger uses
+.B va_list
+internally so that both public logging functions can share the same
+implementation.
+
+The implementation creates a copy:
+
+.nf
+va_list apc;
+va_copy(apc, ap);
+.fi
+
+The copied argument list is then passed to the underlying formatted
+output function.
+
+This allows the original
+.B va_list
+ownership to remain with the caller while
+.B xlog_vcprint()
+consumes its own copy.
+
+The copied list is released with:
+
+.nf
+va_end(apc);
+.fi
+
+.SH 14. EXAMPLE USAGE
+A typical application can include the library through:
+
+.nf
+#include "libxc.h"
+.fi
+
+and then use:
+
+.nf
+int main(void) {
+    XLOGI("MAIN", "Application started");
+    int value = 42;
+    XLOGD("MAIN", "value = %d", value);
+    XLOGW("MAIN", "This is a warning");
+    XLOGE("MAIN", "This is an error");
+
+    return 0;
+}
+.fi
+
+Example output:
+
+.nf
+2026-09-30 18:30:42 [INFO] MAIN (main.c:3) Application started
+2026-09-30 18:30:42 [DEBUG] MAIN (main.c:7) value = 42
+2026-09-30 18:30:42 [Warn] MAIN (main.c:8) This is a warning
+2026-09-30 18:30:42 [ERROR] MAIN (main.c:9) This is an error
+.fi
+
+.B XLOGD
+appears only when the library is compiled with
+.B DEBUG
+defined.
+
+.SH 15. PLATFORM BEHAVIOR
+.TS
+tab(@);
+l l l l.
+Platform@Output mechanism@Timestamp@Source location
+_
+Windows@XLOG_STREAM / stderr@Yes@Yes
+POSIX@XLOG_STREAM / stderr@Yes@Yes
+Android@Android Logcat@Android-managed@Not separately printed
+C++@Same C API through extern "C"@Platform-dependent@Platform-dependent
+.TE
+
+The public logging interface remains the same regardless of platform.
+
+.SH 16. C++ COMPATIBILITY
+The exported functions are wrapped in:
+
+.nf
+#ifdef __cplusplus
+extern "C" {
+#endif
+.fi
+
+and:
+
+.nf
+#ifdef __cplusplus
+}
+#endif
+.fi
+
+This prevents C++ name mangling and allows the library to be called
+directly from C++ applications.
+
+For example:
+
+.nf
+#include "xlog.h"
+
+int main() {
+    XLOGI("CPP", "Hello from C++");
+}
+.fi
+
+The underlying functions retain C linkage.
+
+.SH 17. ABI AND EXPORT MACROS
+The logging functions use the Extern Library API abstraction:
+
+.nf
+XSTDAPI
+XCALLAPI
+.fi
+
+For example:
+
+.nf
+XSTDAPI int XCALLAPI xlog_cprint(...);
+.fi
+
+These macros allow the library to control:
+
+.IP (bu 2
+Symbol visibility.
+.IP (bu 2
+DLL exports and imports.
+.IP (bu 2
+Calling conventions.
+.IP (bu 2
+Platform-specific ABI requirements.
+
+The exact behavior of these macros is provided by the library's
+portability headers.
+
+.SH 18. DESIGN GOALS
+.B xlog.h
+is designed around several principles:
+
+.IP (bu 2
+.B Small API
+(em only two core logging functions.
+.IP (bu 2
+.B Cross-platform behavior
+(em Windows, POSIX, and Android support.
+.IP (bu 2
+.B Source diagnostics
+(em automatic file and line information.
+.IP (bu 2
+.B Log levels
+(em standardized priority classification.
+.IP (bu 2
+.B Tags
+(em logical grouping of messages.
+.IP (bu 2
+.B Debug elimination
+(em debug messages can be compiled out.
+.IP (bu 2
+.B C ABI
+(em usable from both C and C++.
+.IP (bu 2
+.B Existing library integration
+(em uses
+.BR XSTDAPI ,
+.BR XCALLAPI ,
+and
+.BR xbasename (3).
+.IP (bu 2
+.B Immediate output
+(em streams are flushed after each message.
+
+.SH 19. HEADER INTEGRATION
+.B xlog.h
+is included by the umbrella library header:
+
+.nf
+#include "xlog.h"
+.fi
+
+For example:
+
+.nf
+#ifndef LIBXC_H
+#define LIBXC_H
+
+#include "xlocale.h"
+#include "xlog.h"
+#include "xstdio.h"
+#include "xstdlib.h"
+#include "xstring.h"
+#include "xwchar.h"
+#include "xmap.h"
+#include "xctype.h"
+#include "xwctype.h"
+#include "xstat.h"
+#include "xdlfcn.h"
+
+#endif
+.fi
+
+This makes the logging API available to applications through the main
+.B libxc.h
+interface.
+
+.SH 20. LICENSE
+This library is distributed under the
+.B GNU General Public License v3 or later.
+
+See the project license for the complete terms and conditions.
+
+.SH 21. SUMMARY
+.B xlog.h
+provides the Extern Library with a unified logging layer across desktop
+and mobile platforms.
+
+Its primary interface consists of:
+
+.nf
+xlog_vcprint()
+xlog_cprint()
+.fi
+
+and the convenience macros:
+
+.nf
+XLOGV()
+XLOGD()
+XLOGI()
+XLOGW()
+XLOGE()
+XLOGF()
+.fi
+
+Applications can therefore use one logging API while the library handles
+platform-specific output, timestamp generation, priority mapping,
+source information, and debug configuration.
+
+.SH RETURN VALUES
+.B xlog_vcprint()
+and
+.B xlog_cprint()
+return the result of the underlying formatted output operation.
+
+When
+.B XLOGD
+is compiled without
+.B DEBUG ,
+it expands to
+.BR 0 .
+
+.B XLOG_SILENT
+logging returns zero without producing output.
+
+.SH PORTABILITY
+The XLOG interface is designed for:
+
+.IP (bu 2
+Windows.
+.IP (bu 2
+POSIX-compatible systems.
+.IP (bu 2
+Android.
+.IP (bu 2
+C++ applications using the C ABI.
+
+Windows uses
+.BR localtime_s (3)
+for local time conversion, while POSIX systems use
+.BR localtime_r (3).
+
+Android uses the native Android logging API and does not use the desktop
+timestamp and stream formatting path.
+
+.SH THREAD SAFETY
+The logger avoids the non-thread-safe
+.BR localtime (3)
+function by using
+.B localtime_s()
+on Windows and
+.B localtime_r()
+on POSIX systems.
+
+The logging functions themselves write to the configured output stream
+on desktop and POSIX platforms. Applications requiring serialized output
+from multiple threads should provide appropriate synchronization around
+shared logging destinations when necessary.
+
+.SH ERRORS
+The logging interface does not define a separate error-reporting
+mechanism.
+
+Formatting and output errors are reported through the return value of
+the underlying formatted output operation.
+
+No additional error information is provided by the XLOG API.
+
+.SH SEE ALSO
+xbasename(3),
+xstdio(3),
+fprintf(3),
+vfprintf(3),
+strftime(3),
+localtime(3),
+localtime_r(3),
+localtime_s(3),
+stderr(3)
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+GPLv3 or later.

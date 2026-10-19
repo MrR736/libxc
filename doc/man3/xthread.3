@@ -1,0 +1,75 @@
+.TH XTHREAD 3 "2026-10-15" "xthread" "Library Functions Manual"
+.SH NAME
+xthread \- cross-platform thread and mutex utilities
+.SH SYNOPSIS
+.nf
+.B #include <xthread.h>
+.PP
+.BI "typedef " "platform-specific-type" " xmutex_t;"
+.PP
+.BI "int xmutex_init(xmutex_t *" m ");"
+.BI "void xmutex_lock(xmutex_t *" m ");"
+.BI "void xmutex_unlock(xmutex_t *" m ");"
+.BI "void xmutex_destroy(xmutex_t *" m ");"
+.fi
+.SH DESCRIPTION
+The
+.B xthread
+library provides a cross-platform mutex interface for synchronizing access to shared resources.
+.PP
+On Windows, the implementation uses Windows Critical Sections
+.RB ( CRITICAL_SECTION ).
+On POSIX-compatible systems, it uses POSIX Threads
+.RB ( pthread_mutex_t ).
+.SH TYPES
+.TP
+.B xmutex_t
+The platform-specific mutex type selected by the header.
+.SH FUNCTIONS
+.TP
+.BI "int xmutex_init(xmutex_t *" m );
+Initializes the mutex pointed to by
+.IR m .
+Returns zero on success. On POSIX systems, a nonzero error code indicates failure.
+.TP
+.BI "void xmutex_lock(xmutex_t *" m );
+Locks the initialized mutex. The calling thread blocks until the mutex can be acquired.
+.TP
+.BI "void xmutex_unlock(xmutex_t *" m );
+Unlocks a mutex previously acquired by the calling thread.
+.TP
+.BI "void xmutex_destroy(xmutex_t *" m );
+Destroys the mutex and releases its associated resources. The mutex must not be locked or in use by another thread.
+.SH EXAMPLE
+.nf
+#include <xthread.h>
+
+int main(void)
+{
+    xmutex_t mutex;
+
+    if (xmutex_init(&mutex) != 0)
+        return 1;
+
+    xmutex_lock(&mutex);
+    /* Access shared resources here. */
+    xmutex_unlock(&mutex);
+
+    xmutex_destroy(&mutex);
+    return 0;
+}
+.fi
+.SH RETURN VALUE
+.B xmutex_init
+returns zero on success and a nonzero error code on POSIX initialization failure. The remaining functions return no value.
+.SH NOTES
+The mutex must be initialized before use. Only its owning thread should unlock it. Destroying a locked mutex or one still in use by another thread is invalid.
+.PP
+POSIX builds may require linking with the platform's thread library.
+.SH SEE ALSO
+.BR pthread_mutex_init (3),
+.BR pthread_mutex_lock (3),
+.BR pthread_mutex_unlock (3),
+.BR pthread_mutex_destroy (3)
+.SH LICENSE
+GNU General Public License version 3 or, at your option, any later version.

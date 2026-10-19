@@ -1,0 +1,338 @@
+.TH XMEMORY 3 "2026" "Extern Library" "Programmer's Manual"
+.SH NAME
+xmalloc, xcalloc, xrealloc, xfree, xmemset, xmemcpy, xmemccpy, xmemmove, xmemcmp, xmempcpy - memory allocation and memory manipulation utilities
+.SH SYNOPSIS
+.nf
+#include "xmemory.h"
+
+XSTDAPI void *XCALLAPI xmalloc(size_t size);
+XSTDAPI void *XCALLAPI xcalloc(size_t nmemb, size_t size);
+XSTDAPI void *XCALLAPI xrealloc(void *ptr, size_t size);
+XSTDAPI void XCALLAPI xfree(void *ptr);
+
+XSTDAPI void *XCALLAPI xmemset(void *s, int c, size_t n);
+XSTDAPI void *XCALLAPI xmemcpy(void *xrestrict dest, const void *xrestrict src, size_t n);
+XSTDAPI void *XCALLAPI xmemccpy(void *xrestrict dest, const void *xrestrict src, int c, size_t n);
+XSTDAPI void *XCALLAPI xmemmove(void *dest, const void *src, size_t n);
+XSTDAPI int XCALLAPI xmemcmp(const void *s1, const void *s2, size_t n);
+XSTDAPI void *XCALLAPI xmempcpy(void *xrestrict dest, const void *xrestrict src, size_t n);
+.fi
+.SH DESCRIPTION
+The
+.B xmemory
+interface provides lightweight wrappers around memory allocation and
+memory manipulation functions used by the Extern Library.
+
+The interface provides a consistent Extern Library naming and ABI layer
+while preserving the semantics of the underlying C memory functions.
+
+The API includes dynamic allocation, zero-initialized allocation,
+reallocation, deallocation, memory initialization, copying, moving,
+comparison, and copy-until-character operations.
+.SH HEADER
+The public interface is provided by:
+.nf
+#include "xmemory.h"
+.fi
+The header includes:
+.nf
+#include "xstddef.h"
+.fi
+.SH FUNCTIONS
+.SS xmalloc()
+.nf
+XSTDAPI void *XCALLAPI xmalloc(size_t size);
+.fi
+Allocates
+.I size
+bytes using
+.BR malloc (3).
+The returned memory is uninitialized.
+.SS xcalloc()
+.nf
+XSTDAPI void *XCALLAPI xcalloc(size_t nmemb, size_t size);
+.fi
+Allocates storage for
+.I nmemb
+objects of
+.I size
+bytes each using
+.BR calloc (3).
+The allocated storage is initialized according to
+.BR calloc (3)
+semantics.
+.SS xrealloc()
+.nf
+XSTDAPI void *XCALLAPI xrealloc(void *ptr, size_t size);
+.fi
+Changes the size of an existing allocation using
+.BR realloc (3).
+Behavior follows the underlying implementation.
+.SS xfree()
+.nf
+XSTDAPI void XCALLAPI xfree(void *ptr);
+.fi
+Releases memory using
+.BR free (3).
+Passing NULL follows the semantics of
+.BR free (3).
+.SS xmemset()
+.nf
+XSTDAPI void *XCALLAPI xmemset(void *s, int c, size_t n);
+.fi
+Fills the first
+.I n
+bytes of the object pointed to by
+.I s
+with the byte value represented by
+.I c .
+This is a wrapper around
+.BR memset (3)
+and returns the destination pointer.
+.SS xmemcpy()
+.nf
+XSTDAPI void *XCALLAPI xmemcpy(void *xrestrict dest, const void *xrestrict src, size_t n);
+.fi
+Copies
+.I n
+bytes from
+.I src
+to
+.I dest
+using
+.BR memcpy (3).
+The source and destination regions must not overlap.
+The function returns
+.I dest .
+.SS xmemccpy()
+.nf
+XSTDAPI void *XCALLAPI xmemccpy(void *xrestrict dest, const void *xrestrict src, int c, size_t n);
+.fi
+Copies up to
+.I n
+bytes from
+.I src
+.to
+.I dest
+using
+.BR memccpy (3).
+Copying stops after the first byte matching the value represented by
+.I c .
+The return value follows the underlying
+.BR memccpy (3)
+implementation.
+.B memccpy
+is not universally provided by ISO C implementations; availability
+depends on the target platform and portability layer.
+.SS xmemmove()
+.nf
+XSTDAPI void *XCALLAPI xmemmove(void *dest, const void *src, size_t n);
+.fi
+Copies
+.I n
+bytes from
+.I src
+.to
+.I dest
+using
+.BR memmove (3).
+Unlike
+.BR xmemcpy ,
+overlapping source and destination regions are supported.
+The function returns
+.I dest .
+.SS xmemcmp()
+.nf
+XSTDAPI int XCALLAPI xmemcmp(const void *s1, const void *s2, size_t n);
+.fi
+Compares the first
+.I n
+bytes of
+.I s1
+and
+.I s2
+using
+.BR memcmp (3).
+The return value follows the comparison semantics of
+.BR memcmp (3).
+.SS xmempcpy()
+.nf
+XSTDAPI void *XCALLAPI xmempcpy(void *xrestrict dest, const void *xrestrict src, size_t n);
+.fi
+Copies
+.I n
+bytes from
+.I src
+.to
+.I dest
+using
+.BR mempcpy (3).
+The function returns a pointer to the byte immediately following the
+copied destination range.
+.B mempcpy
+is not part of ISO C on all platforms.
+.SH C++ COMPATIBILITY
+The exported functions are enclosed by:
+.nf
+#ifdef __cplusplus
+extern "C" {
+#endif
+.fi
+and:
+.nf
+#ifdef __cplusplus
+}
+#endif
+.fi
+This provides C linkage when the header is included from C++.
+.SH ABI AND EXPORT MACROS
+The public functions use the Extern Library ABI macros:
+.nf
+XSTDAPI
+XCALLAPI
+.fi
+These macros may control symbol visibility, DLL import/export behavior,
+calling conventions, and other platform-specific ABI properties.
+.SH SEMANTICS
+The XMEMORY functions are thin wrappers and do not add bounds checking,
+ownership tracking, lifetime management, or synchronization.
+Callers remain responsible for satisfying the requirements of the
+underlying C functions.
+.PP
+In particular:
+.IP \(bu 2
+.B xmalloc()
+returns uninitialized storage.
+.IP \(bu 2
+.B xcalloc()
+follows
+.BR calloc (3)
+initialization semantics.
+.IP \(bu 2
+.B xrealloc()
+follows
+.BR realloc (3)
+semantics.
+.IP \(bu 2
+.B xfree()
+must be used with a compatible allocated pointer or NULL.
+.IP \(bu 2
+.B xmemcpy()
+requires non-overlapping source and destination regions.
+.IP \(bu 2
+.B xmemmove()
+supports overlapping regions.
+.IP \(bu 2
+Memory operations require valid accessible memory ranges.
+.IP \(bu 2
+.B xmemcmp()
+requires both compared ranges to be readable for the requested length.
+.IP \(bu 2
+.B xmemccpy()
+and
+.B xmempcpy()
+depend on platform support for their underlying functions.
+.SH RETURN VALUES
+.TS
+box tab(@);
+l l.
+Function@Return value
+_
+xmalloc()@Pointer returned by malloc()
+xcalloc()@Pointer returned by calloc()
+xrealloc()@Pointer returned by realloc()
+xfree()@No return value
+xmemset()@Destination pointer
+xmemcpy()@Destination pointer
+xmemccpy()@Return value of memccpy()
+xmemmove()@Destination pointer
+xmemcmp()@Comparison result from memcmp()
+xmempcpy()@Return value of mempcpy()
+.TE
+.SH ERRORS
+The XMEMORY interface does not define a separate error-reporting
+mechanism.
+.PP
+Allocation failures are reported through the return values of
+.BR xmalloc (),
+.BR xcalloc (),
+and
+.BR xrealloc ().
+.PP
+Invalid pointers, invalid ranges, prohibited overlap, and other
+violations of the underlying function contracts are not converted into
+XMEMORY-specific error codes.
+.SH THREAD SAFETY
+The wrappers do not maintain library-level mutable state.
+Thread-safety characteristics therefore follow those of the underlying
+allocation and memory functions supplied by the target C runtime and
+platform.
+.PP
+Applications remain responsible for synchronizing access to shared
+memory objects when required.
+.SH PORTABILITY
+The standard memory-operation wrappers inherit the portability
+characteristics of their underlying C facilities.
+.PP
+.B memccpy()
+and
+.B mempcpy()
+are not universally provided by ISO C implementations. A platform
+portability implementation may therefore be required where those
+functions are unavailable.
+.SH EXAMPLE
+.nf
+#include "xmemory.h"
+
+int main(void)
+{
+    int *values = xcalloc(16, sizeof(*values));
+
+    if (values == NULL)
+        return 1;
+
+    values[0] = 42;
+
+    int *tmp = xrealloc(values, 32 * sizeof(*values));
+
+    if (tmp == NULL) {
+        xfree(values);
+        return 1;
+    }
+
+    values = tmp;
+    xfree(values);
+
+    return 0;
+}
+.fi
+.SH HEADER GUARD
+The header uses:
+.nf
+#ifndef __XMEMORY_H__
+#define __XMEMORY_H__
+.fi
+The supplied implementation currently ends its comment with
+.B __XSTRING_H__ .
+The guard name is
+.B __XMEMORY_H__ ;
+the closing comment should normally be:
+.nf
+#endif /* __XMEMORY_H__ */
+.fi
+.SH SEE ALSO
+xstddef(3),
+malloc(3),
+calloc(3),
+realloc(3),
+free(3),
+memset(3),
+memcpy(3),
+memccpy(3),
+memmove(3),
+memcmp(3),
+mempcpy(3)
+.SH AUTHOR
+Written by MrR736.
+.SH COPYRIGHT
+GPLv3 or later.

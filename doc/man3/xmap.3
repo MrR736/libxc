@@ -1,0 +1,351 @@
+.\" xmap.3 — xmap library manual
+.\"
+.TH XMAP 3 "September 2026" "libxc" "Library Functions Manual"
+.SH NAME
+xmap \- thread-safe dynamically indexed pointer and string map
+.SH SYNOPSIS
+.nf
+#include <xmap.h>
+
+void xmap_init(xmap_t *xm);
+void xmap_destroy(xmap_t *xm);
+
+/* Generic pointers */
+void  xmap_insert(xmap_t *xm, void *data);
+void *xmap_get(xmap_t *xm, size_t index);
+int   xmap_exists(xmap_t *xm, size_t index);
+void  xmap_erase(xmap_t *xm, size_t index);
+void  xmap_erase_no_shift(xmap_t *xm, size_t index);
+
+/* Strings (char *) */
+void  xmap_strinsert(xmap_t *xm, const char *str);
+char *xmap_strget(xmap_t *xm, size_t str_index);
+int   xmap_strexists(xmap_t *xm, size_t str_index);
+void  xmap_strerase(xmap_t *xm, size_t str_index);
+void  xmap_strerase_no_shift(xmap_t *xm, size_t str_index);
+
+/* Wide strings (wchar_t *) */
+void      xmap_wcsinsert(xmap_t *xm, const wchar_t *str);
+wchar_t  *xmap_wcsget(xmap_t *xm, size_t wstr_index);
+int       xmap_wcsexists(xmap_t *xm, size_t wstr_index);
+void      xmap_wcserase(xmap_t *xm, size_t wstr_index);
+void      xmap_wcserase_no_shift(xmap_t *xm, size_t wstr_index);
+.fi
+.SH DESCRIPTION
+The
+.B xmap
+library implements a dynamically growing pointer array with
+thread-safe access through an internal pthread mutex.
+
+In addition to storing arbitrary
+.BR void *
+pointers, the map maintains dedicated index lists for NUL-terminated
+character strings and wide-character strings.
+
+Strings inserted through
+.BR xmap_strinsert ()
+or
+.BR xmap_wcsinsert ()
+are duplicated by the library and are owned by the map.
+
+The main storage array
+.I xm->map
+contains the stored objects. String and wide-string index arrays contain
+references to entries in the main storage array.
+
+All public API functions lock the map mutex internally unless explicitly
+documented otherwise.
+
+.SH INITIALIZATION
+.SS xmap_init()
+.B xmap_init()
+initializes an
+.BR xmap_t
+object.
+
+No dynamic memory is allocated until an item is inserted.
+
+The map must be initialized before any other operation and must not be
+reinitialized while it contains active resources.
+
+.SS xmap_destroy()
+.B xmap_destroy()
+releases all resources associated with the map.
+
+It frees the map storage, stored objects, string and wide-string index
+arrays, and destroys the internal pthread mutex.
+
+The map must not be used after
+.BR xmap_destroy ().
+
+.SH GENERIC POINTERS
+.SS xmap_insert()
+.B xmap_insert()
+adds a pointer to the map.
+
+The pointer is stored directly and is not copied.
+
+Ownership of the pointer is transferred to the map. The pointer must
+therefore refer to memory that can safely be released by the map when the
+corresponding entry is erased or when the map is destroyed.
+
+.SS xmap_get()
+.B xmap_get()
+returns the pointer stored at
+.IR index .
+
+If
+.I index
+is invalid or the corresponding slot contains
+.BR NULL ,
+.B xmap_get()
+returns
+.BR NULL .
+
+.SS xmap_exists()
+.B xmap_exists()
+tests whether
+.I index
+contains a non-NULL pointer.
+
+It returns 1 when the entry exists and 0 otherwise.
+
+.SS xmap_erase()
+.B xmap_erase()
+removes the entry at
+.IR index .
+
+The stored object is freed and all subsequent entries are shifted one
+position toward the beginning of the map.
+
+Associated string and wide-string index lists are updated to reflect the
+shift.
+
+Invalid indices are silently ignored.
+
+.SS xmap_erase_no_shift()
+.B xmap_erase_no_shift()
+removes the entry at
+.I index
+without shifting subsequent entries.
+
+The stored object is freed and the map slot is set to
+.BR NULL .
+
+Invalid indices are silently ignored.
+
+.SH CHARACTER STRINGS
+.SS xmap_strinsert()
+.B xmap_strinsert()
+inserts a NUL-terminated character string.
+
+The string is duplicated using
+.BR strdup (3).
+The duplicated string is owned by the map and is automatically freed when
+the corresponding entry is erased or the map is destroyed.
+
+.SS xmap_strget()
+.B xmap_strget()
+returns the character string associated with string index
+.IR str_index .
+
+The returned pointer refers to memory owned by the map and must not be
+freed by the caller.
+
+It returns
+.B NULL
+when the index is invalid or the corresponding entry does not exist.
+
+.SS xmap_strexists()
+.B xmap_strexists()
+tests whether a character-string index is valid and contains an entry.
+
+It returns 1 if the entry exists and 0 otherwise.
+
+.SS xmap_strerase()
+.B xmap_strerase()
+removes the character-string entry at
+.IR str_index .
+
+The stored string is freed and subsequent map entries are shifted.
+
+The associated string-index list is updated accordingly.
+
+Invalid indices are silently ignored.
+
+.SS xmap_strerase_no_shift()
+.B xmap_strerase_no_shift()
+removes a character-string entry without shifting subsequent map entries.
+
+The stored string is freed and its underlying map slot is set to
+.BR NULL .
+
+Invalid indices are silently ignored.
+
+.SH WIDE STRINGS
+.SS xmap_wcsinsert()
+.B xmap_wcsinsert()
+inserts a NUL-terminated wide-character string.
+
+The string is duplicated using
+.BR wcsdup (3).
+The duplicated string is owned by the map and is automatically freed when
+the entry is erased or the map is destroyed.
+
+.SS xmap_wcsget()
+.B xmap_wcsget()
+returns the wide-character string associated with
+.IR wstr_index .
+
+The returned pointer is owned by the map and must not be freed by the
+caller.
+
+It returns
+.B NULL
+when the index is invalid or the corresponding entry does not exist.
+
+.SS xmap_wcsexists()
+.B xmap_wcsexists()
+tests whether a wide-string index contains an entry.
+
+It returns 1 if the entry exists and 0 otherwise.
+
+.SS xmap_wcserase()
+.B xmap_wcserase()
+removes a wide-string entry and frees the stored string.
+
+Subsequent map entries and associated wide-string indices are shifted as
+necessary.
+
+Invalid indices are silently ignored.
+
+.SS xmap_wcserase_no_shift()
+.B xmap_wcserase_no_shift()
+removes a wide-string entry without shifting subsequent map entries.
+
+The stored wide string is freed and the underlying map slot is set to
+.BR NULL .
+
+Invalid indices are silently ignored.
+
+.SH MEMORY MANAGEMENT
+The map owns all objects inserted through its ownership-taking interfaces.
+
+The library frees:
+.IP \(bu 2
+objects inserted with
+.BR xmap_insert ();
+.IP \(bu 2
+strings duplicated by
+.BR xmap_strinsert ();
+.IP \(bu 2
+wide strings duplicated by
+.BR xmap_wcsinsert ();
+.IP \(bu 2
+the map storage;
+.IP \(bu 2
+the string and wide-string index arrays.
+.PP
+Pointers returned by the
+.BR xmap_get (),
+.BR xmap_strget (),
+and
+.BR xmap_wcsget ()
+functions remain owned by the map and must not be freed by the caller.
+
+.SH THREAD SAFETY
+All public
+.B xmap
+operations are thread-safe and lock the internal map mutex.
+
+Internal or
+.B _nolock
+variants do not acquire the mutex. The caller must already hold
+.IR xm->mutex
+when using such functions.
+
+The caller must not destroy a map while another thread is operating on
+it.
+
+.SH C++ BINDINGS
+When compiled as C++, the header provides C++ convenience interfaces
+including typed iterators, typed pointer retrieval, and helpers for
+.B std::string
+and
+.BR std::wstring .
+
+The C++ interfaces use appropriate C++ casts and provide string
+convenience operations while retaining the ownership semantics of the
+underlying map.
+
+.SH RETURN VALUES
+.B xmap_get(),
+.B xmap_strget(),
+and
+.B xmap_wcsget()
+return the requested pointer on success and
+.B NULL
+if the requested entry does not exist.
+
+.B xmap_exists(),
+.B xmap_strexists(),
+and
+.B xmap_wcsexists()
+return 1 when the requested entry exists and 0 otherwise.
+
+Insertion and erase functions return no value.
+
+.SH ERRORS
+The following errors may be reported through
+.IR errno :
+.TP
+.B ENOMEM
+A memory allocation failed while growing the map or duplicating a string.
+
+.PP
+Invalid indices passed to erase operations are silently ignored.
+
+.SH EXAMPLE
+.nf
+#include <stdio.h>
+#include <xmap.h>
+
+int
+main(void)
+{
+    xmap_t xm;
+
+    xmap_init(&xm);
+
+    xmap_strinsert(&xm, "hello");
+    xmap_strinsert(&xm, "world");
+
+    printf("%s\\n", xmap_strget(&xm, 0));
+
+    xmap_destroy(&xm);
+
+    return 0;
+}
+.fi
+.PP
+The example prints:
+.nf
+hello
+.fi
+
+.SH AUTHOR
+Written by MrR736.
+
+.SH COPYRIGHT
+Copyright (C) 2026 MrR736.
+
+This library is free software; you may redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+.SH SEE ALSO
+.BR pthread_mutex_init (3),
+.BR pthread_mutex_lock (3),
+.BR strdup (3),
+.BR wcsdup (3)

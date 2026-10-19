@@ -1,0 +1,18 @@
+@PACKAGE_INIT@
+
+set(LIBXC_BUILD_SHARED @LIBXC_BUILD_SHARED@)
+set(LIBXC_BUILD_STATIC @LIBXC_BUILD_STATIC@)
+
+# Load the exported targets
+include("${CMAKE_CURRENT_LIST_DIR}/libxcTargets.cmake")
+
+# Set variables for convenience
+if(NOT LIBXC_BUILD_STATIC AND NOT LIBXC_BUILD_SHARED)
+	message(FATAL_ERROR "At least one of LIBXC_BUILD_SHARED or LIBXC_BUILD_STATIC must be enabled.")
+#elseif(LIBXC_BUILD_SHARED AND LIBXC_BUILD_STATIC)
+#	set(LIBXC_LIBRARIES libxc::libxc libxc::libxc-static)
+elseif(LIBXC_BUILD_SHARED)
+	set(LIBXC_LIBRARIES libxc::libxc)
+else()
+	set(LIBXC_LIBRARIES libxc::libxc-static)
+endif()

@@ -1,0 +1,145 @@
+/**
+ * xwctype.h: Extern wctype.h
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XWCTYPE_H__
+#define __XWCTYPE_H__
+
+#include "xtypes.h"
+#include "xmemory.h"
+
+#include <limits.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+XSTDAPI wchar_t* XCALLAPI xtowlower(const wchar_t* str) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	for (size_t i = 0; i < len; i++) ret[i] = (wchar_t)towlower((wint_t)str[i]);
+	ret[len] = L'\0';
+	return ret;
+}
+
+XSTDAPI wchar_t* XCALLAPI xtowupper(const wchar_t* str) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	for (size_t i = 0; i < len; i++)
+		ret[i] = (wchar_t)towupper((wint_t)str[i]);
+
+	ret[len] = L'\0';
+	return ret;
+}
+
+XSTDAPI wchar_t* XCALLAPI xtowlower_l(const wchar_t* str,xlocale_t l) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	for (size_t i = 0; i < len; i++)
+#ifdef _WIN32
+		ret[i] = (char)_towlower_l((unsigned char)str[i],l);
+#else
+		ret[i] = (char)towlower_l((unsigned char)str[i],l);
+#endif
+	ret[len] = L'\0';
+	return ret;
+}
+
+XSTDAPI wchar_t* XCALLAPI xtowupper_l(const wchar_t* str,xlocale_t l) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	for (size_t i = 0; i < len; i++)
+#ifdef _WIN32
+		ret[i] = (char)_towupper_l((unsigned char)str[i],l);
+#else
+		ret[i] = (char)towupper_l((unsigned char)str[i],l);
+#endif
+
+	ret[len] = L'\0';
+	return ret;
+}
+
+XSTDAPI wchar_t* XCALLAPI xtowascii(const wchar_t* str) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	size_t j = 0;
+	for (size_t i = 0; i < len; i++) {
+		if (str[i] >= 0 && str[i] <= UCHAR_MAX) ret[j++] = (wchar_t)str[i];
+		else ret[j++] = L'?';
+	}
+
+	ret[j] = '\0';
+	return ret;
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __XWCTYPE_H__

@@ -1,7 +1,7 @@
 /**
- * xsearch.h: Extern Library
+ * xsearch.h: Extern Search
  *
- * Copyright (C) 2025 MrR736 <MrR736@users.github.com>
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,15 +23,10 @@
 #ifndef __XSEARCH_H__
 #define __XSEARCH_H__
 
-#include "xstddef.h"
-
 #include <dirent.h>
-
-#ifdef _WIN32
-#include <pcre.h>
-#else
 #include <regex.h>
-#endif
+
+#include "xstddef.h"
 
 #ifdef __cplusplus
 extern "C" {

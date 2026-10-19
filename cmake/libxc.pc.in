@@ -1,0 +1,11 @@
+prefix=@LIBXC_INSTALL_PREFIX@
+exec_prefix=${prefix}
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: Libxc@LIBXC_ADD_TEXT@
+Description: @PROJECT_DESCRIPTION@ @LIBXC_DESCRIPTION@
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} @LIBXC_LDFLAGS@
+Libs.private: @LIBXC_LDFLAGS_PRIVATE@
+Cflags: -I${includedir} -I${includedir}/libxc -I${includedir}/libxcxx@LIBXC_CFLAGS@

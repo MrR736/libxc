@@ -28,6 +28,10 @@ It is designed to complement the C standard library with convenient, safe, and p
 | xwctype | Extended Wide-Character Type Utilities   | [xwctype.md](doc/xwctype.md) | [xwctype.3](doc/man3/xwctype.3)   |
 | xdlfcn  | Cross-Platform Dynamic Library Utilities | [xdlfcn.md](doc/xdlfcn.md)   | [xdlfcn.3](doc/man3/xdlfcn.3)     |
 | xstat   | Cross-Platform Directory Operations      | [xstat.md](doc/xstat.md)     | [xstat.3](doc/man3/xstat.3)       |
+| xlog    | Cross-Platform Log Utilities             | [xlog.md](doc/xlog.md)       | [xlog.3](doc/man3/xlog.3)         |
+| xmemory | Cross-Platform Memory Utilities          | [xmemory.md](doc/xmemory.md) | [xmemory.3](doc/man3/xmemory.3)   |
+| xthread | Cross-Platform Thread Library            | [xthread.md](doc/xthread.md) | [xthread.3](doc/man3/xthread.3)   |
+| xuchar  | Unicode Character String Utilities       | [xuchar.md](doc/xuchar.md)   | [xuchar.3](doc/man3/xuchar.3)     |
 
 ---
 
@@ -108,6 +112,20 @@ int main() {
     return 0;
 }
 ```
+
+---
+
+## Documentation Policy
+
+To prioritize library development and reduce documentation maintenance overhead, existing documentation will no longer be routinely updated.
+
+- **Existing documentation:** Remains unchanged unless I choose to revise it.
+- **New modules:** Documentation will be added when a new module is introduced.
+- **Optional updates:** Improvements, corrections, and revisions to existing documentation are entirely at my discretion.
+- **No mandatory maintenance:** Documentation updates are not required unless I decide they are necessary.
+- **libxcxx:** No documentation will be provided for libxcxx.
+
+The primary focus is on developing and improving the library itself rather than maintaining existing documentation. Documentation changes will be made when I consider them worthwhile, not as a routine obligation.
 
 ---
 
