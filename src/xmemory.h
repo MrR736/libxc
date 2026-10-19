@@ -186,7 +186,7 @@ XSTDAPI int XCALLAPI xwmemcmp(const wchar_t *s1,const wchar_t *s2,size_t n) {
 
 XSTDAPI wchar_t* XCALLAPI xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src, size_t n) {
 #ifdef __APPLE__
-	return (unsigned char*)__iwmemcpy(dest,src,n) + n;
+	return __iwmemcpy(dest,src,n) + n;
 #else
 	return __iwmempcpy(dest,src,n);
 #endif
