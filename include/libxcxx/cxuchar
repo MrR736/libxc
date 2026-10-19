@@ -1,0 +1,80 @@
+/**
+ * cxuchar: Extern Library for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXCTYPE__
+#define __CXCTYPE__
+
+#include <string>
+
+#include "xuchar.h"
+
+namespace xstd __xvisibility__(default) {
+
+#define XSTD_USTRS(name,type,type1) \
+using ::name##len LIBXC_USING_IF_EXISTS; \
+using ::name##nlen LIBXC_USING_IF_EXISTS; \
+using ::name##cpy LIBXC_USING_IF_EXISTS; \
+using ::name##ncpy LIBXC_USING_IF_EXISTS; \
+using ::name##cat LIBXC_USING_IF_EXISTS; \
+using ::name##ncat LIBXC_USING_IF_EXISTS; \
+using ::name##cmp LIBXC_USING_IF_EXISTS; \
+using ::name##ncmp LIBXC_USING_IF_EXISTS; \
+using ::name##coll LIBXC_USING_IF_EXISTS; \
+using ::name##dup LIBXC_USING_IF_EXISTS; \
+using ::name##ndup LIBXC_USING_IF_EXISTS; \
+using ::name##chr LIBXC_USING_IF_EXISTS; \
+using ::name##chrnul LIBXC_USING_IF_EXISTS; \
+using ::name##cspn LIBXC_USING_IF_EXISTS; \
+using ::name##spn LIBXC_USING_IF_EXISTS; \
+using ::name##tok_r LIBXC_USING_IF_EXISTS; \
+using ::name##tok LIBXC_USING_IF_EXISTS; \
+using ::name##pbrk LIBXC_USING_IF_EXISTS; \
+using ::name##str LIBXC_USING_IF_EXISTS; \
+using ::name##casestr LIBXC_USING_IF_EXISTS; \
+using ::name##casecmp LIBXC_USING_IF_EXISTS; \
+using ::name##ncasecmp LIBXC_USING_IF_EXISTS; \
+using ::name##xfrm LIBXC_USING_IF_EXISTS;
+
+XSTD_USTRS(ustr8,char8_t,int)
+XSTD_USTRS(ustr16,char16_t,int)
+XSTD_USTRS(ustr32,char32_t,int)
+
+#undef XSTD_USTRS
+
+using ::xmbrtoc8_len LIBXC_USING_IF_EXISTS;
+using ::xmbrtoc8 LIBXC_USING_IF_EXISTS;
+using ::xc8rtomb_len LIBXC_USING_IF_EXISTS;
+using ::xc8rtomb LIBXC_USING_IF_EXISTS;
+
+using ::xmbrtoc16_len LIBXC_USING_IF_EXISTS;
+using ::xmbrtoc16 LIBXC_USING_IF_EXISTS;
+using ::xc16rtomb_len LIBXC_USING_IF_EXISTS;
+using ::xc16rtomb LIBXC_USING_IF_EXISTS;
+
+using ::xmbrtoc32_len LIBXC_USING_IF_EXISTS;
+using ::xmbrtoc32 LIBXC_USING_IF_EXISTS;
+using ::xc32rtomb_len LIBXC_USING_IF_EXISTS;
+using ::xc32rtomb LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif

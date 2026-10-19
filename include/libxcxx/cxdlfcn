@@ -1,0 +1,72 @@
+/**
+ * xmemory.h: Cross-Platform Dynamic Library Utilities
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXMEMORY__
+#define __CXMEMORY__
+
+#include <memory>
+
+#include "xdlfcn.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::xhandle_t LIBXC_USING_IF_EXISTS;
+using ::xproc_t LIBXC_USING_IF_EXISTS;
+
+using ::XDl_info LIBXC_USING_IF_EXISTS;
+using ::XWDl_info LIBXC_USING_IF_EXISTS;
+
+using ::xdllibpath LIBXC_USING_IF_EXISTS;
+using ::xwdllibpath LIBXC_USING_IF_EXISTS;
+
+using ::xcdllibpath LIBXC_USING_IF_EXISTS;
+using ::xcwdllibpath LIBXC_USING_IF_EXISTS;
+
+using ::xdladdr LIBXC_USING_IF_EXISTS;
+using ::xwdladdr LIBXC_USING_IF_EXISTS;
+
+using ::xdlopen LIBXC_USING_IF_EXISTS;
+using ::xdlsym LIBXC_USING_IF_EXISTS;
+using ::xdlerror LIBXC_USING_IF_EXISTS;
+
+using ::xwdlopen LIBXC_USING_IF_EXISTS;
+using ::xwdlsym LIBXC_USING_IF_EXISTS;
+using ::xwdlerror LIBXC_USING_IF_EXISTS;
+
+using ::xdlclose LIBXC_USING_IF_EXISTS;
+
+using ::GetProcAddressA  LIBXC_USING_IF_EXISTS;
+using ::GetProcAddressW  LIBXC_USING_IF_EXISTS;
+
+using ::GetModuleHandleA LIBXC_USING_IF_EXISTS;
+using ::GetModuleHandleW LIBXC_USING_IF_EXISTS;
+
+using ::LoadLibraryA LIBXC_USING_IF_EXISTS;
+using ::LoadLibraryW LIBXC_USING_IF_EXISTS;
+
+using ::GetProcAddress LIBXC_USING_IF_EXISTS;
+
+using ::FreeLibrary LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif // __CXMEMORY__

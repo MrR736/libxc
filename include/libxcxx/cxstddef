@@ -1,0 +1,302 @@
+/**
+ * cxstddef: Extern Library C++ Definitions
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXSTDDEF__
+#define __CXSTDDEF__
+
+#ifndef __cplusplus
+# error "<libxcxx/cxstddef> requires a C++ compiler"
+#endif
+
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+
+#include "xstddef.h"
+
+// C++ standard version compatibility
+#ifndef CPLUSPLUS_GE
+# define CPLUSPLUS_GE(v) (__cplusplus >= (v))
+#endif
+
+#ifndef CPLUSPLUS_LE
+# define CPLUSPLUS_LE(v) (__cplusplus <= (v))
+#endif
+
+#ifndef CPLUSPLUS_EQ
+# define CPLUSPLUS_EQ(v) (__cplusplus == (v))
+#endif
+
+#ifndef CPLUSPLUS_NE
+# define CPLUSPLUS_NE(v) (__cplusplus != (v))
+#endif
+
+#ifndef CPLUSPLUS_LT
+# define CPLUSPLUS_LT(v) (__cplusplus < (v))
+#endif
+
+#ifndef CPLUSPLUS_GT
+# define CPLUSPLUS_GT(v) (__cplusplus > (v))
+#endif
+
+// C++ standard library compatibility
+namespace xstd {
+	/*
+	 * integral_constant
+	 *
+	 * C++11 and later provide std::integral_constant.  This alias keeps
+	 * xstd code independent of the implementation namespace.
+	 */
+	template<class T, T V>
+	using integral_constant = std::integral_constant<T, V>;
+
+	typedef std::true_type  true_type;
+	typedef std::false_type false_type;
+
+	// enable_if
+	template<bool B, class T = void>
+	using enable_if = typename std::enable_if<B, T>::type;
+
+	// remove_const
+	template<class T>
+	using remove_const = typename std::remove_const<T>::type;
+
+	// remove_volatile
+	template<class T>
+	using remove_volatile = typename std::remove_volatile<T>::type;
+
+	// remove_cv
+	template<class T>
+	using remove_cv = typename std::remove_cv<T>::type;
+
+	// remove_reference
+	template<class T>
+	using remove_reference = typename std::remove_reference<T>::type;
+
+	// add_lvalue_reference
+	template<class T>
+	using add_lvalue_reference =
+	typename std::add_lvalue_reference<T>::type;
+
+	// add_rvalue_reference
+	template<class T>
+	using add_rvalue_reference =
+	typename std::add_rvalue_reference<T>::type;
+
+	// decay
+	template<class T>
+	using decay = typename std::decay<T>::type;
+
+	// conditional
+	template<bool B, class T, class F>
+	using conditional = typename std::conditional<B, T, F>::type;
+
+	// is_same
+	template<class T, class U>
+	using is_same = std::is_same<T, U>;
+
+	// is_pointer
+	template<class T>
+	using is_pointer = std::is_pointer<T>;
+
+	// is_reference
+	template<class T>
+	using is_reference = std::is_reference<T>;
+
+	// is_const
+	template<class T>
+	using is_const = std::is_const<T>;
+
+	// is_volatile
+	template<class T>
+	using is_volatile = std::is_volatile<T>;
+
+	// move
+	using std::move;
+
+	// forward
+	using std::forward;
+
+	// swap
+	using std::swap;
+} // namespace xstd
+
+// C++11 compatibility helpers
+namespace xstd {
+	namespace detail {
+
+		/*
+		 * remove_cvref
+		 *
+		 * std::remove_cvref_t is C++20.  Implement the equivalent for older
+		 * language standards.
+		 */
+		template<class T>
+		struct remove_cvref {
+			typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
+		};
+
+#if CPLUSPLUS_GE(STDC20PP)
+		template<class T>
+		using remove_cvref_t = std::remove_cvref_t<T>;
+#else
+		template<class T>
+		using remove_cvref_t = typename remove_cvref<T>::type;
+#endif
+
+
+		/*
+		 * void_t
+		 */
+#if CPLUSPLUS_GE(STDC17PP)
+		template<class... T>
+		using void_t = std::void_t<T...>;
+#else
+		template<class...>
+		struct make_void {
+			typedef void type;
+		};
+
+		template<class... T>
+		using void_t = typename make_void<T...>::type;
+#endif
+
+		// bool_constant
+#if CPLUSPLUS_GE(STDC17PP)
+		template<bool B>
+		using bool_constant = std::bool_constant<B>;
+#else
+		template<bool B>
+		using bool_constant = std::integral_constant<bool, B>;
+#endif
+
+	} // namespace detail
+} // namespace xstd
+
+// index sequence compatibility
+namespace xstd {
+	namespace detail {
+
+#if CPLUSPLUS_GE(STDC14PP)
+		using std::index_sequence;
+		using std::make_index_sequence;
+		using std::index_sequence_for;
+#else
+		template<std::size_t... I>
+		struct index_sequence {
+			typedef index_sequence<I...> type;
+		};
+
+
+		template<std::size_t N, std::size_t... I>
+		struct make_index_sequence_impl
+		: make_index_sequence_impl<N - 1, N - 1, I...> { };
+
+
+		template<std::size_t... I>
+		struct make_index_sequence_impl<0, I...> {
+			typedef index_sequence<I...> type;
+		};
+
+
+		template<std::size_t N>
+		using make_index_sequence = typename make_index_sequence_impl<N>::type;
+
+		template<class... T>
+		using index_sequence_for = make_index_sequence<sizeof...(T)>;
+
+#endif
+
+	} // namespace detail
+} // namespace xstd
+
+// noexcept compatibility
+#ifndef XSTD_NOEXCEPT
+# define XSTD_NOEXCEPT LIBXC_NOEXCEPT
+#endif
+
+#ifndef XSTD_NOEXCEPT_
+# define XSTD_NOEXCEPT_(...) LIBXC_NOEXCEPT_(__VA_ARGS__)
+#endif
+
+// nullptr compatibility
+#if CPLUSPLUS_GE(STDC11PP)
+# define XSTD_NULL nullptr
+#else
+namespace xstd {
+	namespace detail {
+		struct nullptr_t {
+			template<class T>
+			operator T*() const {
+				return 0;
+			}
+
+			template<class C, class T>
+			operator T C::*() const {
+				return 0;
+			}
+		};
+
+		static const nullptr_t null = {};
+	} // namespace detail
+} // namespace xstd
+# define XSTD_NULL xstd::detail::null
+#endif
+
+#define xnullptr XSTD_NULL
+
+// constexpr compatibility
+#ifndef XSTD_CONSTEXPR
+# define XSTD_CONSTEXPR LIBXC_CONSTEXPR
+#endif
+
+// inline compatibility
+#ifndef XSTD_INLINE
+# define XSTD_INLINE inline
+#endif
+
+// static assertion compatibility
+
+#ifndef XSTD_STATIC_ASSERT
+# define XSTD_STATIC_ASSERT LIBXC_STATIC_ASSERT
+#endif
+
+// C++ attributes
+#ifndef XSTD_NODISCARD
+# define XSTD_NODISCARD LIBXC_NODISCARD
+#endif
+
+#ifndef XSTD_MAYBE_UNUSED
+# define XSTD_MAYBE_UNUSED LIBXC_MAYBE_UNUSED
+#endif
+
+// C++20 concepts compatibility
+#ifndef XSTD_CONCEPT
+# define XSTD_CONCEPT LIBXC_CONCEPT
+#endif
+
+#ifndef XSTD_REQUIRES
+# define XSTD_REQUIRES(...) LIBXC_REQUIRES(__VA_ARGS__)
+#endif
+
+#endif /* __CXSTDDEF__ */

@@ -1,0 +1,179 @@
+/**
+ * xmemory.h: Cross-Platform Memory Utilities
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XMEMORY__
+#define __XMEMORY__
+
+#include <memory>
+#include <new>
+#include <stdexcept>
+#include <type_traits>
+
+#include "xstddef.h"
+
+namespace xstd __xvisibility__(default) {
+
+using std::unique_ptr;
+
+template <typename T, typename ... Args>
+unique_ptr<T> make_unique(Args&&... args) LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC14PP)
+	return std::make_unique<T>(std::forward<Args>(args)...);
+#else
+	return unique_ptr<T>(new T(std::forward<Args>(args)...));
+#endif
+}
+
+template <typename T>
+unique_ptr<T[]> make_unique(std::size_t n) LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC14PP)
+	return std::make_unique<T>(n);
+#else
+	using Element = typename std::remove_extent<T>::type;
+	return unique_ptr<T>(new Element[n]());
+#endif
+}
+
+template <typename T>
+unique_ptr<T> make_unique_for_overwrite() LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::make_unique_for_overwrite<T>();
+#else
+	return unique_ptr<T>(new T);
+#endif
+}
+
+template <typename T>
+unique_ptr<T> make_unique_for_overwrite(std::size_t n) LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::make_unique_for_overwrite<T>(n);
+#else
+	using Element = std::remove_extent_t<T>;
+	return unique_ptr<T>(new Element[n]);
+#endif
+}
+
+template <typename T>
+LIBXC_NODISCARD constexpr T* to_address(T* p) LIBXC_NOEXCEPT {
+	return std::to_address<T>(p);
+}
+
+#if CPLUSPLUS_GE(STDC20PP)
+template<typename Ptr>
+LIBXC_NODISCARD constexpr auto to_address(const Ptr& p) LIBXC_NOEXCEPT {
+	return std::to_address(p);
+}
+#else
+template<typename Ptr>
+LIBXC_NODISCARD constexpr auto to_address(const Ptr& p) LIBXC_NOEXCEPT -> decltype(to_address(p.operator->())) {
+	return to_address(p.operator->());
+}
+#endif
+
+
+template <typename T>
+T* addressof(T& r) LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC11PP)
+	return std::addressof<T>(r);
+#else
+	return reinterpret_cast<T*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(r)));
+#endif
+}
+
+#if CPLUSPLUS_GE(STDC11PP)
+template <typename T>
+T* addressof(const T&& r) noexcept = delete;
+#endif
+
+template <typename T, typename... Args>
+constexpr T* construct_at(T* location, Args&&... args) {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::construct_at<T>(location,std::forward<Args>(args)...);
+#else
+	return ::new (static_cast<void*>(location)) T(std::forward<Args>(args)...);
+#endif
+}
+
+template <typename T>
+void destroy_at(T* location) {
+#if CPLUSPLUS_GE(STDC20PP)
+	std::destroy_at(location);
+#else
+	location->~T();
+#endif
+}
+
+template <size_t N, typename T>
+LIBXC_NODISCARD constexpr T* assume_aligned(T* ptr) LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::assume_aligned<N>(ptr);
+#elif __libxc_builtin(__builtin_assume_aligned)
+	return static_cast<T*>(__builtin_assume_aligned(ptr,N));
+#else
+	return ptr;
+#endif
+}
+
+void* align(size_t alignment, size_t size, void*& ptr, size_t& space) {
+#if CPLUSPLUS_GE(STDC11PP)
+	return std::align(alignment,size,ptr,space);
+#else
+	if (alignment == 0) return nullptr;
+	const uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+	const size_t remainder = addr % alignment;
+	const size_t padding = remainder == 0 ? 0 : alignment - remainder;
+	if (padding > space || size > space - padding) return nullptr;
+	void* result = reinterpret_cast<void*>(addr + padding);
+	ptr = result;
+	space -= padding;
+	return result;
+#endif
+}
+
+template<typename T, typename Alloc, typename... Args>
+constexpr T make_obj_using_allocator(const Alloc& alloc, Args&&... args) {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::make_obj_using_allocator<T,Alloc>(alloc,std::forward<Args>(args)...);
+#else
+	return std::make_from_tuple<T>(
+		std::uses_allocator_construction_args<T>(alloc, std::forward<Args>(args)...)
+	);
+#endif
+}
+
+template<typename T, typename Alloc, typename... Args>
+constexpr T* uninitialized_construct_using_allocator(T* p, const Alloc& alloc, Args&&... args) {
+#if CPLUSPLUS_GE(STDC20PP)
+	return std::uninitialized_construct_using_allocator<T,Alloc>(alloc,std::forward<Args>(args)...);
+#else
+	return std::apply(
+		[p](auto&&... ctor_args) -> T* {
+			return ::new (static_cast<void*>(p))
+			T(std::forward<decltype(ctor_args)>(ctor_args)...);
+		}, std::uses_allocator_construction_args<T>(alloc, std::forward<Args>(args)...)
+	);
+#endif
+}
+
+}
+
+#endif // __XMEMORY__

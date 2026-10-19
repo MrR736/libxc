@@ -1,0 +1,732 @@
+/**
+ * xstring: Extern Library for string in C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XSTRING__
+#define __XSTRING__
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <list>
+
+#include "xtypes.h"
+
+#include "xstdlib.h"
+#include "xmemory.h"
+
+#include "xstring.h"
+#include "xwchar.h"
+
+#include "xctype.h"
+#include "xwctype.h"
+
+#if CPLUSPLUS_GE(STDC17PP)
+#include <string_view>
+#endif
+
+namespace xstd __xvisibility__(default) {
+
+std::string from_wstring(const wchar_t* s) {
+	char* p = xwcstombs(s);
+	if (!p) return std::string();
+	std::string result(p);
+	xfree(p);
+	return result;
+}
+
+std::string from_wstring(const std::wstring& s) {
+	return from_wstring(s.c_str());
+}
+
+std::wstring from_string(const char* s) {
+	wchar_t* p = xmbstowcs(s);
+	if (!p) return std::wstring();
+	std::wstring result(p);
+	xfree(p);
+	return result;
+}
+
+std::wstring from_string(const std::string& s) {
+	return from_string(s.c_str());
+}
+
+class xstring : public std::string {
+private:
+	mutable wchar_t* _wdata;
+	mutable char* _upper;
+	mutable char* _lower;
+	mutable std::string _uppersource;
+	mutable std::string _lowersource;
+
+	void update_wdata(std::size_t* len) const LIBXC_NOEXCEPT {
+		if (!xwcsstrcmp(_wdata, c_str())) {
+			if (_wdata) xfree(_wdata);
+			_wdata = xmbstowcs_len(c_str(),len);
+		}
+	}
+
+	void update_wdata() const LIBXC_NOEXCEPT {
+		if (!xwcsstrcmp(_wdata, c_str())) {
+			if (_wdata) xfree(_wdata);
+			_wdata = xmbstowcs(c_str());
+		}
+	}
+
+	void update_upper() const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			char* result = xtoupper(c_str());
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
+		}
+	}
+
+	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			char* result = xtoupper_l(c_str(),l);
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
+		}
+	}
+
+	void update_lower() const LIBXC_NOEXCEPT {
+		if (_lower == nullptr || _lowersource != c_str()) {
+			char* result = xtolower(c_str());
+			if (_lower) xfree(_lower);
+			_lower = result;
+			_lowersource = c_str();
+		}
+	}
+
+	void update_lower(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_lower == nullptr || _lowersource != c_str()) {
+			char* result = xtolower_l(c_str(),l);
+			if (_lower) xfree(_lower);
+			_lower = result;
+			_lowersource = c_str();
+		}
+	}
+
+public:
+	xstring() : std::string(), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+	xstring(const char* s) : std::string(s), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const char* s,std::size_t len) : std::string(s,len), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const std::string& s) : std::string(s), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const std::string& s,std::size_t len) : std::string(s,len), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+	xstring(const wchar_t* s) : std::string(from_wstring(s)), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const wchar_t* s,std::size_t len) : std::string(from_wstring(s),len), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const std::wstring& s) : std::string(from_wstring(s)), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const std::wstring& s,std::size_t len) : std::string(from_wstring(s),len), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+#if CPLUSPLUS_GE(STDC17PP)
+	xstring(const std::string_view& s) : std::string(s.data()), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xstring(const std::wstring_view& s) : std::string(from_wstring(s.data())), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+#endif
+
+	xstring(const xstring& other) : std::string(other), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {
+		if (other._wdata) _wdata = xmbstowcs(other.c_str());
+		if (other._upper) _upper = xtoupper(other.c_str());
+		if (other._lower) _lower = xtolower(other.c_str());
+	}
+
+	xstring(xstring&& other) LIBXC_NOEXCEPT : std::string(std::move(other)), _wdata(other._wdata), _upper(other._upper), _lower(other._lower) {
+		other._wdata = nullptr;
+		other._upper = nullptr;
+		other._lower = nullptr;
+	}
+
+	xstring& operator=(const xstring& other) {
+		if (this != &other) {
+			std::string::operator=(other);
+			if (_wdata) xfree(_wdata);
+			_wdata = nullptr;
+			if (other._wdata) _wdata = xmbstowcs(other.c_str());
+
+			if (_upper) xfree(_upper);
+			_upper = nullptr;
+			if (other._upper) _upper = xtoupper(other.c_str());
+
+			if (_lower) xfree(_lower);
+			_lower = nullptr;
+			if (other._lower) _lower = xtolower(other.c_str());
+		}
+
+		return *this;
+	}
+
+	xstring& operator=(xstring&& other) LIBXC_NOEXCEPT {
+		if (this != &other) {
+			std::string::operator=(std::move(other));
+			if (_wdata) xfree(_wdata);
+			_wdata = other._wdata;
+			other._wdata = nullptr;
+
+			if (_upper) xfree(_upper);
+			_upper = other._upper;
+			other._upper = nullptr;
+
+			if (_lower) xfree(_lower);
+			_lower = other._lower;
+			other._lower = nullptr;
+		}
+
+		return *this;
+	}
+
+	~xstring() LIBXC_NOEXCEPT {
+		if (_wdata) xfree(_wdata);
+		if (_upper) xfree(_upper);
+		if (_lower ) xfree(_lower);
+	}
+
+	wchar_t* wdata() LIBXC_NOEXCEPT {
+		update_wdata();
+		return _wdata;
+	}
+
+	wchar_t* wdata(std::size_t* len) LIBXC_NOEXCEPT {
+		update_wdata(len);
+		return _wdata;
+	}
+
+	const wchar_t* c_wstr() const LIBXC_NOEXCEPT {
+		update_wdata();
+		return _wdata;
+	}
+
+	const wchar_t* c_wstr(std::size_t* len) const LIBXC_NOEXCEPT {
+		update_wdata(len);
+		return _wdata;
+	}
+
+	char* cdata() LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC17PP)
+		return data();
+#else
+		return empty() ? nullptr : &(*this)[0];
+#endif
+	}
+
+	const char* c_cstr() const LIBXC_NOEXCEPT {
+		return c_str();
+	}
+
+	const char* tolower() const LIBXC_NOEXCEPT {
+		update_lower();
+		return _lower;
+	}
+
+	const char* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_lower(l);
+		return _lower;
+	}
+
+	const char* toupper() const LIBXC_NOEXCEPT {
+		update_upper();
+		return _upper;
+	}
+
+	const char* toupper(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_upper(l);
+		return _upper;
+	}
+
+	int compares(const char *const *s, size_t n) const LIBXC_NOEXCEPT {
+		if (!s) return 1;
+		for (size_t i = 0; i < n; ++i) {
+			if (empty() && !s[i]) return 0;
+			if (s[i] && strcmp(c_str(), s[i]) == 0) return 0;
+		}
+		return 1;
+	}
+
+	int compares(const std::vector<const char*>& ss) const LIBXC_NOEXCEPT {
+		return compares(ss.data(),ss.size());
+	}
+
+	int compares(const std::list<const char*>& ss) const LIBXC_NOEXCEPT {
+		for (const char* s : ss) {
+			if (empty() && !s) return 0;
+			if (s && strcmp(c_str(), s) == 0) return 0;
+		}
+		return 1;
+	}
+
+#if CPLUSPLUS_GE(STDC17PP)
+	std::string_view view() const noexcept {
+		return std::string_view(data(), size());
+	}
+
+	std::string_view cview() const noexcept {
+		return view();
+	}
+
+	std::wstring_view wview() const noexcept {
+		return std::wstring_view(c_wstr(), size());
+	}
+#endif
+};
+
+inline xstring to_xstring(int val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(unsigned val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(long val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(unsigned long val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(long long val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(unsigned long long val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(float val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(double val) LIBXC_NOEXCEPT{
+	return std::to_string(val);
+}
+
+inline xstring to_xstring(long double val) LIBXC_NOEXCEPT {
+	return std::to_string(val);
+}
+
+
+inline std::wostream& operator<<(std::wostream& os, const xstring& s) {
+	return os << s.c_wstr();
+}
+
+class xwstring : public std::wstring {
+private:
+	mutable char* _cdata;
+	mutable wchar_t* _upper;
+	mutable wchar_t* _lower;
+	mutable std::wstring _uppersource;
+	mutable std::wstring _lowersource;
+
+	void update_cdata() const LIBXC_NOEXCEPT {
+		if (!xwcsstrcmp(c_str(),_cdata)) {
+			if (_cdata) xfree(_cdata);
+			_cdata = xwcstombs(c_str());
+		}
+	}
+
+	void update_cdata(std::size_t* len) const LIBXC_NOEXCEPT {
+		if (!xwcsstrcmp(c_str(),_cdata)) {
+			if (_cdata) xfree(_cdata);
+			_cdata = xwcstombs_len(c_str(),len);
+		}
+	}
+
+	void update_upper() const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			wchar_t* result = xtowupper(c_str());
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
+		}
+	}
+
+	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			wchar_t* result = xtowupper_l(c_str(),l);
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
+		}
+	}
+
+	void update_lower() const LIBXC_NOEXCEPT {
+		if (_lower == nullptr || _lowersource != c_str()) {
+			wchar_t* result = xtowlower(c_str());
+			if (_lower) xfree(_lower);
+			_lower = result;
+			_lowersource = c_str();
+		}
+	}
+
+	void update_lower(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_lower == nullptr || _lowersource != c_str()) {
+			wchar_t* result = xtowlower_l(c_str(),l);
+			if (_lower) xfree(_lower);
+			_lower = result;
+			_lowersource = c_str();
+		}
+	}
+public:
+	xwstring() : std::wstring(), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+	xwstring(const wchar_t* s) : std::wstring(s), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const wchar_t* s,std::size_t len) : std::wstring(s,len), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const std::wstring& s) : std::wstring(s), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const std::wstring& s,std::size_t len) : std::wstring(s,len), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+	xwstring(const char* s) : std::wstring(from_string(s)), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const char* s,std::size_t len) : std::wstring(from_string(s),len), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const std::string& s) : std::wstring(from_string(s)), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const std::string& s,std::size_t len) : std::wstring(from_string(s),len), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+
+#if CPLUSPLUS_GE(STDC17PP)
+	xwstring(const std::string_view& s) : std::wstring(from_string(s.data())), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+	xwstring(const std::wstring_view& s) : std::wstring(s.data()), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
+#endif
+
+	xwstring(const xwstring& other) : std::wstring(other), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {
+		if (other._cdata) _cdata = xwcstombs(other.c_str());
+		if (other._upper) _upper = xtowupper(other.c_str());
+		if (other._lower) _lower = xtowlower(other.c_str());
+	}
+
+	xwstring(xwstring&& other) LIBXC_NOEXCEPT : std::wstring(std::move(other)), _cdata(other._cdata), _upper(other._upper), _lower(other._lower) {
+		other._cdata = nullptr;
+		other._upper = nullptr;
+		other._lower = nullptr;
+	}
+
+	xwstring& operator=(const xwstring& other) {
+		if (this != &other) {
+			std::wstring::operator=(other);
+			if (_cdata) xfree(_cdata);
+			_cdata = nullptr;
+			if (other._cdata) _cdata = xwcstombs(other.c_str());
+
+			if (_upper) xfree(_upper);
+			_upper = nullptr;
+			if (other._upper) _upper = xtowupper(other.c_str());
+
+			if (_lower) xfree(_lower);
+			_lower = nullptr;
+			if (other._lower) _lower = xtowlower(other.c_str());
+		}
+
+		return *this;
+	}
+
+	xwstring& operator=(xwstring&& other) LIBXC_NOEXCEPT {
+		if (this != &other) {
+			std::wstring::operator=(std::move(other));
+			if (_cdata) xfree(_cdata);
+			_cdata = other._cdata;
+			other._cdata = nullptr;
+
+			if (_upper) xfree(_upper);
+			_upper = other._upper;
+			other._upper = nullptr;
+
+			if (_lower) xfree(_lower);
+			_lower = other._lower;
+			other._lower = nullptr;
+		}
+
+		return *this;
+	}
+
+	~xwstring() LIBXC_NOEXCEPT {
+		if (_cdata) xfree(_cdata);
+		if (_upper) xfree(_upper);
+		if (_lower ) xfree(_lower);
+	}
+
+	char* cdata() LIBXC_NOEXCEPT {
+		update_cdata();
+		return _cdata;
+	}
+
+	char* cdata(std::size_t* len) LIBXC_NOEXCEPT {
+		update_cdata(len);
+		return _cdata;
+	}
+
+	const char* c_cstr() const LIBXC_NOEXCEPT {
+		update_cdata();
+		return _cdata;
+	}
+
+	const char* c_cstr(std::size_t* len) const LIBXC_NOEXCEPT {
+		update_cdata(len);
+		return _cdata;
+	}
+
+	wchar_t* wdata() LIBXC_NOEXCEPT {
+#if CPLUSPLUS_GE(STDC17PP)
+		return data();
+#else
+		return empty() ? nullptr : &(*this)[0];
+#endif
+	}
+
+	const wchar_t* c_wstr() const LIBXC_NOEXCEPT {
+		return c_str();
+	}
+
+	const wchar_t* tolower() const LIBXC_NOEXCEPT {
+		update_lower();
+		return _lower;
+	}
+
+	const wchar_t* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_lower(l);
+		return _lower;
+	}
+
+	const wchar_t* toupper() const LIBXC_NOEXCEPT {
+		update_upper();
+		return _upper;
+	}
+
+	const wchar_t* toupper(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_upper(l);
+		return _upper;
+	}
+
+	int compares(const wchar_t *const *s, size_t n) const LIBXC_NOEXCEPT {
+		if (!s) return 1;
+		for (size_t i = 0; i < n; ++i) {
+			if (empty() && !s[i]) return 0;
+			if (s[i] && wcscmp(c_str(), s[i]) == 0) return 0;
+		}
+		return 1;
+	}
+
+	int compares(const std::vector<const wchar_t*>& ss) const LIBXC_NOEXCEPT {
+		return compares(ss.data(),ss.size());
+	}
+
+	int compares(const std::list<const wchar_t*>& ss) const LIBXC_NOEXCEPT {
+		for (const wchar_t* s : ss) {
+			if (empty() && !s) return 0;
+			if (s && wcscmp(c_str(), s) == 0) return 0;
+		}
+		return 1;
+	}
+
+#if CPLUSPLUS_GE(STDC17PP)
+	std::wstring_view view() const noexcept {
+		return std::wstring_view(data(), size());
+	}
+
+	std::string_view cview() const noexcept {
+		return std::string_view(c_cstr(), size());
+	}
+
+	std::wstring_view wview() const noexcept {
+		return view();
+	}
+#endif
+};
+
+inline xwstring to_xwstring(int val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(unsigned val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(long val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(unsigned long val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(long long val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(unsigned long long val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(float val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(double val) LIBXC_NOEXCEPT{
+	return std::to_wstring(val);
+}
+
+inline xwstring to_xwstring(long double val) LIBXC_NOEXCEPT {
+	return std::to_wstring(val);
+}
+
+inline std::ostream& operator<<(std::ostream& os, const xwstring& s) {
+	return os << s.c_cstr();
+}
+
+/*
+xwstring operator+(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) + rhs;
+}
+
+bool operator!=(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) != rhs;
+}
+
+bool operator==(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) == rhs;
+}
+
+bool operator<(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) < rhs;
+}
+
+bool operator>(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) > rhs;
+}
+
+bool operator<=(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) <= rhs;
+}
+
+bool operator>=(const xstring& lhs, const wchar_t* rhs) {
+	return std::wstring(lhs.begin(), lhs.end()) >= rhs;
+}
+
+xstring operator+(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) + rhs;
+}
+
+
+bool operator!=(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) != rhs;
+}
+
+bool operator==(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) == rhs;
+}
+
+bool operator<(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) < rhs;
+}
+
+bool operator>(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) > rhs;
+}
+
+bool operator<=(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) <= rhs;
+}
+
+bool operator>=(const xwstring& lhs, const char* rhs) {
+	return std::string(lhs.begin(), lhs.end()) >= rhs;
+}
+*/
+
+}
+
+namespace std __xvisibility__(default) {
+
+inline wostream& operator<<(wostream& os, const char* s) {
+	return os << xstd::from_string(s);
+}
+
+inline wostream& operator<<(wostream& os, const string& s) {
+	return os << s.c_str();
+}
+
+inline ostream& operator<<(ostream& os, const wchar_t* s) {
+	return os << xstd::from_wstring(s);
+}
+
+inline ostream& operator<<(ostream& os, const wstring& s) {
+	return os << s.c_str();
+}
+
+/*
+string operator+(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) + rhs;
+}
+
+wstring operator+(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) + rhs;
+}
+
+bool operator!=(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) != rhs;
+}
+
+bool operator==(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) == rhs;
+}
+
+bool operator<(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) < rhs;
+}
+
+bool operator>(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) > rhs;
+}
+
+bool operator<=(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) <= rhs;
+}
+
+bool operator>=(const wstring& lhs, const char* rhs) {
+	return string(lhs.begin(), lhs.end()) >= rhs;
+}
+
+
+bool operator!=(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) != rhs;
+}
+
+bool operator==(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) == rhs;
+}
+
+bool operator<(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) < rhs;
+}
+
+bool operator>(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) > rhs;
+}
+
+bool operator<=(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) <= rhs;
+}
+
+bool operator>=(const string& lhs, const wchar_t* rhs) {
+	return wstring(lhs.begin(), lhs.end()) >= rhs;
+}
+*/
+
+}
+
+#endif

@@ -1,0 +1,222 @@
+/**
+ * cxuchar: Extern Library for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XUCHAR__
+#define __XUCHAR__
+
+#include "xuchar.h"
+
+namespace xstd __xvisibility__(default) {
+
+#define XSTD_USTR_DISPATCH(CharT, name, ...) \
+	if constexpr (std::is_same_v<CharT, char8_t>) { \
+		return ustr8##name(__VA_ARGS__); \
+	} else if constexpr (std::is_same_v<CharT, char16_t>) { \
+		return ustr16##name(__VA_ARGS__); \
+	} else if constexpr (std::is_same_v<CharT, char32_t>) { \
+		return ustr32##name(__VA_ARGS__); \
+	} else { \
+		LIBXC_STATIC_ASSERT(std::is_same_v<CharT, void>,"Unsupported character type"); \
+	}
+
+
+template<typename CharT>
+inline std::size_t XCALLAPI ustrlen(const CharT* xrestrict s) {
+	XSTD_USTR_DISPATCH(CharT, len, s)
+	return 0;
+}
+
+template<typename CharT>
+inline std::size_t XCALLAPI ustrlen(const CharT* xrestrict s, std::size_t maxlen) {
+	XSTD_USTR_DISPATCH(CharT, nlen, s, maxlen)
+	return 0;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcpy(CharT* xrestrict dest, const CharT* xrestrict src) {
+	XSTD_USTR_DISPATCH(CharT, cpy, dest, src)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcpy(CharT* xrestrict dest, const CharT* xrestrict src, std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT, ncpy, dest, src,n)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcat(CharT* xrestrict dest, const CharT* xrestrict src) {
+	XSTD_USTR_DISPATCH(CharT, cat, dest, src)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrncat(CharT* xrestrict dest,const CharT* xrestrict src,std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT, ncat, dest, src, n)
+	return nullptr;
+}
+
+template<typename CharT>
+inline int XCALLAPI ustrcmp(const CharT* xrestrict s1,const CharT* xrestrict s2) {
+	XSTD_USTR_DISPATCH(CharT, cmp, s1, s2)
+	return 0;
+}
+
+template<typename CharT>
+inline int XCALLAPI ustrncmp(const CharT* xrestrict s1,const CharT* xrestrict s2,std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT, ncmp, s1, s2, n)
+	return 0;
+}
+
+template<typename CharT>
+inline int XCALLAPI ustrcoll(const CharT* xrestrict s1,const CharT* xrestrict s2) {
+	XSTD_USTR_DISPATCH(CharT, coll, s1, s2)
+	return 0;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrdup(const CharT* xrestrict s) {
+	XSTD_USTR_DISPATCH(CharT, dup,s)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrndup(const CharT* xrestrict s,std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT, ndup,s,n)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrchr(const CharT* xrestrict s,int c) {
+	XSTD_USTR_DISPATCH(CharT,chr,s,c)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrchrnul(const CharT* xrestrict s,int c) {
+	XSTD_USTR_DISPATCH(CharT,chrnul,s,c)
+	return nullptr;
+}
+
+template<typename CharT>
+inline std::size_t XCALLAPI ustrspn(const CharT* xrestrict s, const CharT *accept) {
+	XSTD_USTR_DISPATCH(CharT, spn,s,accept)
+	return 0;
+}
+
+template<typename CharT>
+inline std::size_t XCALLAPI ustrcspn(const CharT* xrestrict s, const CharT *reject) {
+	XSTD_USTR_DISPATCH(CharT, cspn,s,reject)
+	return 0;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrtok_r(CharT *xrestrict s,const CharT *xrestrict delim,CharT **xrestrict save_ptr) {
+	XSTD_USTR_DISPATCH(CharT,tok_r,s,delim,save_ptr)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrtok(CharT *xrestrict s,const CharT *xrestrict delim) {
+	XSTD_USTR_DISPATCH(CharT,tok,s,delim)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrpbrk(const CharT* s, const CharT *accept) {
+	XSTD_USTR_DISPATCH(CharT,pbrk,s,accept)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrstr(const CharT* haystack, const CharT *needle) {
+	XSTD_USTR_DISPATCH(CharT,str,haystack,needle)
+	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcasestr(const CharT* haystack, const CharT *needle) {
+	XSTD_USTR_DISPATCH(CharT,casestr,haystack,needle)
+	return nullptr;
+}
+
+template<typename CharT>
+inline int XCALLAPI ustrcasecmp(const CharT* s1, const CharT *s2) {
+	XSTD_USTR_DISPATCH(CharT,casecmp,s1,s2)
+	return 0;
+}
+
+template<typename CharT>
+inline int XCALLAPI ustrcasecmp(const CharT* s1, const CharT *s2,std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT,ncasecmp,s1,s2,n)
+	return 0;
+}
+
+template<typename CharT>
+inline std::size_t XCALLAPI ustrxfrm(CharT* xrestrict dest,const CharT* xrestrict src,std::size_t n) {
+	XSTD_USTR_DISPATCH(CharT, xfrm, dest, src, n)
+	return 0;
+}
+
+#undef XSTD_USTR_DISPATCH
+
+template<typename CharT>
+inline char* XCALLAPI xmbrtoc_len(const CharT* xrestrict pc8,size_t* out_size) {
+	if constexpr (std::is_same_v<CharT,char8_t>) {
+		return xmbrtoc8_len(pc8,out_size);
+	} else if constexpr (std::is_same_v<CharT,char16_t>) {
+		return xmbrtoc16_len(pc8,out_size);
+	} else if constexpr (std::is_same_v<CharT,char32_t>) {
+		return xmbrtoc32_len(pc8,out_size);
+	} else {
+		LIBXC_STATIC_ASSERT(std::is_same_v<CharT,void>,"Unsupported character type");
+		return nullptr;
+	}
+}
+
+template<typename CharT>
+inline char* XCALLAPI xmbrtoc(const CharT* xrestrict pc8) {
+	return xmbrtoc_len(pc8,nullptr);
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI xcrtomb_len(const char* xrestrict pc8,size_t* out_size) {
+	if constexpr (std::is_same_v<CharT,char8_t>) {
+		return xc8rtomb_len(pc8,out_size);
+	} else if constexpr (std::is_same_v<CharT,char16_t>) {
+		return xc16rtomb_len(pc8,out_size);
+	} else if constexpr (std::is_same_v<CharT,char32_t>) {
+		return xc32rtomb_len(pc8,out_size);
+	} else {
+		LIBXC_STATIC_ASSERT(std::is_same_v<CharT,void>,"Unsupported character type");
+		return nullptr;
+	}
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI xcrtomb(const char* xrestrict pc8) {
+	return xcrtomb_len<CharT>(pc8,nullptr);
+}
+
+}
+
+#endif

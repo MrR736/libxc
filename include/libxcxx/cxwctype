@@ -1,0 +1,42 @@
+/**
+ * cxwctype: Extern Library for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXWCTYPE__
+#define __CXWCTYPE__
+
+#include <string>
+
+#include "xwctype.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::xtowlower LIBXC_USING_IF_EXISTS;
+using ::xtowlower_l LIBXC_USING_IF_EXISTS;
+
+using ::xtowupper LIBXC_USING_IF_EXISTS;
+using ::xtowupper_l LIBXC_USING_IF_EXISTS;
+
+using ::xtowascii LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif

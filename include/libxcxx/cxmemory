@@ -1,0 +1,59 @@
+/**
+ * xmemory.h: Cross-Platform Memory Utilities
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXMEMORY__
+#define __CXMEMORY__
+
+#include <memory>
+
+#include "xmemory.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::xmalloc LIBXC_USING_IF_EXISTS;
+using ::xcalloc LIBXC_USING_IF_EXISTS;
+using ::xrealloc LIBXC_USING_IF_EXISTS;
+using ::xfree LIBXC_USING_IF_EXISTS;
+
+using ::xmemset LIBXC_USING_IF_EXISTS;
+using ::xmemcpy LIBXC_USING_IF_EXISTS;
+using ::xmemccpy LIBXC_USING_IF_EXISTS;
+using ::xmemmove LIBXC_USING_IF_EXISTS;
+using ::xmemcmp LIBXC_USING_IF_EXISTS;
+using ::xmempcpy LIBXC_USING_IF_EXISTS;
+using ::xmemchr LIBXC_USING_IF_EXISTS;
+
+using ::xwmemset LIBXC_USING_IF_EXISTS;
+using ::xwmemcpy LIBXC_USING_IF_EXISTS;
+using ::xwmemccpy LIBXC_USING_IF_EXISTS;
+using ::xwmemmove LIBXC_USING_IF_EXISTS;
+using ::xwmemcmp LIBXC_USING_IF_EXISTS;
+using ::xwmempcpy LIBXC_USING_IF_EXISTS;
+using ::xwmemchr LIBXC_USING_IF_EXISTS;
+
+using ::xbcmp LIBXC_USING_IF_EXISTS;
+using ::xbcopy LIBXC_USING_IF_EXISTS;
+using ::xbzero LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif // __CXMEMORY__

@@ -1,0 +1,100 @@
+/**
+ * cxstdio: Extern Library for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXSTDIO__
+#define __CXSTDIO__
+
+#include <string>
+
+#include "xstdio.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::fdputs LIBXC_USING_IF_EXISTS;
+
+using ::fopenm LIBXC_USING_IF_EXISTS;
+
+using ::fdopenm LIBXC_USING_IF_EXISTS;
+
+using ::fdno LIBXC_USING_IF_EXISTS;
+
+using ::xflockfile LIBXC_USING_IF_EXISTS;
+
+using ::fdno_unlocked LIBXC_USING_IF_EXISTS;
+
+using ::wfopen LIBXC_USING_IF_EXISTS;
+
+using ::wfopenm LIBXC_USING_IF_EXISTS;
+
+using ::fpsize LIBXC_USING_IF_EXISTS;
+
+using ::furead LIBXC_USING_IF_EXISTS;
+
+using ::fdsize LIBXC_USING_IF_EXISTS;
+
+using ::fduread LIBXC_USING_IF_EXISTS;
+
+using ::vcprintf LIBXC_USING_IF_EXISTS;
+
+using ::cprintf LIBXC_USING_IF_EXISTS;
+
+using ::vcwprintf LIBXC_USING_IF_EXISTS;
+
+using ::cwprintf LIBXC_USING_IF_EXISTS;
+
+using ::vwcprintf LIBXC_USING_IF_EXISTS;
+
+using ::wcprintf LIBXC_USING_IF_EXISTS;
+
+using ::vwccprintf LIBXC_USING_IF_EXISTS;
+
+using ::wccprintf LIBXC_USING_IF_EXISTS;
+
+using ::wremove LIBXC_USING_IF_EXISTS;
+
+using ::vxremove LIBXC_USING_IF_EXISTS;
+
+using ::xremove LIBXC_USING_IF_EXISTS;
+
+using ::vxwremove LIBXC_USING_IF_EXISTS;
+
+using ::xwremove LIBXC_USING_IF_EXISTS;
+
+using ::getcurrentdirectory_size LIBXC_USING_IF_EXISTS;
+
+using ::getcurrentdirectory LIBXC_USING_IF_EXISTS;
+
+using ::wgetcurrentdirectory_size LIBXC_USING_IF_EXISTS;
+
+using ::wgetcurrentdirectory LIBXC_USING_IF_EXISTS;
+
+using ::fexists LIBXC_USING_IF_EXISTS;
+
+using ::wfexists LIBXC_USING_IF_EXISTS;
+
+using ::dexists LIBXC_USING_IF_EXISTS;
+
+using ::wdexists LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif

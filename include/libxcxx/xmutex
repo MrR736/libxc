@@ -1,0 +1,102 @@
+/**
+ * xmutex: Extern Library in xthread.h for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XMUTEX__
+#define __XMUTEX__
+
+#include <system_error>
+
+#include "xthread.h"
+
+namespace xstd __xvisibility__(default) {
+
+class xmutex {
+private:
+	xmutex_t _xmutex;
+
+public:
+	xmutex() {
+		const xthread_result_t ret = xmutex_init(&_xmutex);
+		if (ret != 0) {
+			throw std::system_error(static_cast<int>(ret),std::system_category(),"xmutex_init");
+		}
+	}
+
+	~xmutex() noexcept {
+		xmutex_destroy(&_xmutex);
+	}
+
+	xmutex(const xmutex&) = delete;
+	xmutex& operator=(const xmutex&) = delete;
+	xmutex(xmutex&&) = delete;
+	xmutex& operator=(xmutex&&) = delete;
+
+	void lock() {
+		xmutex_lock(&_xmutex);
+	}
+
+	bool try_lock() noexcept {
+		return xmutex_trylock(&_xmutex) == 0;
+	}
+
+	void unlock() {
+		xmutex_unlock(&_xmutex);
+	}
+};
+
+class recursive_xmutex {
+private:
+	xmutex_t _mutex;
+
+public:
+	recursive_xmutex() {
+		const xthread_result_t ret = recursive_xmutex_init(&_mutex);
+		if (ret != 0) {
+			throw std::system_error(static_cast<int>(ret),std::system_category(),"recursive_xmutex_init");
+		}
+	}
+
+	~recursive_xmutex() noexcept {
+		xmutex_destroy(&_mutex);
+	}
+
+	recursive_xmutex(const recursive_xmutex&) = delete;
+	recursive_xmutex& operator=(const recursive_xmutex&) = delete;
+	recursive_xmutex(recursive_xmutex&&) = delete;
+	recursive_xmutex& operator=(recursive_xmutex&&) = delete;
+
+	void lock() {
+		xmutex_lock(&_mutex);
+	}
+
+	bool try_lock() noexcept {
+		return xmutex_trylock(&_mutex) == 0;
+	}
+
+	void unlock() {
+		xmutex_unlock(&_mutex);
+	}
+};
+
+}
+
+#endif

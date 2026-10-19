@@ -1,0 +1,54 @@
+/**
+ * cxwchar: Extern Library in wstring for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXWCHAR__
+#define __CXWCHAR__
+
+#include <string>
+
+#include "xwchar.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::vxwcslen LIBXC_USING_IF_EXISTS;
+using ::xwcslen LIBXC_USING_IF_EXISTS;
+
+using ::xwcscmp LIBXC_USING_IF_EXISTS;
+
+using ::xwcscasecmp LIBXC_USING_IF_EXISTS;
+using ::xwcscasecmp_l LIBXC_USING_IF_EXISTS;
+
+using ::xwcsicmp LIBXC_USING_IF_EXISTS;
+using ::xwcsicmp_l LIBXC_USING_IF_EXISTS;
+
+using ::xwcsdup LIBXC_USING_IF_EXISTS;
+
+using ::xwcscmb LIBXC_USING_IF_EXISTS;
+using ::xwcscmbs LIBXC_USING_IF_EXISTS;
+
+using ::xwbasename LIBXC_USING_IF_EXISTS;
+
+using ::xwcssdup LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif

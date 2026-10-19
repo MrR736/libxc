@@ -1,0 +1,153 @@
+/**
+ * xthread: Extern Library in xthread.h for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XTHREAD__
+#define __XTHREAD__
+
+#include <utility>
+#include <functional>
+#include <memory>
+#include <system_error>
+#include <exception>
+#include <thread>
+
+#include "xthread.h"
+
+namespace xstd __xvisibility__(default) {
+
+class xthread {
+private:
+	xthread_t _xthread{};
+	bool _joinable = false;
+
+	struct _thread_data {
+		std::function<void()> fn;
+		explicit _thread_data(std::function<void()>&& f) : fn(std::move(f)) {}
+	};
+
+	static void* _thread_entry(void* arg) {
+		std::unique_ptr<_thread_data> data(static_cast<_thread_data*>(arg));
+		try { data->fn(); }
+		catch (...) { std::terminate(); }
+		return nullptr;
+	}
+
+public:
+	class id;
+
+	xthread() noexcept = default;
+
+	template<class F, class... Args>
+	explicit xthread(F&& f, Args&&... args) {
+		auto bound = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+		std::unique_ptr<_thread_data> data(new _thread_data(std::function<void()>(std::move(bound))));
+		const xthread_result_t rc = xthread_create(&_xthread, &_thread_entry, data.get());
+		if (rc != 0) throw std::system_error(static_cast<int>(rc), std::system_category(),"xthread_create");
+		data.release();
+		_joinable = true;
+	}
+
+	~xthread() {
+		if (_joinable) xthread_detach(_xthread);
+	}
+
+	xthread(const xthread&) = delete;
+	xthread& operator=(const xthread&) = delete;
+
+	xthread(xthread&& other) noexcept : _xthread(other._xthread), _joinable(other._joinable) {
+		other._joinable = false;
+	}
+
+	xthread& operator=(xthread&& other) noexcept {
+		if (this != &other) {
+			if (_joinable) xthread_detach(_xthread);
+			_xthread = other._xthread;
+			_joinable = other._joinable;
+			other._joinable = false;
+		}
+		return *this;
+	}
+
+	void swap(xthread& other) noexcept {
+		std::swap(_xthread, other._xthread);
+		std::swap(_joinable, other._joinable);
+	}
+
+	bool joinable() const noexcept {
+		return _joinable;
+	}
+
+	void join() {
+		if (!_joinable) throw std::system_error(std::make_error_code(std::errc::invalid_argument));
+		if (xthread_equal(_xthread, xthread_self())) throw std::system_error(std::make_error_code(std::errc::resource_deadlock_would_occur));
+		const xthread_result_t rc = xthread_join(_xthread, nullptr);
+		if (rc != 0) throw std::system_error(static_cast<int>(rc), std::system_category(), "xthread_join");
+		_joinable = false;
+	}
+
+	void detach() {
+		if (!_joinable) throw std::system_error(std::make_error_code(std::errc::invalid_argument));
+		const xthread_result_t rc = xthread_detach(_xthread);
+		if (rc != 0) throw std::system_error(static_cast<int>(rc), std::system_category(), "xthread_detach");
+		_joinable = false;
+	}
+
+	id get_id() const LIBXC_NOEXCEPT;
+
+	static unsigned hardware_concurrency() noexcept {
+		return std::thread::hardware_concurrency();
+	}
+};
+
+inline void swap(xthread& x, xthread& y) LIBXC_NOEXCEPT {
+	x.swap(y);
+}
+
+class xthread::id {
+	friend class xthread;
+
+private:
+	xthread_t _id;
+	bool _valid;
+
+	explicit id(xthread_t id) LIBXC_NOEXCEPT : _id(id), _valid(true) { }
+
+public:
+	id() LIBXC_NOEXCEPT : _id{}, _valid(false) { }
+
+	friend bool operator==(const id& lhs, const id& rhs) LIBXC_NOEXCEPT {
+		if (!lhs._valid || !rhs._valid) return lhs._valid == rhs._valid;
+		return xthread_equal(lhs._id, rhs._id) != 0;
+	}
+
+	friend bool operator!=(const id& lhs, const id& rhs) LIBXC_NOEXCEPT {
+		return !(lhs == rhs);
+	}
+};
+
+inline xthread::id xthread::get_id() const LIBXC_NOEXCEPT {
+	return _joinable ? id(_xthread) : id();
+}
+
+}
+
+#endif

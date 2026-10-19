@@ -1,0 +1,119 @@
+/**
+ * cxstdlib: Extern Library for C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __CXSTDLIB__
+#define __CXSTDLIB__
+
+#include <string>
+
+#include "xstdlib.h"
+
+namespace xstd __xvisibility__(default) {
+
+using ::xrand LIBXC_USING_IF_EXISTS;
+
+inline void* random(size_t size) {
+#ifdef _WIN32
+	return xrand(size,0);
+#else
+	return xrand(size,XRANDOM_FLAG);
+#endif
+}
+
+using ::xwcstombs_len LIBXC_USING_IF_EXISTS;
+
+using ::xwcstombs LIBXC_USING_IF_EXISTS;
+
+using ::xwcsstombss LIBXC_USING_IF_EXISTS;
+
+using ::xmbstowcs_len LIBXC_USING_IF_EXISTS;
+
+using ::xmbstowcs LIBXC_USING_IF_EXISTS;
+
+using ::xmbsstowcss LIBXC_USING_IF_EXISTS;
+
+using ::wsystem LIBXC_USING_IF_EXISTS;
+
+using ::wperror LIBXC_USING_IF_EXISTS;
+
+
+using ::vnxsystem LIBXC_USING_IF_EXISTS;
+
+using ::nxsystem LIBXC_USING_IF_EXISTS;
+
+using ::vxsystem LIBXC_USING_IF_EXISTS;
+
+using ::xsystem LIBXC_USING_IF_EXISTS;
+
+using ::vnxwsystem LIBXC_USING_IF_EXISTS;
+
+using ::nxwsystem LIBXC_USING_IF_EXISTS;
+
+using ::vxwsystem LIBXC_USING_IF_EXISTS;
+
+using ::xwsystem LIBXC_USING_IF_EXISTS;
+
+
+using ::vnxperror LIBXC_USING_IF_EXISTS;
+
+using ::nxperror LIBXC_USING_IF_EXISTS;
+
+using ::vxperror LIBXC_USING_IF_EXISTS;
+
+using ::xperror LIBXC_USING_IF_EXISTS;
+
+using ::vnxwperror LIBXC_USING_IF_EXISTS;
+
+using ::nxwperror LIBXC_USING_IF_EXISTS;
+
+using ::vxwperror LIBXC_USING_IF_EXISTS;
+
+using ::xwperror LIBXC_USING_IF_EXISTS;
+
+
+using ::csystem LIBXC_USING_IF_EXISTS;
+
+using ::wcsystem LIBXC_USING_IF_EXISTS;
+
+using ::vnxcsystem LIBXC_USING_IF_EXISTS;
+
+using ::nxcsystem LIBXC_USING_IF_EXISTS;
+
+using ::vxcsystem LIBXC_USING_IF_EXISTS;
+
+using ::xcsystem LIBXC_USING_IF_EXISTS;
+
+using ::vnxwcsystem LIBXC_USING_IF_EXISTS;
+
+using ::nxwcsystem LIBXC_USING_IF_EXISTS;
+
+using ::vxwcsystem LIBXC_USING_IF_EXISTS;
+
+using ::xwcsystem LIBXC_USING_IF_EXISTS;
+
+using ::xwcsstrcmp LIBXC_USING_IF_EXISTS;
+
+using ::xstrwcscmp LIBXC_USING_IF_EXISTS;
+
+}
+
+#endif

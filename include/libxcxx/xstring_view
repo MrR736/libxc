@@ -1,0 +1,273 @@
+/**
+ * xstring_view: Extern Library for string_view in C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XSTRING_VIEW__
+#define __XSTRING_VIEW__
+
+#include "xstring"
+
+#if CPLUSPLUS_GE(STDC17PP)
+
+namespace xstd __xvisibility__(default) {
+
+class xstring_view : public std::string_view {
+private:
+	mutable xstring cached_string_;
+	mutable xwstring cached_wstring_;
+
+public:
+	xstring_view() noexcept : std::string_view() {}
+
+	xstring_view(const std::string_view s) noexcept : std::string_view(s) {}
+
+	xstring_view(const char* s) noexcept : std::string_view(s ? s : "") {}
+	xstring_view(const std::string& s) noexcept : std::string_view(s) {}
+
+	xstring_view(const xstring& s) noexcept : std::string_view(s) {}
+
+	xstring_view(const wchar_t* s) : std::string_view() {
+		cached_string_ = xstring(s ? s : L"");
+		std::string_view::operator=(cached_string_.view());
+	}
+
+	xstring_view(const std::wstring_view s) : std::string_view() {
+		cached_string_ = xstring(s);
+		std::string_view::operator=(cached_string_.view());
+	}
+
+	xstring_view(const std::wstring& s) : xstring_view(std::wstring_view(s)) {}
+
+	xstring_view(const xwstring& s): xstring_view(std::wstring_view(s.data(), s.size())) {}
+
+	xstring_view(std::nullptr_t) noexcept : std::string_view() {}
+
+	bool equals_any(const char* const* strings, size_t n) const noexcept {
+		if (!strings) return false;
+		for (size_t i = 0; i < n; ++i) {
+			const char* s = strings[i];
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::string_view(s)) return true;
+		}
+		return false;
+	}
+
+	bool equals_any(const std::vector<const char*>& strings) const noexcept {
+		return equals_any(strings.data(), strings.size());
+	}
+
+	bool equals_any(const std::list<const char*>& strings) const noexcept {
+		for (const char* s : strings) {
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::string_view(s)) return true;
+		}
+		return false;
+	}
+
+	template <typename Container>
+	bool equals_any(const Container& strings) const noexcept {
+		for (auto s : strings) {
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::string_view(s)) return true;
+		}
+		return false;
+	}
+
+	const char* c_str() const noexcept {
+		return data();
+	}
+
+	const char* c_cstr() const noexcept {
+		return c_str();
+	}
+
+	const wchar_t* c_wstr() const {
+		cached_wstring_ = wstr();
+		return cached_wstring_.c_str();
+	}
+
+	xstring str() const {
+		return std::string_view(data(),size());
+	}
+
+	xstring cstr() const {
+		return str();
+	}
+
+	xwstring wstr() const {
+		return std::string_view(data(),size());
+	}
+
+	std::string_view view() const noexcept {
+		return std::string_view(data(), size());
+	}
+
+	std::string_view cview() const noexcept {
+		return view();
+	}
+
+	std::wstring_view wview() const noexcept {
+		cached_wstring_ = cstr();
+		return cached_wstring_.view();
+	}
+};
+
+inline std::wostream& operator<<(std::wostream& os, const xstring_view& s) {
+	return os << s.data();
+}
+
+class xwstring_view : public std::wstring_view {
+private:
+	mutable xstring  cached_string_;
+	mutable xwstring cached_wstring_;
+
+public:
+	xwstring_view() noexcept : std::wstring_view() {}
+
+	xwstring_view(const std::wstring_view s) noexcept : std::wstring_view(s) {}
+
+	xwstring_view(const wchar_t* s) noexcept : std::wstring_view(s ? s : L"") {}
+	xwstring_view(const std::wstring& s) noexcept : std::wstring_view(s) {}
+
+	xwstring_view(const xwstring& s) noexcept : std::wstring_view(s) {}
+
+	xwstring_view(const char* s) : std::wstring_view() {
+		cached_wstring_ = xwstring(s ? s : "");
+		std::wstring_view::operator=(cached_wstring_.view());
+	}
+
+	xwstring_view(const std::string_view s) : std::wstring_view() {
+		cached_wstring_ = xwstring(s);
+		std::wstring_view::operator=(cached_wstring_.view());
+	}
+
+	xwstring_view(const std::string& s) : xwstring_view(std::string_view(s)) {}
+	xwstring_view(const xstring& s) : xwstring_view(std::string_view(s.data(), s.size())) {}
+
+	xwstring_view(std::nullptr_t) noexcept : std::wstring_view() {}
+
+	bool equals_any(const wchar_t* const* strings, size_t n) const noexcept {
+		if (!strings) return false;
+		for (size_t i = 0; i < n; ++i) {
+			const wchar_t* s = strings[i];
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::wstring_view(s)) return true;
+		}
+		return false;
+	}
+
+	bool equals_any(const std::vector<const wchar_t*>& strings) const noexcept {
+		return equals_any(strings.data(), strings.size());
+	}
+
+	bool equals_any(const std::list<const wchar_t*>& strings) const noexcept {
+		for (const wchar_t* s : strings) {
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::wstring_view(s)) return true;
+		}
+		return false;
+	}
+
+	template <typename Container>
+	bool equals_any(const Container& strings) const noexcept {
+		for (auto s : strings) {
+			if (!s) {
+				if (empty()) return true;
+				continue;
+			}
+			if (*this == std::wstring_view(s)) return true;
+		}
+		return false;
+	}
+
+	const wchar_t* c_wstr() const noexcept {
+		return data();
+	}
+
+	const char* c_cstr() const {
+		cached_string_ = str();
+		return cached_string_.c_str();
+	}
+
+	xwstring str() const {
+		return std::wstring_view(data(),size());
+	}
+
+	xwstring wstr() const {
+		return str();
+	}
+
+	xstring cstr() const {
+		return std::wstring_view(data(),size());
+	}
+
+	std::wstring_view view() const noexcept {
+		return std::wstring_view(data(),size());
+	}
+
+	std::wstring_view wview() const noexcept {
+		return view();
+	}
+
+	std::string_view cview() const {
+		cached_string_ = cstr();
+		return cached_string_.view();
+	}
+};
+
+inline std::ostream& operator<<(std::ostream& os, const xwstring_view& s) {
+	return os << s.data();
+}
+
+}
+
+namespace std __xvisibility__(default) {
+
+inline wostream& operator<<(wostream& os, const string_view& s) {
+	return os << s.data();
+}
+
+inline ostream& operator<<(ostream& os, const wstring_view& s) {
+	return os << s.data();
+}
+
+}
+
+#else
+# error "C++17 or newer is required"
+#endif
+
+#endif
