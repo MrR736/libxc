@@ -80,7 +80,7 @@ extern "C" {
 #endif
 
 /* Initialize */
-XSTDAPI void XCALLAPI xmap_init_mutex(xmap_t *xm,int useMutex) {
+XSTDMETHOD(void) xmap_init_mutex(xmap_t *xm,int useMutex) {
 	xm->map = NULL;
 	xm->str = NULL;
 	xm->wstr = NULL;
@@ -103,7 +103,7 @@ XSTDAPI void XCALLAPI xmap_init_mutex(xmap_t *xm,int useMutex) {
 	}
 }
 
-XSTDAPI void XCALLAPI xmap_init(xmap_t *xm) {
+XSTDMETHOD(void) xmap_init(xmap_t *xm) {
 	xmap_init_mutex(xm,XMAP_MUTEX_FALSE);
 }
 
@@ -113,7 +113,7 @@ XSTDAPI void XCALLAPI xmap_init(xmap_t *xm) {
  * It updates xm->map and xm->capacity atomically (no mutex) — caller
  * MUST hold the mutex if concurrent use is possible.
 */
-XSTDAPI int XCALLAPI xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
+XSTDMETHOD(int) xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
 	if (xm->capacity >= mincap) return 1;
 	size_t newcap = (xm->capacity == 0) ? 4 : xm->capacity;
 	while (newcap < mincap) {
@@ -136,7 +136,7 @@ XSTDAPI int XCALLAPI xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap) {
 }
 
 /* Helpers for str/wstr arrays (caller must hold mutex) */
-XSTDAPI int XCALLAPI xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap) {
+XSTDMETHOD(int) xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap) {
 	if (xm->cstr_capacity >= mincap) return 1;
 	size_t newcap = (xm->cstr_capacity == 0) ? 4 : xm->cstr_capacity;
 	while (newcap < mincap) {
@@ -156,7 +156,7 @@ XSTDAPI int XCALLAPI xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap) 
 	return 1;
 }
 
-XSTDAPI int XCALLAPI xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap) {
+XSTDMETHOD(int) xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap) {
 	if (xm->cwstr_capacity >= mincap) return 1;
 	size_t newcap = (xm->cwstr_capacity == 0) ? 4 : xm->cwstr_capacity;
 	while (newcap < mincap) {
@@ -177,7 +177,7 @@ XSTDAPI int XCALLAPI xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap)
 }
 
 /* Exists? (thread-safe) */
-XSTDAPI int XCALLAPI xmap_exists(xmap_t *xm, size_t i) {
+XSTDMETHOD(int) xmap_exists(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	int exists = (i < xm->count && xm->map[i] != NULL);
 	xmap_unlock(xm);
@@ -185,7 +185,7 @@ XSTDAPI int XCALLAPI xmap_exists(xmap_t *xm, size_t i) {
 }
 
 /* String/wstring existence by string-index (thread-safe) */
-XSTDAPI int XCALLAPI xmap_strexists(xmap_t *xm, size_t i) {
+XSTDMETHOD(int) xmap_strexists(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cstr) {
 		xmap_unlock(xm);
@@ -197,7 +197,7 @@ XSTDAPI int XCALLAPI xmap_strexists(xmap_t *xm, size_t i) {
 	return exists;
 }
 
-XSTDAPI int XCALLAPI xmap_wcsexists(xmap_t *xm, size_t i) {
+XSTDMETHOD(int) xmap_wcsexists(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cwstr) {
 		xmap_unlock(xm);
@@ -210,7 +210,7 @@ XSTDAPI int XCALLAPI xmap_wcsexists(xmap_t *xm, size_t i) {
 }
 
 /* Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_insert(xmap_t *xm, void *data) {
+XSTDMETHOD(void) xmap_insert(xmap_t *xm, void *data) {
 	xmap_lock(xm);
 	if (!xmap_ensure_capacity_nolock(xm, xm->count + 1)) {
 		/* errno set by ensure; leave map unchanged */
@@ -221,7 +221,7 @@ XSTDAPI void XCALLAPI xmap_insert(xmap_t *xm, void *data) {
 	xmap_unlock(xm);
 }
 
-XSTDAPI int XCALLAPI xmap_insert_safe(xmap_t *xm, void *data) {
+XSTDMETHOD(int) xmap_insert_safe(xmap_t *xm, void *data) {
 	xmap_lock(xm);
 	if (!xmap_ensure_capacity_nolock(xm, xm->count + 1)) {
 		xmap_unlock(xm);
@@ -233,7 +233,7 @@ XSTDAPI int XCALLAPI xmap_insert_safe(xmap_t *xm, void *data) {
 }
 
 /* String Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_strinsert(xmap_t *xm, const char* str) {
+XSTDMETHOD(void) xmap_strinsert(xmap_t *xm, const char* str) {
 	if (!str) return;
 	char* copy = xstrdup(str);
 	if (!copy) {
@@ -264,7 +264,7 @@ XSTDAPI void XCALLAPI xmap_strinsert(xmap_t *xm, const char* str) {
 }
 
 /* String getter (thread-safe) */
-XSTDAPI char* XCALLAPI xmap_strget(xmap_t *xm, size_t i) {
+XSTDMETHOD(char*) xmap_strget(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cstr) {
 		xmap_unlock(xm);
@@ -282,7 +282,7 @@ XSTDAPI char* XCALLAPI xmap_strget(xmap_t *xm, size_t i) {
 }
 
 /* Wchar Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
+XSTDMETHOD(void) xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
 	if (!str) return;
 	wchar_t *copy = xwcsdup(str);
 	if (!copy) {
@@ -312,7 +312,7 @@ XSTDAPI void XCALLAPI xmap_wcsinsert(xmap_t *xm, const wchar_t *str) {
 }
 
 /* Wchar getter (thread-safe) */
-XSTDAPI wchar_t* XCALLAPI xmap_wcsget(xmap_t *xm, size_t i) {
+XSTDMETHOD(wchar_t*) xmap_wcsget(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cwstr) {
 		xmap_unlock(xm);
@@ -330,7 +330,7 @@ XSTDAPI wchar_t* XCALLAPI xmap_wcsget(xmap_t *xm, size_t i) {
 }
 
 /* Generic get (thread-safe) - avoids nested locking by checking directly */
-XSTDAPI void* XCALLAPI xmap_get(xmap_t* xm, size_t i) {
+XSTDMETHOD(void*) xmap_get(xmap_t* xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->count) {
 		xmap_unlock(xm);
@@ -342,7 +342,7 @@ XSTDAPI void* XCALLAPI xmap_get(xmap_t* xm, size_t i) {
 }
 
 /* Erase entry and shift (thread-safe). Frees stored pointer. */
-XSTDAPI void XCALLAPI xmap_erase(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_erase(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->count) {
 		xmap_unlock(xm);
@@ -388,7 +388,7 @@ XSTDAPI void XCALLAPI xmap_erase(xmap_t *xm, size_t i) {
 }
 
 /* Erase entry but do not shift map (thread-safe). Frees pointer and sets slot NULL. */
-XSTDAPI void XCALLAPI xmap_erase_no_shift(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_erase_no_shift(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->count) {
 		xmap_unlock(xm);
@@ -404,7 +404,7 @@ XSTDAPI void XCALLAPI xmap_erase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDAPI void XCALLAPI xmap_strerase(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_strerase(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cstr) {
 		xmap_unlock(xm);
@@ -432,7 +432,7 @@ XSTDAPI void XCALLAPI xmap_strerase(xmap_t *xm, size_t i) {
 }
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDAPI void XCALLAPI xmap_wcserase(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_wcserase(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 
 	if (i >= xm->cwstr) {
@@ -468,7 +468,7 @@ XSTDAPI void XCALLAPI xmap_wcserase(xmap_t *xm, size_t i) {
 
 
 /* String erase no shift (thread-safe): free stored string and clear map slot; keep str index list */
-XSTDAPI void XCALLAPI xmap_strerase_no_shift(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_strerase_no_shift(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cstr) {
 		xmap_unlock(xm);
@@ -483,7 +483,7 @@ XSTDAPI void XCALLAPI xmap_strerase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* Wchar erase no shift (thread-safe) */
-XSTDAPI void XCALLAPI xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
+XSTDMETHOD(void) xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
 	xmap_lock(xm);
 	if (i >= xm->cwstr) {
 		xmap_unlock(xm);
@@ -498,7 +498,7 @@ XSTDAPI void XCALLAPI xmap_wcserase_no_shift(xmap_t *xm, size_t i) {
 }
 
 /* Destroy: free elements and arrays (thread-safe). After this call xm is unusable. */
-XSTDAPI void XCALLAPI xmap_destroy(xmap_t *xm) {
+XSTDMETHOD(void) xmap_destroy(xmap_t *xm) {
 	xmap_lock(xm);
 	for (size_t i = 0; i < xm->count; ++i) {
 		if (xm->map && xm->map[i]) xfree(xm->map[i]);
@@ -528,6 +528,7 @@ XSTDAPI void XCALLAPI xmap_destroy(xmap_t *xm) {
 #endif
 
 #ifdef __cplusplus
+extern "C++" {
 
 template<typename T>
 class xmap_iterator {
@@ -550,50 +551,52 @@ xmap_iterator<T> xmap_end(xmap_t* xm) { return xmap_iterator<T>(xm, xm->count); 
 
 /* C++ convenience wrappers */
 
-XSTDAPI void XCALLAPI xxmap_strinsert(xmap_t *xm, const std::string& str) {
+XSTDMETHOD(void) xxmap_strinsert(xmap_t *xm, const std::string& str) {
 	xmap_strinsert(xm, str.c_str());
 }
 
-XSTDAPI int XCALLAPI xxmap_strinsert_safe(xmap_t *xm, const std::string& str) {
+XSTDMETHOD(int) xxmap_strinsert_safe(xmap_t *xm, const std::string& str) {
 	/* safe variant name preserved, routing to non-locking is intentionally omitted:
 	   use xmap_strinsert which is thread-safe */
 	xmap_strinsert(xm, str.c_str());
 	return 1;
 }
 
-XSTDAPI std::string XCALLAPI xxmap_strget(xmap_t *xm, size_t i) {
+XSTDMETHOD(std::string) xxmap_strget(xmap_t *xm, size_t i) {
 	char *p = xmap_strget(xm,i);
 	if (!p) return std::string();
 	return std::string(p);
 }
 
-XSTDAPI int XCALLAPI xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str) {
+XSTDMETHOD(int) xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str) {
 	/* safe variant name preserved, routing to non-locking is intentionally omitted:
 	   use xmap_strinsert which is thread-safe */
 	xmap_wcsinsert(xm, str.c_str());
 	return 1;
 }
 
-XSTDAPI void XCALLAPI xxmap_wcsinsert(xmap_t *xm, const std::wstring& str) {
+XSTDMETHOD(void) xxmap_wcsinsert(xmap_t *xm, const std::wstring& str) {
 	xmap_wcsinsert(xm, str.c_str());
 }
 
-XSTDAPI std::wstring XCALLAPI xxmap_wcsget(xmap_t *xm, size_t i) {
+XSTDMETHOD(std::wstring) xxmap_wcsget(xmap_t *xm, size_t i) {
 	wchar_t *p = xmap_wcsget(xm,i);
 	if (!p) return std::wstring();
 	return std::wstring(p);
 }
 
 template<typename T>
-XSTDAPI T* XCALLAPI xxmap_get(xmap_t* xm, size_t i) {
+T* xxmap_get(xmap_t* xm, size_t i) {
 	return reinterpret_cast<T*>(xmap_get(xm, i)); /* calls C version */
 }
 
 template<typename T>
-XSTDAPI T XCALLAPI xxmap_intget(xmap_t* xm, size_t i) {
+T xxmap_intget(xmap_t* xm, size_t i) {
 	void* p = xmap_get(xm, i);
 	if (!p) return T();
 	return *reinterpret_cast<T*>(p);
+}
+
 }
 #endif
 

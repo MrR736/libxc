@@ -29,33 +29,33 @@
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI xchmod(const char *path, xmode_t m);
+XSTDMETHOD(int) xchmod(const char *path, xmode_t m);
 
-XSTDAPI int XCALLAPI xwchmod(const wchar_t *path, xmode_t m);
+XSTDMETHOD(int) xwchmod(const wchar_t *path, xmode_t m);
 
-XSTDAPI int XCALLAPI cmkdir(const char *path, xmode_t m);
+XSTDMETHOD(int) cmkdir(const char *path, xmode_t m);
 
-XSTDAPI int XCALLAPI wmkdir(const wchar_t *path,xmode_t m);
+XSTDMETHOD(int) wmkdir(const wchar_t *path,xmode_t m);
 
-XSTDAPI int XCALLAPI wchdir(const wchar_t *path);
+XSTDMETHOD(int) wchdir(const wchar_t *path);
 
-XSTDAPI int XCALLAPI wrmdir(const wchar_t *path);
+XSTDMETHOD(int) wrmdir(const wchar_t *path);
 
-XSTDAPI int XCALLAPI vxchdir(const char *xrestrict path, va_list ap);
+XSTDMETHOD(int) vxchdir(const char *xrestrict path, va_list ap);
 
-XSTDAPI int XCALLAPI xchdir(const char *xrestrict path, ...);
+XSTDMETHOD(int) xchdir(const char *xrestrict path, ...);
 
-XSTDAPI int XCALLAPI vxwchdir(const wchar_t *xrestrict path, va_list ap);
+XSTDMETHOD(int) vxwchdir(const wchar_t *xrestrict path, va_list ap);
 
-XSTDAPI int XCALLAPI xwchdir(const wchar_t *xrestrict path, ...);
+XSTDMETHOD(int) xwchdir(const wchar_t *xrestrict path, ...);
 
-XSTDAPI int XCALLAPI vxrmdir(const char *xrestrict path, va_list ap);
+XSTDMETHOD(int) vxrmdir(const char *xrestrict path, va_list ap);
 
-XSTDAPI int XCALLAPI xrmdir(const char *xrestrict path, ...);
+XSTDMETHOD(int) xrmdir(const char *xrestrict path, ...);
 
-XSTDAPI int XCALLAPI vxwrmdir(const wchar_t *xrestrict path, va_list ap);
+XSTDMETHOD(int) vxwrmdir(const wchar_t *xrestrict path, va_list ap);
 
-XSTDAPI int XCALLAPI xwrmdir(const wchar_t *xrestrict path, ...);
+XSTDMETHOD(int) xwrmdir(const wchar_t *xrestrict path, ...);
 
 #ifdef __cplusplus
 }

@@ -20,13 +20,8 @@ public:
 		const auto end = xmap_clock::now();
 		const auto elapsed = end - start_;
 
-		std::cout << "[TIMER] " << name_ << ": "
-		<< std::fixed << std::setprecision(6)
-		<< std::chrono::duration<double>(elapsed).count()
-		<< " seconds ("
-		<< std::chrono::duration_cast<
-		std::chrono::milliseconds>(elapsed).count()
-		<< " ms)\n";
+		std::cout << "[TIMER] " << name_ << ": " << std::fixed << std::setprecision(6) << std::chrono::duration<double>(elapsed).count()
+		<< " seconds (" << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() << " ms)\n";
 	}
 
 	xmap_timer(const xmap_timer&) = delete;
@@ -47,9 +42,7 @@ private:
  */
 static bool insert_string_checked(xmap_t* xm, const char* str) {
 	const size_t before = xm->count;
-
 	xmap_strinsert(xm, str);
-
 	return xm->count == before + 1;
 }
 
@@ -64,35 +57,27 @@ void test_xmap_basic_operations() {
 	xxmap_strinsert(&xm, std::string("Hello, world!"));
 	xxmap_strinsert(&xm, std::string("Goodbye, world!"));
 
-	std::cout << "Retrieved string 0: "
-	<< xxmap_strget(&xm, 0) << '\n';
-	std::cout << "Retrieved string 1: "
-	<< xxmap_strget(&xm, 1) << '\n';
+	std::cout << "Retrieved string 0: " << xxmap_strget(&xm, 0) << '\n';
+	std::cout << "Retrieved string 1: " << xxmap_strget(&xm, 1) << '\n';
 
 	xxmap_wcsinsert(&xm, std::wstring(L"Wide Hello!"));
 	xxmap_wcsinsert(&xm, std::wstring(L"Wide Goodbye!"));
 
-	std::wcout << L"Retrieved wide 0: "
-	<< xxmap_wcsget(&xm, 0) << L'\n';
-	std::wcout << L"Retrieved wide 1: "
-	<< xxmap_wcsget(&xm, 1) << L'\n';
+	std::wcout << L"Retrieved wide 0: " << xxmap_wcsget(&xm, 0) << L'\n';
+	std::wcout << L"Retrieved wide 1: " << xxmap_wcsget(&xm, 1) << L'\n';
 
 	xmap_strerase(&xm, 0);
 
-	std::cout << "After narrow erase: "
-	<< xxmap_strget(&xm, 0) << '\n';
+	std::cout << "After narrow erase: " << xxmap_strget(&xm, 0) << '\n';
 
 	xmap_wcserase(&xm, 0);
 
-	std::wcout << L"After wide erase: "
-	<< xxmap_wcsget(&xm, 0) << L'\n';
+	std::wcout << L"After wide erase: " << xxmap_wcsget(&xm, 0) << L'\n';
 
 	xmap_strerase_no_shift(&xm, 0);
 	xmap_wcserase_no_shift(&xm, 0);
 
-	std::cout << "After no-shift erase: count=" << xm.count
-	<< " cstr=" << xm.cstr
-	<< " cwstr=" << xm.cwstr << '\n';
+	std::cout << "After no-shift erase: count=" << xm.count << " cstr=" << xm.cstr << " cwstr=" << xm.cwstr << '\n';
 
 	xmap_destroy(&xm);
 }
@@ -108,35 +93,27 @@ void test_xmap_basic_operations_mutex() {
 	xxmap_strinsert(&xm, std::string("Hello, world!"));
 	xxmap_strinsert(&xm, std::string("Goodbye, world!"));
 
-	std::cout << "Retrieved string 0: "
-	<< xxmap_strget(&xm, 0) << '\n';
-	std::cout << "Retrieved string 1: "
-	<< xxmap_strget(&xm, 1) << '\n';
+	std::cout << "Retrieved string 0: " << xxmap_strget(&xm, 0) << '\n';
+	std::cout << "Retrieved string 1: " << xxmap_strget(&xm, 1) << '\n';
 
 	xxmap_wcsinsert(&xm, std::wstring(L"Wide Hello!"));
 	xxmap_wcsinsert(&xm, std::wstring(L"Wide Goodbye!"));
 
-	std::wcout << L"Retrieved wide 0: "
-	<< xxmap_wcsget(&xm, 0) << L'\n';
-	std::wcout << L"Retrieved wide 1: "
-	<< xxmap_wcsget(&xm, 1) << L'\n';
+	std::wcout << L"Retrieved wide 0: " << xxmap_wcsget(&xm, 0) << L'\n';
+	std::wcout << L"Retrieved wide 1: " << xxmap_wcsget(&xm, 1) << L'\n';
 
 	xmap_strerase(&xm, 0);
 
-	std::cout << "After narrow erase: "
-	<< xxmap_strget(&xm, 0) << '\n';
+	std::cout << "After narrow erase: " << xxmap_strget(&xm, 0) << '\n';
 
 	xmap_wcserase(&xm, 0);
 
-	std::wcout << L"After wide erase: "
-	<< xxmap_wcsget(&xm, 0) << L'\n';
+	std::wcout << L"After wide erase: " << xxmap_wcsget(&xm, 0) << L'\n';
 
 	xmap_strerase_no_shift(&xm, 0);
 	xmap_wcserase_no_shift(&xm, 0);
 
-	std::cout << "After no-shift erase: count=" << xm.count
-	<< " cstr=" << xm.cstr
-	<< " cwstr=" << xm.cwstr << '\n';
+	std::cout << "After no-shift erase: count=" << xm.count << " cstr=" << xm.cstr << " cwstr=" << xm.cwstr << '\n';
 
 	xmap_destroy(&xm);
 }
@@ -161,8 +138,7 @@ void test_memory_allocation_failure() {
 		char* buf = static_cast<char*>(std::malloc(64));
 
 		if (!buf) {
-			std::cout << "malloc failed at iteration "
-			<< i << '\n';
+			std::cout << "malloc failed at iteration " << i << '\n';
 			break;
 		}
 
@@ -175,8 +151,7 @@ void test_memory_allocation_failure() {
 		std::free(buf);
 
 		if (!success) {
-			std::cout << "xmap_strinsert failed at entry "
-			<< i << '\n';
+			std::cout << "xmap_strinsert failed at entry " << i << '\n';
 			break;
 		}
 
@@ -205,8 +180,7 @@ void test_memory_allocation_failure_mutex() {
 		char* buf = static_cast<char*>(std::malloc(64));
 
 		if (!buf) {
-			std::cout << "malloc failed at iteration "
-			<< i << '\n';
+			std::cout << "malloc failed at iteration " << i << '\n';
 			break;
 		}
 
@@ -217,8 +191,7 @@ void test_memory_allocation_failure_mutex() {
 		std::free(buf);
 
 		if (!success) {
-			std::cout << "xmap_strinsert failed at entry "
-			<< i << '\n';
+			std::cout << "xmap_strinsert failed at entry " << i << '\n';
 			break;
 		}
 

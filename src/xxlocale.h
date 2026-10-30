@@ -77,7 +77,7 @@
 extern "C" {
 #endif
 
-XSTDAPI char** XCALLAPI xgetlocale(size_t* out_size) {
+XSTDMETHOD(char**) xgetlocale(size_t* out_size) {
 	if (out_size) *out_size = 0;
 #ifdef _WIN32
 	const char *xlocale_candidates[] = {
@@ -210,13 +210,13 @@ fail:
 }
 
 /* Release the returned array. */
-XSTDAPI void XCALLAPI xfreelocales(char **locales) {
+XSTDMETHOD(void) xfreelocales(char **locales) {
 	if (locales == NULL) return;
 	for (size_t i = 0; locales[i] != NULL; ++i) xfree(locales[i]);
 	xfree(locales);
 }
 
-XSTDAPI wchar_t** XCALLAPI xwgetlocale(size_t *out_size) {
+XSTDMETHOD(wchar_t**) xwgetlocale(size_t *out_size) {
 	if (out_size) *out_size = 0;
 #ifdef _WIN32
 	const wchar_t *xlocale_candidates[] = {
@@ -252,13 +252,13 @@ XSTDAPI wchar_t** XCALLAPI xwgetlocale(size_t *out_size) {
 #endif
 }
 
-XSTDAPI void XCALLAPI xwfreelocales(wchar_t **locales) {
+XSTDMETHOD(void) xwfreelocales(wchar_t **locales) {
 	if (locales == NULL) return;
 	for (size_t i = 0; locales[i] != NULL; ++i) xfree(locales[i]);
 	xfree(locales);
 }
 
-XSTDAPI wchar_t* XCALLAPI wsetlocale(int category, const wchar_t *req_locale) {
+XSTDMETHOD(wchar_t*) wsetlocale(int category, const wchar_t *req_locale) {
 #ifdef _WIN32
 	return _wsetlocale(category, req_locale);
 #else
@@ -285,7 +285,7 @@ XSTDAPI wchar_t* XCALLAPI wsetlocale(int category, const wchar_t *req_locale) {
 #endif
 }
 
-XSTDAPI char *XCALLAPI xsetlocale(int category, const char *req_locale) {
+XSTDMETHOD(char*) xsetlocale(int category, const char *req_locale) {
 	char *ret;
 	size_t n;
 
@@ -313,7 +313,7 @@ XSTDAPI char *XCALLAPI xsetlocale(int category, const char *req_locale) {
 }
 
 
-XSTDAPI wchar_t* XCALLAPI xwsetlocale(int category,const wchar_t *req_locale) {
+XSTDMETHOD(wchar_t*) xwsetlocale(int category,const wchar_t *req_locale) {
 	wchar_t *ret;
 	size_t n;
 
@@ -340,7 +340,7 @@ XSTDAPI wchar_t* XCALLAPI xwsetlocale(int category,const wchar_t *req_locale) {
 	return wsetlocale(category, req_locale);
 }
 
-XSTDAPI void XCALLAPI xfreelocale(xlocale_t loc) {
+XSTDMETHOD(void) xfreelocale(xlocale_t loc) {
 #ifdef _WIN32
 	_free_locale(loc);
 #else
@@ -348,7 +348,7 @@ XSTDAPI void XCALLAPI xfreelocale(xlocale_t loc) {
 #endif
 }
 
-XSTDAPI xlocale_t XCALLAPI xnewlocale(int category_mask,const char *req_locale,xlocale_t base) {
+XSTDMETHOD(xlocale_t) xnewlocale(int category_mask,const char *req_locale,xlocale_t base) {
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
 
 #ifdef _WIN32
@@ -414,7 +414,7 @@ XSTDAPI xlocale_t XCALLAPI xnewlocale(int category_mask,const char *req_locale,x
 #endif
 }
 
-XSTDAPI xlocale_t XCALLAPI xwnewlocale(int category_mask, const wchar_t* req_locale, xlocale_t base) {
+XSTDMETHOD(xlocale_t) xwnewlocale(int category_mask, const wchar_t* req_locale, xlocale_t base) {
 	char* mbs = xwcstombs(req_locale);
 	if (!mbs) return NULL;
 	xlocale_t ret = xnewlocale(category_mask, mbs, base);
@@ -422,7 +422,7 @@ XSTDAPI xlocale_t XCALLAPI xwnewlocale(int category_mask, const wchar_t* req_loc
 	return ret;
 }
 
-XSTDAPI void XCALLAPI xinit_console_utf8(void) {
+XSTDMETHOD(void) xinit_console_utf8(void) {
 #ifdef _WIN32
 	static int console_utf8_initialized = 0;
 	if (console_utf8_initialized) return;
@@ -435,7 +435,7 @@ XSTDAPI void XCALLAPI xinit_console_utf8(void) {
 	xsetlocale(XLC_ALL,"C.UTF-8");
 }
 
-XSTDAPI void XCALLAPI xinit_console_wutf(void) {
+XSTDMETHOD(void) xinit_console_wutf(void) {
 #ifdef _WIN32
 	static int console_wutf_initialized = 0;
 	if (console_wutf_initialized) return;

@@ -76,76 +76,78 @@ extern "C" {
 #endif
 
 /* Initialize */
-XSTDAPI void XCALLAPI xmap_init_mutex(xmap_t *xm,bool useMutex);
-XSTDAPI void XCALLAPI xmap_init(xmap_t *xm);
+XSTDMETHOD(void) xmap_init_mutex(xmap_t *xm,bool useMutex);
+XSTDMETHOD(void) xmap_init(xmap_t *xm);
 
 /* Helper: ensure map capacity (holds/assumes caller has not locked mutex:
    this routine will not lock. Returns 1 on success, 0 on failure).
    It updates xm->map and xm->capacity atomically (no mutex) — caller
    MUST hold the mutex if concurrent use is possible.
 */
-XSTDAPI int XCALLAPI xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap);
+XSTDMETHOD(int) xmap_ensure_capacity_nolock(xmap_t *xm, size_t mincap);
 
 /* Helpers for str/wstr arrays (caller must hold mutex) */
-XSTDAPI int XCALLAPI xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap);
+XSTDMETHOD(int) xmap_ensure_str_capacity_locked(xmap_t *xm, size_t mincap);
 
-XSTDAPI int XCALLAPI xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap);
+XSTDMETHOD(int) xmap_ensure_wstr_capacity_locked(xmap_t *xm, size_t mincap);
 
 /* Exists? (thread-safe) */
-XSTDAPI int XCALLAPI xmap_exists(xmap_t *xm, size_t i);
+XSTDMETHOD(int) xmap_exists(xmap_t *xm, size_t i);
 
 /* String/wstring existence by string-index (thread-safe) */
-XSTDAPI int XCALLAPI xmap_strexists(xmap_t *xm, size_t i);
+XSTDMETHOD(int) xmap_strexists(xmap_t *xm, size_t i);
 
-XSTDAPI int XCALLAPI xmap_wcsexists(xmap_t *xm, size_t i);
+XSTDMETHOD(int) xmap_wcsexists(xmap_t *xm, size_t i);
 
 /* Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_insert(xmap_t *xm, void *data);
+XSTDMETHOD(void) xmap_insert(xmap_t *xm, void *data);
 
 /* Non-locking insert (caller must hold mutex) */
-XSTDAPI int XCALLAPI xmap_insert_safe(xmap_t *xm, void *data);
+XSTDMETHOD(int) xmap_insert_safe(xmap_t *xm, void *data);
 
 /* String Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_strinsert(xmap_t *xm, const char* str);
+XSTDMETHOD(void) xmap_strinsert(xmap_t *xm, const char* str);
 
 /* String getter (thread-safe) */
-XSTDAPI char* XCALLAPI xmap_strget(xmap_t *xm, size_t i);
+XSTDMETHOD(char*) xmap_strget(xmap_t *xm, size_t i);
 
 /* Wchar Insert data pointer (thread-safe) */
-XSTDAPI void XCALLAPI xmap_wcsinsert(xmap_t *xm, const wchar_t *str);
+XSTDMETHOD(void) xmap_wcsinsert(xmap_t *xm, const wchar_t *str);
 
 /* Wchar getter (thread-safe) */
-XSTDAPI wchar_t* XCALLAPI xmap_wcsget(xmap_t *xm, size_t i);
+XSTDMETHOD(wchar_t*) xmap_wcsget(xmap_t *xm, size_t i);
 
 /* Generic get (thread-safe) - avoids nested locking by checking directly */
-XSTDAPI void* XCALLAPI xmap_get(xmap_t* xm, size_t i);
+XSTDMETHOD(void*) xmap_get(xmap_t* xm, size_t i);
 
 /* Erase entry and shift (thread-safe). Frees stored pointer. */
-XSTDAPI void XCALLAPI xmap_erase(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_erase(xmap_t *xm, size_t i);
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDAPI void XCALLAPI xmap_strerase(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_strerase(xmap_t *xm, size_t i);
 
 /* String erase by string-index (thread-safe): removes mapping and frees stored string, shifts arrays */
-XSTDAPI void XCALLAPI xmap_wcserase(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_wcserase(xmap_t *xm, size_t i);
 
 /* Erase entry but do not shift map (thread-safe). Frees pointer and sets slot NULL. */
-XSTDAPI void XCALLAPI xmap_erase_no_shift(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_erase_no_shift(xmap_t *xm, size_t i);
 
 /* String erase no shift (thread-safe): free stored string and clear map slot; keep str index list */
-XSTDAPI void XCALLAPI xmap_strerase_no_shift(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_strerase_no_shift(xmap_t *xm, size_t i);
 
 /* Wchar erase no shift (thread-safe) */
-XSTDAPI void XCALLAPI xmap_wcserase_no_shift(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xmap_wcserase_no_shift(xmap_t *xm, size_t i);
 
 /* Destroy: free elements and arrays (thread-safe). After this call xm is unusable. */
-XSTDAPI void XCALLAPI xmap_destroy(xmap_t *xm);
+XSTDMETHOD(void) xmap_destroy(xmap_t *xm);
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef __cplusplus
+extern "C++" {
+
 template<typename T>
 class xmap_iterator {
 public:
@@ -167,20 +169,27 @@ xmap_iterator<T> xmap_end(xmap_t* xm) { return xmap_iterator<T>(xm, xm->count); 
 
 /* C++ convenience wrappers */
 
-XSTDAPI void XCALLAPI xxmap_strinsert(xmap_t *xm, const std::string& str);
-XSTDAPI int XCALLAPI xxmap_strinsert_safe(xmap_t *xm, const std::string& str);
-XSTDAPI std::string XCALLAPI xxmap_strget(xmap_t *xm, size_t i);
+XSTDMETHOD(void) xxmap_strinsert(xmap_t *xm, const std::string& str);
+XSTDMETHOD(int) xxmap_strinsert_safe(xmap_t *xm, const std::string& str);
+XSTDMETHOD(std::string) xxmap_strget(xmap_t *xm, size_t i);
 
-XSTDAPI void XCALLAPI xxmap_wcsinsert(xmap_t *xm, const std::wstring& str);
-XSTDAPI int XCALLAPI xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str);
-XSTDAPI std::wstring XCALLAPI xxmap_wcsget(xmap_t *xm, size_t i);
-
-template<typename T>
-XSTDAPI T* XCALLAPI xxmap_get(xmap_t* xm, size_t i);
+XSTDMETHOD(void) xxmap_wcsinsert(xmap_t *xm, const std::wstring& str);
+XSTDMETHOD(int) xxmap_wcsinsert_safe(xmap_t *xm, const std::wstring& str);
+XSTDMETHOD(std::wstring) xxmap_wcsget(xmap_t *xm, size_t i);
 
 template<typename T>
-XSTDAPI T XCALLAPI xxmap_intget(xmap_t* xm, size_t i);
+T* xxmap_get(xmap_t* xm, size_t i) {
+	return reinterpret_cast<T*>(xmap_get(xm, i)); /* calls C version */
+}
 
+template<typename T>
+T xxmap_intget(xmap_t* xm, size_t i) {
+	void* p = xmap_get(xm, i);
+	if (!p) return T();
+	return *reinterpret_cast<T*>(p);
+}
+
+}
 #endif
 
 #endif /* __XMAP_H__ */

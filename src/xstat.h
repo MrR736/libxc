@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI xchmod(const char *path, xmode_t m) {
+XSTDMETHOD(int) xchmod(const char *path, xmode_t m) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -41,7 +41,7 @@ XSTDAPI int XCALLAPI xchmod(const char *path, xmode_t m) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xwchmod(const wchar_t *path, xmode_t m) {
+XSTDMETHOD(int) xwchmod(const wchar_t *path, xmode_t m) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -60,7 +60,7 @@ XSTDAPI int XCALLAPI xwchmod(const wchar_t *path, xmode_t m) {
 #endif
 }
 
-XSTDAPI int XCALLAPI cmkdir(const char *path, xmode_t m) {
+XSTDMETHOD(int) cmkdir(const char *path, xmode_t m) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -74,7 +74,7 @@ XSTDAPI int XCALLAPI cmkdir(const char *path, xmode_t m) {
 #endif
 }
 
-XSTDAPI int XCALLAPI wmkdir(const wchar_t *path,xmode_t m) {
+XSTDMETHOD(int) wmkdir(const wchar_t *path,xmode_t m) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -92,7 +92,7 @@ XSTDAPI int XCALLAPI wmkdir(const wchar_t *path,xmode_t m) {
 #endif
 }
 
-XSTDAPI int XCALLAPI wchdir(const wchar_t *path) {
+XSTDMETHOD(int) wchdir(const wchar_t *path) {
 #ifdef _WIN32
 	return _wchdir(path);
 #else
@@ -105,7 +105,7 @@ XSTDAPI int XCALLAPI wchdir(const wchar_t *path) {
 #endif
 }
 
-XSTDAPI int XCALLAPI wrmdir(const wchar_t *path) {
+XSTDMETHOD(int) wrmdir(const wchar_t *path) {
 #ifdef _WIN32
 	return _wrmdir(path);
 #else
@@ -118,7 +118,7 @@ XSTDAPI int XCALLAPI wrmdir(const wchar_t *path) {
 #endif
 }
 
-XSTDAPI int XCALLAPI vxchdir(const char *xrestrict path, va_list ap) {
+XSTDMETHOD(int) vxchdir(const char *xrestrict path, va_list ap) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -133,7 +133,7 @@ XSTDAPI int XCALLAPI vxchdir(const char *xrestrict path, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xchdir(const char *xrestrict path, ...) {
+XSTDMETHOD(int) xchdir(const char *xrestrict path, ...) {
 	va_list ap;
 	va_start(ap, path);
 	int ret = vxchdir(path, ap);
@@ -141,7 +141,7 @@ XSTDAPI int XCALLAPI xchdir(const char *xrestrict path, ...) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI vxwchdir(const wchar_t *xrestrict path, va_list ap) {
+XSTDMETHOD(int) vxwchdir(const wchar_t *xrestrict path, va_list ap) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -156,7 +156,7 @@ XSTDAPI int XCALLAPI vxwchdir(const wchar_t *xrestrict path, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xwchdir(const wchar_t *xrestrict path, ...) {
+XSTDMETHOD(int) xwchdir(const wchar_t *xrestrict path, ...) {
 	va_list ap;
 	va_start(ap, path);
 	int ret = vxwchdir(path, ap);
@@ -164,7 +164,7 @@ XSTDAPI int XCALLAPI xwchdir(const wchar_t *xrestrict path, ...) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI vxrmdir(const char *xrestrict path, va_list ap) {
+XSTDMETHOD(int) vxrmdir(const char *xrestrict path, va_list ap) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -179,7 +179,7 @@ XSTDAPI int XCALLAPI vxrmdir(const char *xrestrict path, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xrmdir(const char *xrestrict path, ...) {
+XSTDMETHOD(int) xrmdir(const char *xrestrict path, ...) {
 	va_list ap;
 	va_start(ap, path);
 	int ret = vxrmdir(path, ap);
@@ -187,7 +187,7 @@ XSTDAPI int XCALLAPI xrmdir(const char *xrestrict path, ...) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI vxwrmdir(const wchar_t *xrestrict path, va_list ap) {
+XSTDMETHOD(int) vxwrmdir(const wchar_t *xrestrict path, va_list ap) {
 	if (path == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -202,7 +202,7 @@ XSTDAPI int XCALLAPI vxwrmdir(const wchar_t *xrestrict path, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xwrmdir(const wchar_t *xrestrict path, ...) {
+XSTDMETHOD(int) xwrmdir(const wchar_t *xrestrict path, ...) {
 	va_list ap;
 	va_start(ap, path);
 	int ret = vxwrmdir(path, ap);

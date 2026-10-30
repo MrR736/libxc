@@ -29,26 +29,26 @@
 extern "C" {
 #endif
 
-XSTDAPI size_t XCALLAPI vxstrlen(const char *xrestrict __s, va_list ap);
+XSTDMETHOD(size_t) vxstrlen(const char *xrestrict __s, va_list ap);
 
-XSTDAPI size_t XCALLAPI xstrlen(const char *xrestrict __s, ...);
+XSTDMETHOD(size_t) xstrlen(const char *xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI xstrcmp(const char *s1, const char **s2, size_t n);
+XSTDMETHOD(int) xstrcmp(const char *s1, const char **s2, size_t n);
 
-XSTDAPI int XCALLAPI xstrcasecmp(const char *s1, const char *s2);
-XSTDAPI int XCALLAPI xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l);
+XSTDMETHOD(int) xstrcasecmp(const char *s1, const char *s2);
+XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l);
 
-XSTDAPI int XCALLAPI xstricmp(const char *s1, const char *s2);
-XSTDAPI int XCALLAPI xstricmp_l(const char *s1, const char *s2,xlocale_t l);
+XSTDMETHOD(int) xstricmp(const char *s1, const char *s2);
+XSTDMETHOD(int) xstricmp_l(const char *s1, const char *s2,xlocale_t l);
 
-XSTDAPI char* XCALLAPI xstrdup(const char *s);
+XSTDMETHOD(char*) xstrdup(const char *s);
 
-XSTDAPI char* XCALLAPI xstrcmb(const char * s1, const char * s2);
-XSTDAPI char* XCALLAPI xstrcmbs(const char** ss, size_t n);
+XSTDMETHOD(char*) xstrcmb(const char * s1, const char * s2);
+XSTDMETHOD(char*) xstrcmbs(const char** ss, size_t n);
 
-XSTDAPI const char* XCALLAPI xbasename(const char* path);
+XSTDMETHOD(const char*) xbasename(const char* path);
 
-XSTDAPI char** XCALLAPI xstrsdup(const char** strs, size_t n);
+XSTDMETHOD(char**) xstrsdup(const char** strs, size_t n);
 
 #ifdef __cplusplus
 }

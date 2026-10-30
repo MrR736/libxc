@@ -94,8 +94,8 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-XSTDDEF_INLINE_API DWORD XCALLAPI __xthread_wrapper(LPVOID param) {
-	__xthread_t *data = (__xthread_t *)param;
+XSTDDEF_INLINE_API DWORD XCALLAPI __xthread_wrapper(LPVOID arg) {
+	__xthread_t *data = (__xthread_t *)arg;
 	data->result = data->lpStartAddress(data->lpParameter);
 	return 0;
 }
@@ -107,7 +107,7 @@ XSTDDEF_INLINE_API void* XCALLAPI __xthread_wrapper(void *arg) {
 }
 #endif
 
-XSTDAPI int XCALLAPI xmutex_init(xmutex_t *m) {
+XSTDMETHOD(int) xmutex_init(xmutex_t *m) {
 #ifdef _WIN32
 	InitializeCriticalSection(m);
 	return 0;
@@ -116,7 +116,7 @@ XSTDAPI int XCALLAPI xmutex_init(xmutex_t *m) {
 #endif
 }
 
-XSTDAPI int XCALLAPI recursive_xmutex_init(xmutex_t *m) {
+XSTDMETHOD(int) recursive_xmutex_init(xmutex_t *m) {
 #ifdef _WIN32
     InitializeCriticalSection(m);
     return 0;
@@ -131,7 +131,7 @@ XSTDAPI int XCALLAPI recursive_xmutex_init(xmutex_t *m) {
 #endif
 }
 
-XSTDAPI void XCALLAPI xmutex_lock(xmutex_t *m) {
+XSTDMETHOD(void) xmutex_lock(xmutex_t *m) {
 #ifdef _WIN32
 	EnterCriticalSection(m);
 #else
@@ -139,7 +139,7 @@ XSTDAPI void XCALLAPI xmutex_lock(xmutex_t *m) {
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xmutex_trylock(xmutex_t *mutex) {
+XSTDMETHOD(xthread_result_t) xmutex_trylock(xmutex_t *mutex) {
 #ifdef _WIN32
 	return TryEnterCriticalSection(mutex) ? 0 : ERROR_BUSY;
 #else
@@ -147,7 +147,7 @@ XSTDAPI xthread_result_t XCALLAPI xmutex_trylock(xmutex_t *mutex) {
 #endif
 }
 
-XSTDAPI void XCALLAPI xmutex_unlock(xmutex_t *m) {
+XSTDMETHOD(void) xmutex_unlock(xmutex_t *m) {
 #ifdef _WIN32
 	LeaveCriticalSection(m);
 #else
@@ -155,7 +155,7 @@ XSTDAPI void XCALLAPI xmutex_unlock(xmutex_t *m) {
 #endif
 }
 
-XSTDAPI void XCALLAPI xmutex_destroy(xmutex_t *m) {
+XSTDMETHOD(void) xmutex_destroy(xmutex_t *m) {
 #ifdef _WIN32
 	DeleteCriticalSection(m);
 #else
@@ -163,7 +163,7 @@ XSTDAPI void XCALLAPI xmutex_destroy(xmutex_t *m) {
 #endif
 }
 
-XSTDAPI xthread_t XCALLAPI xthread_self(void) {
+XSTDMETHOD(xthread_t) xthread_self(void) {
 #ifdef _WIN32
 	return OpenThread(THREAD_ALL_ACCESS,FALSE,GetCurrentThreadId());
 #else
@@ -171,8 +171,10 @@ XSTDAPI xthread_t XCALLAPI xthread_self(void) {
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_create(xthread_t *thread,void *(XCALLAPI *start_routine)(void *),void *arg) {
+XSTDMETHOD(xthread_result_t) xthread_create(xthread_t *thread,void *(XCALLAPI *start_routine)(void *),void *arg) {
 #ifdef _WIN32
+	if (thread == NULL || start_routine == NULL)
+		return (xthread_result_t)ERROR_INVALID_PARAMETER;
 	__xthread_t *data = (__xthread_t*)xmalloc(sizeof(__xthread_t));
 	if (!data) return (xthread_result_t)-1;
 	data->lpStartAddress = start_routine;
@@ -190,13 +192,15 @@ XSTDAPI xthread_result_t XCALLAPI xthread_create(xthread_t *thread,void *(XCALLA
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_createw(xthread_t* thread,LPTHREAD_START_ROUTINE lpStartAddress,LPVOID lpParameter) {
+XSTDMETHOD(xthread_result_t) xthread_createw(xthread_t* thread,LPTHREAD_START_ROUTINE lpStartAddress,LPVOID lpParameter) {
 #ifdef _WIN32
 	HANDLE h = CreateThread(NULL, 0, lpStartAddress, lpParameter, 0, NULL);
 	if (!h) return (xthread_result_t)GetLastError();
 	*thread = h;
 	return (xthread_result_t)0;
 #else
+	if (thread == NULL || lpStartAddress == NULL)
+		return EINVAL;
 	__xthread_t* data = (__xthread_t*)xmalloc(sizeof(*data));
 	if (!data) return (xthread_result_t)-1;
 	data->lpStartAddress = lpStartAddress;
@@ -211,20 +215,27 @@ XSTDAPI xthread_result_t XCALLAPI xthread_createw(xthread_t* thread,LPTHREAD_STA
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_join(xthread_t thread, void **retval) {
+XSTDMETHOD(xthread_result_t) xthread_join(xthread_t thread, void **retval) {
 #ifdef _WIN32
-	DWORD wait_res = WaitForSingleObject(thread, INFINITE);
-	if (wait_res != WAIT_OBJECT_0) return (xthread_result_t)(wait_res == WAIT_FAILED ? GetLastError() : ERROR_GEN_FAILURE);
 	DWORD exit_code;
+	if (thread == NULL) return (xthread_result_t)ERROR_INVALID_HANDLE;
+	DWORD wait_res = WaitForSingleObject(thread, INFINITE);
+	if (wait_res != WAIT_OBJECT_0) {
+		return (xthread_result_t)(wait_res == WAIT_FAILED ? GetLastError() : ERROR_GEN_FAILURE);
+	}
+
 	if (!GetExitCodeThread(thread, &exit_code)) return (xthread_result_t)GetLastError();
-	if (retval != NULL) *retval = NULL;
+
+	if (retval != NULL) *retval = (void *)(uintptr_t)exit_code;
+	if (!CloseHandle(thread)) return (xthread_result_t)GetLastError();
+
 	return 0;
 #else
-	return pthread_join(thread, retval);
+	return (xthread_result_t)pthread_join(thread, retval);
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_detach(xthread_t thread) {
+XSTDMETHOD(xthread_result_t) xthread_detach(xthread_t thread) {
 #ifdef _WIN32
 	if (!CloseHandle(thread)) return GetLastError();
 	return 0;
@@ -233,7 +244,7 @@ XSTDAPI xthread_result_t XCALLAPI xthread_detach(xthread_t thread) {
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_equal(xthread_t t1, xthread_t t2) {
+XSTDMETHOD(xthread_result_t) xthread_equal(xthread_t t1, xthread_t t2) {
 #ifdef _WIN32
 	return GetThreadId(t1) == GetThreadId(t2);
 #else
@@ -241,7 +252,7 @@ XSTDAPI xthread_result_t XCALLAPI xthread_equal(xthread_t t1, xthread_t t2) {
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_cancel(xthread_t th) {
+XSTDMETHOD(xthread_result_t) xthread_cancel(xthread_t th) {
 #ifdef _WIN32
 	return ENOSYS;
 #elif defined(__ANDROID__)
@@ -251,7 +262,7 @@ XSTDAPI xthread_result_t XCALLAPI xthread_cancel(xthread_t th) {
 #endif
 }
 
-XSTDAPI xthread_result_t XCALLAPI xthread_setcanceltype(int type, int *oldtype) {
+XSTDMETHOD(xthread_result_t) xthread_setcanceltype(int type, int *oldtype) {
 #ifdef _WIN32
 	static xthread_local int cancel_state = XTHREAD_CANCEL_ENABLE;
 	if (oldtype) *oldtype = cancel_state;
@@ -269,7 +280,7 @@ XSTDAPI xthread_result_t XCALLAPI xthread_setcanceltype(int type, int *oldtype) 
 #endif
 }
 
-XSTDAPI int XCALLAPI xthread_setcancelstate(int state, int *oldstate) {
+XSTDMETHOD(int) xthread_setcancelstate(int state, int *oldstate) {
 	static xthread_local int cancel_state = XTHREAD_CANCEL_ENABLE; // per-thread
 #ifdef __ANDROID__
 	if (oldstate != NULL) *(int*)oldstate = thread_cancel_state;
@@ -289,7 +300,7 @@ XSTDAPI int XCALLAPI xthread_setcancelstate(int state, int *oldstate) {
 #endif
 }
 
-XSTDAPI void XCALLAPI xthread_testcancel(void) {
+XSTDMETHOD(void) xthread_testcancel(void) {
 #ifdef _WIN32
 	return;
 #else

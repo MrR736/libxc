@@ -26,13 +26,12 @@
 #include "xstddef.h"
 #include "xmemory.h"
 #include "xtypes.h"
-#include <wchar.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-XSTDAPI size_t XCALLAPI vxwcslen(const wchar_t *xrestrict fmt, va_list ap) {
+XSTDMETHOD(size_t) vxwcslen(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return 0;
 	va_list apc;
 	va_copy(apc, ap);
@@ -75,7 +74,7 @@ XSTDAPI size_t XCALLAPI vxwcslen(const wchar_t *xrestrict fmt, va_list ap) {
 #endif
 }
 
-XSTDAPI size_t XCALLAPI xwcslen(const wchar_t *xrestrict fmt, ...) {
+XSTDMETHOD(size_t) xwcslen(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	size_t len = vxwcslen(fmt, ap);
@@ -83,7 +82,7 @@ XSTDAPI size_t XCALLAPI xwcslen(const wchar_t *xrestrict fmt, ...) {
 	return len;
 }
 
-XSTDAPI int XCALLAPI xwcscmp(const wchar_t * s1, const wchar_t ** s2, size_t n) {
+XSTDMETHOD(int) xwcscmp(const wchar_t * s1, const wchar_t ** s2, size_t n) {
 	if (!s2) return 0;  // array pointer itself is NULL
 	for (size_t i = 0; i < n; ++i) {
 		const wchar_t *s2_str = s2[i];
@@ -94,7 +93,7 @@ XSTDAPI int XCALLAPI xwcscmp(const wchar_t * s1, const wchar_t ** s2, size_t n) 
 	return 0; // no match
 }
 
-XSTDAPI int XCALLAPI xwcscasecmp(const wchar_t *s1, const wchar_t *s2) {
+XSTDMETHOD(int) xwcscasecmp(const wchar_t *s1, const wchar_t *s2) {
 #ifdef _WIN32
 	return _wcsicmp(s1,s2);
 #else
@@ -102,7 +101,7 @@ XSTDAPI int XCALLAPI xwcscasecmp(const wchar_t *s1, const wchar_t *s2) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
+XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
 #ifdef _WIN32
 	return _wcsicmp_l(s1,s2,l);
 #else
@@ -110,15 +109,15 @@ XSTDAPI int XCALLAPI xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_
 #endif
 }
 
-XSTDAPI int XCALLAPI xwcsicmp(const wchar_t *s1, const wchar_t *s2) {
+XSTDMETHOD(int) xwcsicmp(const wchar_t *s1, const wchar_t *s2) {
 	return xwcscasecmp(s1,s2);
 }
 
-XSTDAPI int XCALLAPI xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
+XSTDMETHOD(int) xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
 	return xwcscasecmp_l(s1,s2,l);
 }
 
-XSTDAPI wchar_t* XCALLAPI xwcsdup(const wchar_t *s) {
+XSTDMETHOD(wchar_t*) xwcsdup(const wchar_t *s) {
 	if (!s) return NULL;
 	size_t len = wcslen(s);
 	wchar_t *d = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
@@ -127,7 +126,7 @@ XSTDAPI wchar_t* XCALLAPI xwcsdup(const wchar_t *s) {
 	return d;
 }
 
-XSTDAPI wchar_t* XCALLAPI xwcscmb(const wchar_t *s1, const wchar_t *s2) {
+XSTDMETHOD(wchar_t*) xwcscmb(const wchar_t *s1, const wchar_t *s2) {
 	if (!s1 && !s2) return NULL;
 	if (!s1) return xwcsdup(s2);
 	if (!s2) return xwcsdup(s1);
@@ -150,7 +149,7 @@ XSTDAPI wchar_t* XCALLAPI xwcscmb(const wchar_t *s1, const wchar_t *s2) {
 	return result;
 }
 
-XSTDAPI wchar_t* XCALLAPI xwcscmbs(const wchar_t** ss, size_t n) {
+XSTDMETHOD(wchar_t*) xwcscmbs(const wchar_t** ss, size_t n) {
 	if (ss == NULL || n == 0) return NULL;
 	size_t total = 0;
 	for (size_t i = 0; i < n; ++i) {
@@ -172,14 +171,14 @@ XSTDAPI wchar_t* XCALLAPI xwcscmbs(const wchar_t** ss, size_t n) {
 	return result;
 }
 
-XSTDAPI const wchar_t* XCALLAPI xwbasename(const wchar_t* path) {
+XSTDMETHOD(const wchar_t*) xwbasename(const wchar_t* path) {
 	const wchar_t *p1 = wcsrchr(path,L'/');
 	const wchar_t *p2 = wcsrchr(path,L'\\');
 	const wchar_t *p = p1 > p2 ? p1 : p2;
 	return p ? p + 1 : path;
 }
 
-XSTDAPI wchar_t** XCALLAPI xwcssdup(const wchar_t** strs, size_t n) {
+XSTDMETHOD(wchar_t**) xwcssdup(const wchar_t** strs, size_t n) {
 	wchar_t **result;
 	size_t i;
 

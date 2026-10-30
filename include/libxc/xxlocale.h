@@ -74,29 +74,29 @@
 extern "C" {
 #endif
 
-XSTDAPI char** XCALLAPI xgetlocale(size_t* out_size);
+XSTDMETHOD(char**) xgetlocale(size_t* out_size);
 
-XSTDAPI void XCALLAPI xfreelocales(char **locales);
+XSTDMETHOD(void) xfreelocales(char **locales);
 
-XSTDAPI wchar_t** XCALLAPI xwgetlocale(size_t *out_size);
+XSTDMETHOD(wchar_t**) xwgetlocale(size_t *out_size);
 
-XSTDAPI void XCALLAPI xwfreelocales(wchar_t **locales);
+XSTDMETHOD(void) xwfreelocales(wchar_t **locales);
 
-XSTDAPI wchar_t* XCALLAPI wsetlocale(int,const wchar_t*);
+XSTDMETHOD(wchar_t*) wsetlocale(int,const wchar_t*);
 
-XSTDAPI char* XCALLAPI xsetlocale(int,const char*);
+XSTDMETHOD(char*) xsetlocale(int,const char*);
 
-XSTDAPI wchar_t* XCALLAPI xwsetlocale(int,const wchar_t*);
+XSTDMETHOD(wchar_t*) xwsetlocale(int,const wchar_t*);
 
-XSTDAPI void XCALLAPI xfreelocale(xlocale_t);
+XSTDMETHOD(void) xfreelocale(xlocale_t);
 
-XSTDAPI xlocale_t XCALLAPI xnewlocale(int,const char*,xlocale_t);
+XSTDMETHOD(xlocale_t) xnewlocale(int,const char*,xlocale_t);
 
-XSTDAPI xlocale_t XCALLAPI xwnewlocale(int,const wchar_t*,xlocale_t);
+XSTDMETHOD(xlocale_t) xwnewlocale(int,const wchar_t*,xlocale_t);
 
-XSTDAPI void XCALLAPI xinit_console_utf8(void);
+XSTDMETHOD(void) xinit_console_utf8(void);
 
-XSTDAPI void XCALLAPI xinit_console_wutf(void);
+XSTDMETHOD(void) xinit_console_wutf(void);
 
 #ifdef __cplusplus
 }

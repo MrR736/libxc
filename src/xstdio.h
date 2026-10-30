@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI fdputs(const char *xrestrict s, int fd) {
+XSTDMETHOD(int) fdputs(const char *xrestrict s, int fd) {
 	if (!s) {
 		errno = EINVAL;
 		return -1;
@@ -46,7 +46,7 @@ XSTDAPI int XCALLAPI fdputs(const char *xrestrict s, int fd) {
 	return 0;
 }
 
-XSTDAPI FILE* XCALLAPI fopenm(const char *xrestrict filename, int oflag, ...) {
+XSTDMETHOD(FILE*) fopenm(const char *xrestrict filename, int oflag, ...) {
 	char mode[16];
 	size_t i = 0;
 #ifndef _WIN32
@@ -110,7 +110,7 @@ XSTDAPI FILE* XCALLAPI fopenm(const char *xrestrict filename, int oflag, ...) {
 	return fp;
 }
 
-XSTDAPI FILE* XCALLAPI fdopenm(int fd, int oflag, ...) {
+XSTDMETHOD(FILE*) fdopenm(int fd, int oflag, ...) {
 	char mode[16];
 	size_t i = 0;
 #ifndef _WIN32
@@ -175,7 +175,7 @@ XSTDAPI FILE* XCALLAPI fdopenm(int fd, int oflag, ...) {
 	return fp;
 }
 
-XSTDAPI FILE* XCALLAPI fdno(int fd) {
+XSTDMETHOD(FILE*) fdno(int fd) {
 	if (fd < 0) {
 		errno = EBADF;
 		return NULL;
@@ -206,7 +206,7 @@ XSTDAPI FILE* XCALLAPI fdno(int fd) {
 	return fp;
 }
 
-XSTDAPI void XCALLAPI xflockfile(FILE *fp) {
+XSTDMETHOD(void) xflockfile(FILE *fp) {
 #ifdef _WIN32
 	_lock_file(fp);
 #else
@@ -214,7 +214,7 @@ XSTDAPI void XCALLAPI xflockfile(FILE *fp) {
 #endif
 }
 
-XSTDAPI FILE* XCALLAPI fdno_unlocked(int fd) {
+XSTDMETHOD(FILE*) fdno_unlocked(int fd) {
 	if (fd < 0) return NULL;
 	FILE *fp = fdno(fd);
 	if (!fp) return NULL;
@@ -222,7 +222,7 @@ XSTDAPI FILE* XCALLAPI fdno_unlocked(int fd) {
 	return fp;
 }
 
-XSTDAPI size_t XCALLAPI fpsize(FILE *fp) {
+XSTDMETHOD(size_t) fpsize(FILE *fp) {
 	if (!fp) {
 		errno = EINVAL;
 		return (size_t)-1;
@@ -255,7 +255,7 @@ XSTDAPI size_t XCALLAPI fpsize(FILE *fp) {
 }
 
 /* full read */
-XSTDAPI void* XCALLAPI furead(FILE *fp, size_t *out_size) {
+XSTDMETHOD(void*) furead(FILE *fp, size_t *out_size) {
 	if (!fp) {
 		errno = EINVAL;
 		return NULL;
@@ -285,7 +285,7 @@ XSTDAPI void* XCALLAPI furead(FILE *fp, size_t *out_size) {
 	return data;
 }
 
-XSTDAPI size_t XCALLAPI fdsize(int fd) {
+XSTDMETHOD(size_t) fdsize(int fd) {
 	if (fd < 0) {
 		errno = EINVAL;
 		return (size_t)-1;
@@ -316,7 +316,7 @@ XSTDAPI size_t XCALLAPI fdsize(int fd) {
 	return (size_t)diff;
 }
 
-XSTDAPI void* XCALLAPI fduread(int fd, size_t *out_size) {
+XSTDMETHOD(void*) fduread(int fd, size_t *out_size) {
 	if (fd < 0) {
 		errno = EINVAL;
 		return NULL;
@@ -359,7 +359,7 @@ XSTDAPI void* XCALLAPI fduread(int fd, size_t *out_size) {
 	return buf;
 }
 
-XSTDAPI char* XCALLAPI vcprintf(const char *xrestrict fmt, va_list ap) {
+XSTDMETHOD(char*) vcprintf(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return NULL;
 	va_list apc;
 
@@ -381,7 +381,7 @@ XSTDAPI char* XCALLAPI vcprintf(const char *xrestrict fmt, va_list ap) {
 	return s;
 }
 
-XSTDAPI char* XCALLAPI cprintf(const char *xrestrict fmt, ...) {
+XSTDMETHOD(char*) cprintf(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	char *s = vcprintf(fmt, ap);
@@ -389,7 +389,7 @@ XSTDAPI char* XCALLAPI cprintf(const char *xrestrict fmt, ...) {
 	return s;
 }
 
-XSTDAPI wchar_t* XCALLAPI vcwprintf(const char *xrestrict fmt, va_list ap) {
+XSTDMETHOD(wchar_t*) vcwprintf(const char *xrestrict fmt, va_list ap) {
 	char* s = vcprintf(fmt,ap);
 	if (!s) return NULL;
 	wchar_t* ret = xmbstowcs(s);
@@ -401,7 +401,7 @@ XSTDAPI wchar_t* XCALLAPI vcwprintf(const char *xrestrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI cwprintf(const char *xrestrict fmt, ...) {
+XSTDMETHOD(wchar_t*) cwprintf(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	wchar_t *s = vcwprintf(fmt, ap);
@@ -409,7 +409,7 @@ XSTDAPI wchar_t* XCALLAPI cwprintf(const char *xrestrict fmt, ...) {
 	return s;
 }
 
-XSTDAPI wchar_t* XCALLAPI vwcprintf(const wchar_t *xrestrict fmt, va_list ap) {
+XSTDMETHOD(wchar_t*) vwcprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return NULL;
 	va_list apc, apf;
 	va_copy(apc, ap);
@@ -428,7 +428,7 @@ XSTDAPI wchar_t* XCALLAPI vwcprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	return s;
 }
 
-XSTDAPI wchar_t* XCALLAPI wcprintf(const wchar_t *xrestrict fmt, ...) {
+XSTDMETHOD(wchar_t*) wcprintf(const wchar_t *xrestrict fmt, ...) {
 	if (!fmt) return NULL;
 	va_list ap;
 	va_start(ap, fmt);
@@ -437,7 +437,7 @@ XSTDAPI wchar_t* XCALLAPI wcprintf(const wchar_t *xrestrict fmt, ...) {
 	return s;
 }
 
-XSTDAPI char* XCALLAPI vwccprintf(const wchar_t *xrestrict fmt, va_list ap) {
+XSTDMETHOD(char*) vwccprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	wchar_t* s = vwcprintf(fmt, ap);
 	if (!s) return NULL;
 	char* ret = xwcstombs(s);
@@ -449,7 +449,7 @@ XSTDAPI char* XCALLAPI vwccprintf(const wchar_t *xrestrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI wccprintf(const wchar_t *xrestrict fmt, ...) {
+XSTDMETHOD(char*) wccprintf(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	char *s = vwccprintf(fmt, ap);
@@ -457,7 +457,7 @@ XSTDAPI char* XCALLAPI wccprintf(const wchar_t *xrestrict fmt, ...) {
 	return s;
 }
 
-XSTDAPI FILE* XCALLAPI wfopen(const wchar_t *xrestrict f, const wchar_t *xrestrict m) {
+XSTDMETHOD(FILE*) wfopen(const wchar_t *xrestrict f, const wchar_t *xrestrict m) {
 #ifdef _WIN32
 	return _wfopen(f, m);
 #else
@@ -476,7 +476,7 @@ XSTDAPI FILE* XCALLAPI wfopen(const wchar_t *xrestrict f, const wchar_t *xrestri
 }
 
 
-XSTDAPI FILE* XCALLAPI wfopenm(const wchar_t *xrestrict filename, int oflag, ...) {
+XSTDMETHOD(FILE*) wfopenm(const wchar_t *xrestrict filename, int oflag, ...) {
 	wchar_t mode[16];
 	size_t i = 0;
 #ifndef _WIN32
@@ -543,7 +543,7 @@ XSTDAPI FILE* XCALLAPI wfopenm(const wchar_t *xrestrict filename, int oflag, ...
 	return fp;
 }
 
-XSTDAPI int XCALLAPI wremove(const wchar_t *xrestrict fmt) {
+XSTDMETHOD(int) wremove(const wchar_t *xrestrict fmt) {
 #ifdef _WIN32
 	return _wremove(fmt);
 #else
@@ -556,7 +556,7 @@ XSTDAPI int XCALLAPI wremove(const wchar_t *xrestrict fmt) {
 #endif
 }
 
-XSTDAPI int XCALLAPI vxremove(const char *xrestrict fmt, va_list ap) {
+XSTDMETHOD(int) vxremove(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
 	va_list apc;
 	va_copy(apc,ap);
@@ -568,7 +568,7 @@ XSTDAPI int XCALLAPI vxremove(const char *xrestrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xremove(const char *xrestrict fmt, ...) {
+XSTDMETHOD(int) xremove(const char *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	int ret = vxremove(fmt, ap);
@@ -576,7 +576,7 @@ XSTDAPI int XCALLAPI xremove(const char *xrestrict fmt, ...) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI vxwremove(const wchar_t *xrestrict fmt, va_list ap) {
+XSTDMETHOD(int) vxwremove(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
 	va_list apc;
 	va_copy(apc, ap);
@@ -587,7 +587,7 @@ XSTDAPI int XCALLAPI vxwremove(const wchar_t *xrestrict fmt, va_list ap) {
 	return ret;
 }
 
-XSTDAPI int XCALLAPI xwremove(const wchar_t *xrestrict fmt, ...) {
+XSTDMETHOD(int) xwremove(const wchar_t *xrestrict fmt, ...) {
 	va_list ap;
 	va_start(ap,fmt);
 	int ret = vxwremove(fmt,ap);
@@ -595,7 +595,7 @@ XSTDAPI int XCALLAPI xwremove(const wchar_t *xrestrict fmt, ...) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI getcurrentdirectory_size(size_t n) {
+XSTDMETHOD(char*) getcurrentdirectory_size(size_t n) {
 	char *abs_path = (char*)xmalloc(n);
 	if (!abs_path) {
 		errno = ENOMEM;
@@ -659,11 +659,11 @@ XSTDAPI char* XCALLAPI getcurrentdirectory_size(size_t n) {
 	return dir;
 }
 
-XSTDAPI char* XCALLAPI getcurrentdirectory(void) {
+XSTDMETHOD(char*) getcurrentdirectory(void) {
 	return getcurrentdirectory_size(XPATH_MAX + 1);
 }
 
-XSTDAPI wchar_t* XCALLAPI wgetcurrentdirectory_size(size_t n) {
+XSTDMETHOD(wchar_t*) wgetcurrentdirectory_size(size_t n) {
 	char *s = getcurrentdirectory_size(n);
 	if (!s) return NULL;
 	wchar_t* ws = xmbstowcs(s);
@@ -672,11 +672,11 @@ XSTDAPI wchar_t* XCALLAPI wgetcurrentdirectory_size(size_t n) {
 	return ws;
 }
 
-XSTDAPI wchar_t* XCALLAPI wgetcurrentdirectory(void) {
+XSTDMETHOD(wchar_t*) wgetcurrentdirectory(void) {
 	return wgetcurrentdirectory_size(XPATH_MAX + 1);
 }
 
-XSTDAPI bool XCALLAPI fexists(const char *xrestrict path) {
+XSTDMETHOD(bool) fexists(const char *xrestrict path) {
 	struct stat s;
 	if (path == NULL) {
 		errno = EINVAL;
@@ -686,7 +686,7 @@ XSTDAPI bool XCALLAPI fexists(const char *xrestrict path) {
 	return S_ISREG(s.st_mode);
 }
 
-XSTDAPI bool XCALLAPI wfexists(const wchar_t *xrestrict path) {
+XSTDMETHOD(bool) wfexists(const wchar_t *xrestrict path) {
 	struct stat s;
 	if (path == NULL) {
 		errno = EINVAL;
@@ -703,7 +703,7 @@ XSTDAPI bool XCALLAPI wfexists(const wchar_t *xrestrict path) {
 #endif
 }
 
-XSTDAPI bool XCALLAPI dexists(const char *xrestrict path) {
+XSTDMETHOD(bool) dexists(const char *xrestrict path) {
 	struct stat s;
 	if (path == NULL) {
 		errno = EINVAL;
@@ -713,7 +713,7 @@ XSTDAPI bool XCALLAPI dexists(const char *xrestrict path) {
 	return S_ISDIR(s.st_mode);
 }
 
-XSTDAPI bool XCALLAPI wdexists(const wchar_t *xrestrict path) {
+XSTDMETHOD(bool) wdexists(const wchar_t *xrestrict path) {
 	struct stat s;
 	if (path == NULL) {
 		errno = EINVAL;

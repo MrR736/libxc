@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-XSTDAPI char* XCALLAPI xtolower(const char* str) {
+XSTDMETHOD(char*) xtolower(const char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -49,7 +49,7 @@ XSTDAPI char* XCALLAPI xtolower(const char* str) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI xtoupper(const char* str) {
+XSTDMETHOD(char*) xtoupper(const char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -68,7 +68,7 @@ XSTDAPI char* XCALLAPI xtoupper(const char* str) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI xtolower_l(const char* str,xlocale_t l) {
+XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -90,7 +90,7 @@ XSTDAPI char* XCALLAPI xtolower_l(const char* str,xlocale_t l) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI xtoupper_l(const char* str,xlocale_t l) {
+XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -113,7 +113,7 @@ XSTDAPI char* XCALLAPI xtoupper_l(const char* str,xlocale_t l) {
 	return ret;
 }
 
-XSTDAPI char* XCALLAPI xtoascii(const char* str) {
+XSTDMETHOD(char*) xtoascii(const char* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;

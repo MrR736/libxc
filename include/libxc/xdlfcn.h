@@ -125,49 +125,49 @@ typedef struct {
 extern "C" {
 #endif
 
-XSTDAPI char* XCALLAPI xdllibpath(const char *dir, const char *name);
-XSTDAPI wchar_t* XCALLAPI xwdllibpath(const wchar_t* dir,const wchar_t* name);
+XSTDMETHOD(char*) xdllibpath(const char *dir, const char *name);
+XSTDMETHOD(wchar_t*) xwdllibpath(const wchar_t* dir,const wchar_t* name);
 
-XSTDAPI const char* XCALLAPI xcdllibpath(const char *dir, const char *name);
-XSTDAPI const wchar_t* XCALLAPI xcwdllibpath(const wchar_t *dir, const wchar_t *name);
+XSTDMETHOD(const char*) xcdllibpath(const char *dir, const char *name);
+XSTDMETHOD(const wchar_t*) xcwdllibpath(const wchar_t *dir, const wchar_t *name);
 
-XSTDAPI int XCALLAPI xdladdr(const void *addr, XDl_info *info);
+XSTDMETHOD(int) xdladdr(const void *addr, XDl_info *info);
 
-XSTDAPI int XCALLAPI xwdladdr(const void *addr, XWDl_info *info);
+XSTDMETHOD(int) xwdladdr(const void *addr, XWDl_info *info);
 
-XSTDAPI xhandle_t XCALLAPI xdlopen(const char * file, int mode);
+XSTDMETHOD(xhandle_t) xdlopen(const char * file, int mode);
 
-XSTDAPI xproc_t XCALLAPI xdlsym(xhandle_t handle,const char *name);
+XSTDMETHOD(xproc_t) xdlsym(xhandle_t handle,const char *name);
 
-XSTDAPI char* XCALLAPI xdlerror(void);
-
-
-XSTDAPI xhandle_t XCALLAPI xwdlopen(const wchar_t* file, int mode);
-
-XSTDAPI xproc_t XCALLAPI xwdlsym(xhandle_t handle,const wchar_t* name);
-
-XSTDAPI wchar_t* XCALLAPI xwdlerror(void);
+XSTDMETHOD(char*) xdlerror(void);
 
 
-XSTDAPI int XCALLAPI xdlclose(xhandle_t handle);
+XSTDMETHOD(xhandle_t) xwdlopen(const wchar_t* file, int mode);
+
+XSTDMETHOD(xproc_t) xwdlsym(xhandle_t handle,const wchar_t* name);
+
+XSTDMETHOD(wchar_t*) xwdlerror(void);
 
 
-XSTDAPI FARPROC XCALLAPI GetProcAddressA (HMODULE hModule, LPCSTR lpProcName);
+XSTDMETHOD(int) xdlclose(xhandle_t handle);
 
-XSTDAPI FARPROC XCALLAPI GetProcAddressW (HMODULE hModule, LPCWSTR lpProcName);
+
+XSTDMETHOD(FARPROC) GetProcAddressA (HMODULE hModule, LPCSTR lpProcName);
+
+XSTDMETHOD(FARPROC) GetProcAddressW (HMODULE hModule, LPCWSTR lpProcName);
 
 #ifndef _WIN32
-XSTDAPI HMODULE XCALLAPI GetModuleHandleA(LPCSTR lpModuleName);
+XSTDMETHOD(HMODULE) GetModuleHandleA(LPCSTR lpModuleName);
 
-XSTDAPI HMODULE XCALLAPI GetModuleHandleW(LPCWSTR lpModuleName);
+XSTDMETHOD(HMODULE) GetModuleHandleW(LPCWSTR lpModuleName);
 
-XSTDAPI HMODULE XCALLAPI LoadLibraryA(LPCSTR lpLibFileName);
+XSTDMETHOD(HMODULE) LoadLibraryA(LPCSTR lpLibFileName);
 
-XSTDAPI HMODULE XCALLAPI LoadLibraryW(LPCWSTR lpLibFileName);
+XSTDMETHOD(HMODULE) LoadLibraryW(LPCWSTR lpLibFileName);
 
-XSTDAPI FARPROC XCALLAPI GetProcAddress(HMODULE hModule, LPCSTR lpProcName);
+XSTDMETHOD(FARPROC) GetProcAddress(HMODULE hModule, LPCSTR lpProcName);
 
-XSTDAPI WINBOOL XCALLAPI FreeLibrary(HMODULE hLibModule);
+XSTDMETHOD(WINBOOL) FreeLibrary(HMODULE hLibModule);
 
 #define GetModuleHandle __LIBXC_NAME_AW(GetModuleHandle)
 #define LoadLibrary __LIBXC_NAME_AW(LoadLibrary)

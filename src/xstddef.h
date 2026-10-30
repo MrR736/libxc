@@ -82,7 +82,7 @@
 #define __LIBXC_VERSION_MINOR 0
 #endif
 #ifndef __LIBXC_VERSION_PATCH
-#define __LIBXC_VERSION_PATCH 8
+#define __LIBXC_VERSION_PATCH 9
 #endif
 
 #define __LIBXC_VERSION ((__LIBXC_VERSION_MAJOR * 1000) + (__LIBXC_VERSION_MINOR * 100) + __LIBXC_VERSION_PATCH)
@@ -556,6 +556,10 @@ typedef char xstd_static_assertion[(condition) ? 1 : -1]
 #  define LIBXC_STATIC_ASSERT(condition, ...) \
 typedef char xstd_static_assertion[(condition) ? 1 : -1]
 # endif
+#endif
+
+#ifndef XSTDMETHOD
+#define XSTDMETHOD(type) XSTDAPI type XCALLAPI
 #endif
 
 #endif // __XSTDDEF_H__

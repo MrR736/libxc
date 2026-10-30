@@ -29,26 +29,26 @@
 extern "C" {
 #endif
 
-XSTDAPI size_t XCALLAPI vxwcslen(const wchar_t *xrestrict __s, va_list ap);
+XSTDMETHOD(size_t) vxwcslen(const wchar_t *xrestrict __s, va_list ap);
 
-XSTDAPI size_t XCALLAPI xwcslen(const wchar_t *xrestrict __s, ...);
+XSTDMETHOD(size_t) xwcslen(const wchar_t *xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI xwcscmp(const wchar_t *s1, const wchar_t **s2, size_t n);
+XSTDMETHOD(int) xwcscmp(const wchar_t *s1, const wchar_t **s2, size_t n);
 
-XSTDAPI int XCALLAPI xwcscasecmp(const wchar_t *s1, const wchar_t *s2);
-XSTDAPI int XCALLAPI xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
+XSTDMETHOD(int) xwcscasecmp(const wchar_t *s1, const wchar_t *s2);
+XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
 
-XSTDAPI int XCALLAPI xwcsicmp(const wchar_t *s1, const wchar_t *s2);
-XSTDAPI int XCALLAPI xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
+XSTDMETHOD(int) xwcsicmp(const wchar_t *s1, const wchar_t *s2);
+XSTDMETHOD(int) xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
 
-XSTDAPI wchar_t* XCALLAPI xwcsdup(const wchar_t *s);
+XSTDMETHOD(wchar_t*) xwcsdup(const wchar_t *s);
 
-XSTDAPI wchar_t* XCALLAPI xwcscmb(const wchar_t *s1, const wchar_t *s2);
-XSTDAPI wchar_t* XCALLAPI xwcscmbs(const wchar_t** ss, size_t n);
+XSTDMETHOD(wchar_t*) xwcscmb(const wchar_t *s1, const wchar_t *s2);
+XSTDMETHOD(wchar_t*) xwcscmbs(const wchar_t** ss, size_t n);
 
-XSTDAPI const wchar_t* XCALLAPI xwbasename(const wchar_t* path);
+XSTDMETHOD(const wchar_t*) xwbasename(const wchar_t* path);
 
-XSTDAPI wchar_t** XCALLAPI xwcssdup(const wchar_t** strs, size_t n);
+XSTDMETHOD(wchar_t**) xwcssdup(const wchar_t** strs, size_t n);
 
 #ifdef __cplusplus
 }

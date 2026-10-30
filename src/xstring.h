@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-XSTDAPI size_t XCALLAPI vxstrlen(const char *xrestrict fmt, va_list ap) {
+XSTDMETHOD(size_t) vxstrlen(const char *xrestrict fmt, va_list ap) {
 	if (fmt == NULL) return 0;
 	va_list apc;
 	int len = 0;
@@ -44,7 +44,7 @@ XSTDAPI size_t XCALLAPI vxstrlen(const char *xrestrict fmt, va_list ap) {
 	return len < 0 ? (size_t)-1 : (size_t)len;
 }
 
-XSTDAPI size_t XCALLAPI xstrlen(const char *xrestrict s, ...) {
+XSTDMETHOD(size_t) xstrlen(const char *xrestrict s, ...) {
 	va_list ap;
 	va_start(ap,s);
 	size_t len = vxstrlen(s, ap);
@@ -52,7 +52,7 @@ XSTDAPI size_t XCALLAPI xstrlen(const char *xrestrict s, ...) {
 	return len;
 }
 
-XSTDAPI int XCALLAPI xstrcmp(const char * s1, const char ** s2, size_t n) {
+XSTDMETHOD(int) xstrcmp(const char * s1, const char ** s2, size_t n) {
 	if (!s2) return 0;  // array pointer itself is NULL
 
 	for (size_t i = 0; i < n; ++i) {
@@ -65,7 +65,7 @@ XSTDAPI int XCALLAPI xstrcmp(const char * s1, const char ** s2, size_t n) {
 	return 0; // no match
 }
 
-XSTDAPI int XCALLAPI xstrcasecmp(const char *s1, const char *s2) {
+XSTDMETHOD(int) xstrcasecmp(const char *s1, const char *s2) {
 #ifdef _WIN32
 	return _stricmp(s1, s2);
 #else
@@ -73,7 +73,7 @@ XSTDAPI int XCALLAPI xstrcasecmp(const char *s1, const char *s2) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l) {
+XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l) {
 #ifdef _WIN32
 	return _stricmp_l(s1, s2,l);
 #else
@@ -81,15 +81,15 @@ XSTDAPI int XCALLAPI xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xstricmp(const char *s1, const char *s2) {
+XSTDMETHOD(int) xstricmp(const char *s1, const char *s2) {
 	return xstrcasecmp(s1, s2);
 }
 
-XSTDAPI int XCALLAPI xstricmp_l(const char *s1, const char *s2,xlocale_t l) {
+XSTDMETHOD(int) xstricmp_l(const char *s1, const char *s2,xlocale_t l) {
 	return xstrcasecmp_l(s1, s2,l);
 }
 
-XSTDAPI char* XCALLAPI xstrdup(const char *s) {
+XSTDMETHOD(char*) xstrdup(const char *s) {
 	if (!s) return NULL;
 	size_t len = strlen(s);
 	char *d = (char*)xmalloc(len + 1);
@@ -98,7 +98,7 @@ XSTDAPI char* XCALLAPI xstrdup(const char *s) {
 	return d;
 }
 
-XSTDAPI char* XCALLAPI xstrcmb(const char * s1, const char * s2) {
+XSTDMETHOD(char*) xstrcmb(const char * s1, const char * s2) {
 	if (!s1 && !s2) return NULL;
 	if (!s1) return xstrdup(s2);
 	if (!s2) return xstrdup(s1);
@@ -121,7 +121,7 @@ XSTDAPI char* XCALLAPI xstrcmb(const char * s1, const char * s2) {
 	return result;
 }
 
-XSTDAPI char* XCALLAPI xstrcmbs(const char** ss, size_t n) {
+XSTDMETHOD(char*) xstrcmbs(const char** ss, size_t n) {
 	if (ss == NULL || n == 0) return NULL;
 	size_t total = 0;
 
@@ -146,14 +146,14 @@ XSTDAPI char* XCALLAPI xstrcmbs(const char** ss, size_t n) {
 	return result;
 }
 
-XSTDAPI const char* XCALLAPI xbasename(const char* path) {
+XSTDMETHOD(const char*) xbasename(const char* path) {
 	const char *p1 = strrchr(path, '/');
 	const char *p2 = strrchr(path, '\\');
 	const char *p = p1 > p2 ? p1 : p2;
 	return p ? p + 1 : path;
 }
 
-XSTDAPI char** XCALLAPI xstrsdup(const char** strs, size_t n) {
+XSTDMETHOD(char**) xstrsdup(const char** strs, size_t n) {
 	char **result;
 	size_t i;
 

@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-XSTDAPI wchar_t* XCALLAPI xtowlower(const wchar_t* str) {
+XSTDMETHOD(wchar_t*) xtowlower(const wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -49,7 +49,7 @@ XSTDAPI wchar_t* XCALLAPI xtowlower(const wchar_t* str) {
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI xtowupper(const wchar_t* str) {
+XSTDMETHOD(wchar_t*) xtowupper(const wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -69,7 +69,7 @@ XSTDAPI wchar_t* XCALLAPI xtowupper(const wchar_t* str) {
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI xtowlower_l(const wchar_t* str,xlocale_t l) {
+XSTDMETHOD(wchar_t*) xtowlower_l(const wchar_t* str,xlocale_t l) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -83,15 +83,15 @@ XSTDAPI wchar_t* XCALLAPI xtowlower_l(const wchar_t* str,xlocale_t l) {
 	}
 	for (size_t i = 0; i < len; i++)
 #ifdef _WIN32
-		ret[i] = (char)_towlower_l((unsigned char)str[i],l);
+		ret[i] = (wchar_t)_towlower_l((unsigned char)str[i],l);
 #else
-		ret[i] = (char)towlower_l((unsigned char)str[i],l);
+		ret[i] = (wchar_t)towlower_l((unsigned char)str[i],l);
 #endif
 	ret[len] = L'\0';
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI xtowupper_l(const wchar_t* str,xlocale_t l) {
+XSTDMETHOD(wchar_t*) xtowupper_l(const wchar_t* str,xlocale_t l) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;
@@ -106,16 +106,16 @@ XSTDAPI wchar_t* XCALLAPI xtowupper_l(const wchar_t* str,xlocale_t l) {
 
 	for (size_t i = 0; i < len; i++)
 #ifdef _WIN32
-		ret[i] = (char)_towupper_l((unsigned char)str[i],l);
+		ret[i] = (wchar_t)_towupper_l((unsigned char)str[i],l);
 #else
-		ret[i] = (char)towupper_l((unsigned char)str[i],l);
+		ret[i] = (wchar_t)towupper_l((unsigned char)str[i],l);
 #endif
 
 	ret[len] = L'\0';
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI xtowascii(const wchar_t* str) {
+XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str) {
 	if (str == NULL) {
 		errno = EINVAL;
 		return NULL;

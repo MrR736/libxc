@@ -31,56 +31,56 @@ extern "C" {
 #endif
 
 #define XSTD_USTRS(name,type,type1,tcnull) \
-XSTDAPI size_t XCALLAPI name##len(const type* s) { \
+XSTDMETHOD(size_t) name##len(const type* s) { \
 	if (s == NULL) return 0; \
 	const type *p = s; \
 	while (*p != tcnull) ++p; \
 	return (size_t)(p - s); \
 } \
-XSTDAPI size_t XCALLAPI name##nlen(const type *string, size_t maxlen) { \
+XSTDMETHOD(size_t) name##nlen(const type *string, size_t maxlen) { \
 	if (string == NULL) return 0; \
 	size_t len = 0; \
 	while (len < maxlen && string[len] != tcnull) ++len; \
 	return len; \
 } \
-XSTDAPI type* XCALLAPI name##cpy(type *xrestrict dest, const type *xrestrict src) { \
+XSTDMETHOD(type*) name##cpy(type *xrestrict dest, const type *xrestrict src) { \
 	type *result = dest; \
 	while ((*dest++ = *src++) != tcnull); \
 	return result; \
 } \
-XSTDAPI type* XCALLAPI name##ncpy(type *xrestrict dest,const type *xrestrict src,size_t n) { \
+XSTDMETHOD(type*) name##ncpy(type *xrestrict dest,const type *xrestrict src,size_t n) { \
 	type *result = dest; \
 	size_t i = 0; \
 	for (; i < n && src[i] != tcnull; ++i) dest[i] = src[i]; \
 	for (; i < n; ++i) dest[i] = tcnull; \
 	return result; \
 } \
-XSTDAPI type* XCALLAPI name##cat(type *xrestrict dest, const type *xrestrict src) { \
+XSTDMETHOD(type*) name##cat(type *xrestrict dest, const type *xrestrict src) { \
 	type *result = dest; \
 	while (*dest != tcnull) ++dest; \
 	while ((*dest++ = *src++) != tcnull); \
 	return result; \
 } \
-XSTDAPI type* XCALLAPI name##ncat(type *xrestrict dest,const type *xrestrict src,size_t n) { \
+XSTDMETHOD(type*) name##ncat(type *xrestrict dest,const type *xrestrict src,size_t n) { \
 	type *result = dest; \
 	while (*dest != tcnull) ++dest; \
 	while (n > 0 && *src != tcnull) { *dest++ = *src++; --n; } \
 	*dest = tcnull; \
 	return result; \
 } \
-XSTDAPI int XCALLAPI name##cmp(const type *s1, const type *s2) { \
+XSTDMETHOD(int) name##cmp(const type *s1, const type *s2) { \
 	while (*s1 == *s2 && *s1 != tcnull) { ++s1; ++s2; } \
 	return (*s1 > *s2) - (*s1 < *s2); \
 } \
-XSTDAPI int XCALLAPI name##ncmp(const type *s1, const type *s2, size_t n) { \
+XSTDMETHOD(int) name##ncmp(const type *s1, const type *s2, size_t n) { \
 	while (n > 0 && *s1 == *s2 && *s1 != tcnull) { ++s1; ++s2; --n; } \
 	if (n == 0) return 0; \
 	return (*s1 > *s2) - (*s1 < *s2); \
 } \
-XSTDAPI int XCALLAPI name##coll(const type *s1, const type *s2) { \
+XSTDMETHOD(int) name##coll(const type *s1, const type *s2) { \
 	return name##cmp(s1, s2); \
 } \
-XSTDAPI size_t XCALLAPI name##xfrm(type *xrestrict dest,const type *xrestrict src, size_t n) { \
+XSTDMETHOD(size_t) name##xfrm(type *xrestrict dest,const type *xrestrict src, size_t n) { \
 	if (src == NULL) return 0; \
 	size_t len = name##len(src); \
 	if (n > 0) { \
@@ -90,7 +90,7 @@ XSTDAPI size_t XCALLAPI name##xfrm(type *xrestrict dest,const type *xrestrict sr
 	} \
 	return len; \
 } \
-XSTDAPI type* XCALLAPI name##dup(const type *s) { \
+XSTDMETHOD(type*) name##dup(const type *s) { \
 	if (s == NULL) return NULL; \
 	size_t len = name##len(s); \
 	if (len >= SIZE_MAX / sizeof(type)) return NULL; \
@@ -99,7 +99,7 @@ XSTDAPI type* XCALLAPI name##dup(const type *s) { \
 	for (size_t i = 0; i <= len; ++i) result[i] = s[i]; \
 	return result; \
 } \
-XSTDAPI type* XCALLAPI name##ndup(const type *s, size_t n) { \
+XSTDMETHOD(type*) name##ndup(const type *s, size_t n) { \
 	if (s == NULL) return NULL; \
 	size_t len = 0; \
 	while (len < n && s[len] != tcnull) ++len; \
@@ -110,7 +110,7 @@ XSTDAPI type* XCALLAPI name##ndup(const type *s, size_t n) { \
 	result[len] = tcnull; \
 	return result; \
 } \
-XSTDAPI type* XCALLAPI name##chr(const type *s, type1 c) { \
+XSTDMETHOD(type*) name##chr(const type *s, type1 c) { \
 	if (s == NULL) return NULL; \
 	type ch = (type)c; \
 	for (;;) { \
@@ -119,13 +119,13 @@ XSTDAPI type* XCALLAPI name##chr(const type *s, type1 c) { \
 		++s; \
 	} \
 } \
-XSTDAPI type* XCALLAPI name##chrnul(const type *s, type1 c) { \
+XSTDMETHOD(type*) name##chrnul(const type *s, type1 c) { \
 	if (s == NULL) return NULL; \
 	type ch = (type)c; \
 	while (*s != ch && *s != tcnull) ++s; \
 	return (type*)s; \
 } \
-XSTDAPI size_t XCALLAPI name##cspn(const type *s, const type *reject) { \
+XSTDMETHOD(size_t) name##cspn(const type *s, const type *reject) { \
 	if (s == NULL || reject == NULL) return 0; \
 	const type *p = s; \
 	while (*p != tcnull) { \
@@ -136,7 +136,7 @@ XSTDAPI size_t XCALLAPI name##cspn(const type *s, const type *reject) { \
 	} \
 	return (size_t)(p - s); \
 } \
-XSTDAPI size_t XCALLAPI name##spn(const type *s, const type *accept) { \
+XSTDMETHOD(size_t) name##spn(const type *s, const type *accept) { \
 	if (s == NULL || accept == NULL) return 0; \
 	const type *p = s; \
 	while (*p != tcnull) { \
@@ -147,7 +147,7 @@ XSTDAPI size_t XCALLAPI name##spn(const type *s, const type *accept) { \
 	} \
 	return (size_t)(p - s); \
 } \
-XSTDAPI type* XCALLAPI name##tok_r(type *xrestrict s,const type *xrestrict delim,type **xrestrict save_ptr) { \
+XSTDMETHOD(type*) name##tok_r(type *xrestrict s,const type *xrestrict delim,type **xrestrict save_ptr) { \
 	if (delim == NULL || save_ptr == NULL) return NULL; \
 	if (s == NULL) s = *save_ptr; \
 	if (s == NULL) return NULL; \
@@ -175,11 +175,11 @@ XSTDAPI type* XCALLAPI name##tok_r(type *xrestrict s,const type *xrestrict delim
 	*save_ptr = NULL; \
 	return token; \
 } \
-XSTDAPI type* XCALLAPI name##tok(type *xrestrict s, const type *xrestrict delim) { \
+XSTDMETHOD(type*) name##tok(type *xrestrict s, const type *xrestrict delim) { \
 	static type *save_ptr; \
 	return name##tok_r(s, delim, &save_ptr); \
 } \
-XSTDAPI type* XCALLAPI name##pbrk(const type *s, const type *accept) { \
+XSTDMETHOD(type*) name##pbrk(const type *s, const type *accept) { \
 	if (s == NULL || accept == NULL) return NULL; \
 	for (; *s != tcnull; ++s) { \
 		const type *a = accept; \
@@ -188,7 +188,7 @@ XSTDAPI type* XCALLAPI name##pbrk(const type *s, const type *accept) { \
 	} \
 	return NULL; \
 } \
-XSTDAPI type* XCALLAPI name##str(const type *haystack, const type *needle) { \
+XSTDMETHOD(type*) name##str(const type *haystack, const type *needle) { \
 	if (haystack == NULL || needle == NULL) return NULL; \
 	if (*needle == tcnull) return (type*)haystack; \
 	for (const type *h = haystack; *h != tcnull; ++h) { \
@@ -199,7 +199,7 @@ XSTDAPI type* XCALLAPI name##str(const type *haystack, const type *needle) { \
 	} \
 	return NULL; \
 } \
-XSTDAPI type* XCALLAPI name##casestr(const type *haystack, const type *needle) { \
+XSTDMETHOD(type*) name##casestr(const type *haystack, const type *needle) { \
 	if (haystack == NULL || needle == NULL) return NULL; \
 	if (*needle == tcnull) return (type*)haystack; \
 	for (const type *h = haystack; *h != tcnull; ++h) { \
@@ -210,7 +210,7 @@ XSTDAPI type* XCALLAPI name##casestr(const type *haystack, const type *needle) {
 	} \
 	return NULL; \
 } \
-XSTDAPI int XCALLAPI name##casecmp(const type *s1, const type *s2) { \
+XSTDMETHOD(int) name##casecmp(const type *s1, const type *s2) { \
 	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL); \
 	while (*s1 != tcnull && *s2 != tcnull) { \
 		wint_t c1 = towlower((wint_t)*s1); \
@@ -220,7 +220,7 @@ XSTDAPI int XCALLAPI name##casecmp(const type *s1, const type *s2) { \
 	} \
 	return (*s1 != tcnull) - (*s2 != tcnull); \
 } \
-XSTDAPI int XCALLAPI name##ncasecmp(const type *s1, const type *s2, size_t n) { \
+XSTDMETHOD(int) name##ncasecmp(const type *s1, const type *s2, size_t n) { \
 	if (n == 0) return 0; \
 	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL); \
 	while (n > 0 && *s1 != tcnull && *s2 != tcnull) { \
@@ -231,6 +231,46 @@ XSTDAPI int XCALLAPI name##ncasecmp(const type *s1, const type *s2, size_t n) { 
 	} \
 	if (n == 0) return 0; \
 	return (*s1 != tcnull) - (*s2 != tcnull); \
+} \
+XSTDMETHOD(const type*) name##basename(const type* path) { \
+	const type *p1 = name##chr(path, '/'); \
+	const type *p2 = name##chr(path, '\\'); \
+	const type *p = !p1 ? p2 : !p2 ? p1 : p1 > p2 ? p1 : p2; \
+	return p ? p + 1 : path; \
+} \
+XSTDMETHOD(type*) name##cmbs(const type** ss, size_t n) { \
+	if (ss == NULL || n == 0) return NULL; \
+	size_t total = 0; \
+	for (size_t i = 0; i < n; ++i) { \
+		if (ss[i] == NULL) continue; \
+		size_t len = name##len(ss[i]); \
+		if (len > (SIZE_MAX / sizeof(type)) - total - 1) return NULL; \
+		total += len; \
+	} \
+	if (total == 0) return NULL; \
+	type* result = (type*)xmalloc((total + 1) * sizeof(type)); \
+	if (result == NULL) return NULL; \
+	size_t pos = 0; \
+	for (size_t i = 0; i < n; ++i) { \
+		if (ss[i] == NULL) continue; \
+		size_t len = name##len(ss[i]); \
+		if (len != 0) { \
+			xmemcpy(result + pos, ss[i], len * sizeof(type)); \
+			pos += len; \
+		} \
+	} \
+	result[pos] = tcnull; \
+	return result; \
+} \
+XSTDMETHOD(int) name##cmps(const type * s1, const type ** s2, size_t n) { \
+	if (!s2) return 0; \
+	for (size_t i = 0; i < n; ++i) { \
+		const type *s2_str = s2[i]; \
+		if (s1 == NULL && s2_str == NULL) return 1; \
+		else if (s1 == NULL || s2_str == NULL) continue; \
+		if (name##cmp(s1, s2_str) == 0) return 1; \
+	} \
+	return 0; \
 }
 
 XSTD_USTRS(ustr8,char8_t,int,0)
@@ -239,7 +279,7 @@ XSTD_USTRS(ustr32,char32_t,int,U'\0')
 
 #undef XSTD_USTRS
 
-XSTDAPI char* XCALLAPI xmbrtoc8_len(const char8_t *xrestrict pc8,size_t *out_size) {
+XSTDMETHOD(char*) xmbrtoc8_len(const char8_t *xrestrict pc8,size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -259,11 +299,11 @@ XSTDAPI char* XCALLAPI xmbrtoc8_len(const char8_t *xrestrict pc8,size_t *out_siz
 	return mbs;
 }
 
-XSTDAPI char* XCALLAPI xmbrtoc8(const char8_t *xrestrict pc8) {
+XSTDMETHOD(char*) xmbrtoc8(const char8_t *xrestrict pc8) {
 	return xmbrtoc8_len(pc8,NULL);
 }
 
-XSTDAPI char8_t* XCALLAPI xc8rtomb_len(const char *xrestrict pc8, size_t *out_size) {
+XSTDMETHOD(char8_t*) xc8rtomb_len(const char *xrestrict pc8, size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -358,12 +398,12 @@ invalid_utf8:
 	return NULL;
 }
 
-XSTDAPI char8_t* XCALLAPI xc8rtomb(const char *xrestrict pc8) {
+XSTDMETHOD(char8_t*) xc8rtomb(const char *xrestrict pc8) {
 	return xc8rtomb_len(pc8, NULL);
 }
 
 
-XSTDAPI char* XCALLAPI xmbrtoc16_len(const char16_t *xrestrict pc8,size_t *out_size) {
+XSTDMETHOD(char*) xmbrtoc16_len(const char16_t *xrestrict pc8,size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -437,11 +477,11 @@ XSTDAPI char* XCALLAPI xmbrtoc16_len(const char16_t *xrestrict pc8,size_t *out_s
 	return out;
 }
 
-XSTDAPI char* XCALLAPI xmbrtoc16(const char16_t *xrestrict pc8) {
+XSTDMETHOD(char*) xmbrtoc16(const char16_t *xrestrict pc8) {
 	return xmbrtoc16_len(pc8, NULL);
 }
 
-XSTDAPI char16_t* XCALLAPI xc16rtomb_len(const char *xrestrict pc8,size_t *out_size) {
+XSTDMETHOD(char16_t*) xc16rtomb_len(const char *xrestrict pc8,size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -508,13 +548,13 @@ invalid:
 	return NULL;
 }
 
-XSTDAPI char16_t* XCALLAPI xc16rtomb(const char *xrestrict pc8) {
+XSTDMETHOD(char16_t*) xc16rtomb(const char *xrestrict pc8) {
 	return xc16rtomb_len(pc8, NULL);
 }
 
 
 
-XSTDAPI char* XCALLAPI xmbrtoc32_len(const char32_t *xrestrict pc8,size_t *out_size) {
+XSTDMETHOD(char*) xmbrtoc32_len(const char32_t *xrestrict pc8,size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -569,11 +609,11 @@ XSTDAPI char* XCALLAPI xmbrtoc32_len(const char32_t *xrestrict pc8,size_t *out_s
 	return out;
 }
 
-XSTDAPI char* XCALLAPI xmbrtoc32(const char32_t *xrestrict pc8) {
+XSTDMETHOD(char*) xmbrtoc32(const char32_t *xrestrict pc8) {
 	return xmbrtoc32_len(pc8, NULL);
 }
 
-XSTDAPI char32_t* XCALLAPI xc32rtomb_len(const char *xrestrict pc8,size_t *out_size) {
+XSTDMETHOD(char32_t*) xc32rtomb_len(const char *xrestrict pc8,size_t *out_size) {
 	if (out_size) *out_size = 0;
 
 	if (!pc8) {
@@ -633,7 +673,7 @@ invalid:
 	return NULL;
 }
 
-XSTDAPI char32_t* XCALLAPI xc32rtomb(const char *xrestrict pc8) {
+XSTDMETHOD(char32_t*) xc32rtomb(const char *xrestrict pc8) {
 	return xc32rtomb_len(pc8, NULL);
 }
 

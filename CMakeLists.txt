@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(xc
-	VERSION 1.0.8
+	VERSION 1.0.9
 	DESCRIPTION "Extern Utility Library"
 	LANGUAGES C CXX
 )
@@ -169,7 +169,8 @@ install(
 )
 
 if(LIBXC_INSTALL_MAN3)
-	install(DIRECTORY ${CMAKE_SOURCE_DIR}/doc/man3/
+	install(
+			DIRECTORY ${CMAKE_SOURCE_DIR}/doc/man3/
 			DESTINATION ${CMAKE_INSTALL_MANDIR}/man3
 			FILES_MATCHING PATTERN "*.3"
 	)
@@ -263,6 +264,7 @@ if (LIBXC_BUILD_TESTS)
 	endfunction()
 
 	# Add executables for each test
+	add_test_executable(test_xthread  ${CMAKE_SOURCE_DIR}/test/test_xthread.cpp)
 	add_test_executable(test_xxlocale  ${CMAKE_SOURCE_DIR}/test/test_xxlocale.c)
 	add_test_executable(test_xlog      ${CMAKE_SOURCE_DIR}/test/test_xlog.c)
 	add_test_executable(test_xstdio    ${CMAKE_SOURCE_DIR}/test/test_xstdio.c)

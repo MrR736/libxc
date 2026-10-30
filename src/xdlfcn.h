@@ -126,7 +126,7 @@ typedef struct {
 extern "C" {
 #endif
 
-XSTDAPI char* XCALLAPI xdllibpath(const char* dir, const char* name) {
+XSTDMETHOD(char*) xdllibpath(const char* dir, const char* name) {
 #ifdef _WIN32
 	const char* prefix = "";
 	const char* suffix = ".dll";
@@ -165,7 +165,7 @@ XSTDAPI char* XCALLAPI xdllibpath(const char* dir, const char* name) {
 	return xstrcmbs(parts, n);
 }
 
-XSTDAPI wchar_t* XCALLAPI xwdllibpath(const wchar_t* dir,const wchar_t* name) {
+XSTDMETHOD(wchar_t*) xwdllibpath(const wchar_t* dir,const wchar_t* name) {
 #ifdef _WIN32
 	const wchar_t* prefix = L"";
 	const wchar_t* suffix = L".dll";
@@ -204,7 +204,7 @@ XSTDAPI wchar_t* XCALLAPI xwdllibpath(const wchar_t* dir,const wchar_t* name) {
 	return xwcscmbs(parts, n);
 }
 
-XSTDAPI const char* XCALLAPI xcdllibpath(const char *dir, const char *name) {
+XSTDMETHOD(const char*) xcdllibpath(const char *dir, const char *name) {
 #ifdef _WIN32
 	const char *prefix = "";
 	const char *suffix = ".dll";
@@ -268,7 +268,7 @@ XSTDAPI const char* XCALLAPI xcdllibpath(const char *dir, const char *name) {
 #endif
 }
 
-XSTDAPI const wchar_t* XCALLAPI xcwdllibpath(const wchar_t *dir, const wchar_t *name) {
+XSTDMETHOD(const wchar_t*) xcwdllibpath(const wchar_t *dir, const wchar_t *name) {
 #ifdef _WIN32
 	const wchar_t *prefix = L"";
 	const wchar_t *suffix = L".dll";
@@ -335,7 +335,7 @@ XSTDAPI const wchar_t* XCALLAPI xcwdllibpath(const wchar_t *dir, const wchar_t *
 #endif
 }
 
-XSTDAPI int XCALLAPI xdladdr(const void *addr, XDl_info *info) {
+XSTDMETHOD(int) xdladdr(const void *addr, XDl_info *info) {
 	if (addr == NULL || info == NULL) {
 #ifdef _WIN32
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -584,7 +584,7 @@ XSTDAPI int XCALLAPI xdladdr(const void *addr, XDl_info *info) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xwdladdr(const void *addr, XWDl_info *info) {
+XSTDMETHOD(int) xwdladdr(const void *addr, XWDl_info *info) {
 	if (addr == NULL || info == NULL) {
 #ifdef _WIN32
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -1014,7 +1014,7 @@ cleanup:
 #endif
 }
 
-XSTDAPI xhandle_t XCALLAPI xdlopen(const char * file, int mode) {
+XSTDMETHOD(xhandle_t) xdlopen(const char * file, int mode) {
 #ifdef _WIN32
 	//if (!file) {
 	//	SetLastError(ERROR_INVALID_PARAMETER);
@@ -1043,7 +1043,7 @@ XSTDAPI xhandle_t XCALLAPI xdlopen(const char * file, int mode) {
 #endif
 }
 
-XSTDAPI xproc_t XCALLAPI xdlsym(xhandle_t handle, const char *name) {
+XSTDMETHOD(xproc_t) xdlsym(xhandle_t handle, const char *name) {
 	if (name == NULL || *name == '\0') {
 #ifdef _WIN32
 		SetLastError(ERROR_INVALID_PARAMETER);
@@ -1064,7 +1064,7 @@ XSTDAPI xproc_t XCALLAPI xdlsym(xhandle_t handle, const char *name) {
 #endif
 }
 
-XSTDAPI char* XCALLAPI xdlerror(void) {
+XSTDMETHOD(char*) xdlerror(void) {
 #ifdef _WIN32
 	static xthread_local char error_buffer[XDLFCN_ERROR_BUFFER];
 	DWORD error_code = GetLastError();
@@ -1090,7 +1090,7 @@ XSTDAPI char* XCALLAPI xdlerror(void) {
 #endif
 }
 
-XSTDAPI xhandle_t XCALLAPI xwdlopen(const wchar_t* file, int mode) {
+XSTDMETHOD(xhandle_t) xwdlopen(const wchar_t* file, int mode) {
 #ifdef _WIN32
 	//if (!file) {
 	//	SetLastError(ERROR_INVALID_PARAMETER);
@@ -1124,7 +1124,7 @@ XSTDAPI xhandle_t XCALLAPI xwdlopen(const wchar_t* file, int mode) {
 #endif
 }
 
-XSTDAPI xproc_t XCALLAPI xwdlsym(xhandle_t handle, const wchar_t *name) {
+XSTDMETHOD(xproc_t) xwdlsym(xhandle_t handle, const wchar_t *name) {
 	xproc_t ret;
 	if (name == NULL || *name == L'\0') {
 #ifdef _WIN32
@@ -1153,7 +1153,7 @@ XSTDAPI xproc_t XCALLAPI xwdlsym(xhandle_t handle, const wchar_t *name) {
 	return ret;
 }
 
-XSTDAPI wchar_t* XCALLAPI xwdlerror(void) {
+XSTDMETHOD(wchar_t*) xwdlerror(void) {
 #ifdef _WIN32
 	static xthread_local wchar_t error_buffer[XDLFCN_ERROR_BUFFER];
 	DWORD error_code = GetLastError();
@@ -1181,7 +1181,7 @@ XSTDAPI wchar_t* XCALLAPI xwdlerror(void) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xdlclose(xhandle_t handle) {
+XSTDMETHOD(int) xdlclose(xhandle_t handle) {
 #ifdef _WIN32
 	if (handle == NULL) {
 		SetLastError(ERROR_INVALID_HANDLE);
@@ -1193,7 +1193,7 @@ XSTDAPI int XCALLAPI xdlclose(xhandle_t handle) {
 #endif
 }
 
-XSTDAPI FARPROC XCALLAPI GetProcAddressA(HMODULE hModule, LPCSTR lpProcName) {
+XSTDMETHOD(FARPROC) GetProcAddressA(HMODULE hModule, LPCSTR lpProcName) {
 #ifdef _WIN32
 	return GetProcAddress(hModule,lpProcName);
 #else
@@ -1201,7 +1201,7 @@ XSTDAPI FARPROC XCALLAPI GetProcAddressA(HMODULE hModule, LPCSTR lpProcName) {
 #endif
 }
 
-XSTDAPI FARPROC XCALLAPI GetProcAddressW(HMODULE hModule, LPCWSTR lpProcName) {
+XSTDMETHOD(FARPROC) GetProcAddressW(HMODULE hModule, LPCWSTR lpProcName) {
 #ifdef _WIN32
 	if (!hModule || !lpProcName) return NULL;
 	char *s = xwcstombs(lpProcName);
@@ -1215,27 +1215,27 @@ XSTDAPI FARPROC XCALLAPI GetProcAddressW(HMODULE hModule, LPCWSTR lpProcName) {
 }
 
 #ifndef _WIN32
-XSTDAPI HMODULE XCALLAPI GetModuleHandleA(LPCSTR lpModuleName) {
+XSTDMETHOD(HMODULE) GetModuleHandleA(LPCSTR lpModuleName) {
 	return xdlopen(lpModuleName,XRTLD_NOLOAD);
 }
 
-XSTDAPI HMODULE XCALLAPI GetModuleHandleW(LPCWSTR lpModuleName) {
+XSTDMETHOD(HMODULE) GetModuleHandleW(LPCWSTR lpModuleName) {
 	return xwdlopen(lpModuleName,XRTLD_NOLOAD);
 }
 
-XSTDAPI HMODULE XCALLAPI LoadLibraryA(LPCSTR lpLibFileName) {
+XSTDMETHOD(HMODULE) LoadLibraryA(LPCSTR lpLibFileName) {
 	return xdlopen(lpLibFileName,XRTLD_LAZY);
 }
 
-XSTDAPI HMODULE XCALLAPI LoadLibraryW(LPCWSTR lpLibFileName) {
+XSTDMETHOD(HMODULE) LoadLibraryW(LPCWSTR lpLibFileName) {
 	return xwdlopen(lpLibFileName,XRTLD_LAZY);
 }
 
-XSTDAPI FARPROC XCALLAPI GetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
+XSTDMETHOD(FARPROC) GetProcAddress(HMODULE hModule, LPCSTR lpProcName) {
 	return xdlsym(hModule,lpProcName);
 }
 
-XSTDAPI WINBOOL XCALLAPI FreeLibrary(HMODULE hLibModule) {
+XSTDMETHOD(WINBOOL) FreeLibrary(HMODULE hLibModule) {
 	return dlclose(hLibModule) == 0 ? TRUE : FALSE;
 }
 

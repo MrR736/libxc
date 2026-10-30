@@ -99,50 +99,50 @@
 extern "C" {
 #endif
 
-XSTDAPI void* XCALLAPI xmalloc(size_t size) {
+XSTDMETHOD(void*) xmalloc(size_t size) {
 	return __imalloc(size);
 }
 
-XSTDAPI void* XCALLAPI xcalloc(size_t nmemb, size_t size) {
+XSTDMETHOD(void*) xcalloc(size_t nmemb, size_t size) {
 	return __icalloc(nmemb,size);
 }
 
-XSTDAPI void* XCALLAPI xrealloc(void *ptr, size_t size) {
+XSTDMETHOD(void*) xrealloc(void *ptr, size_t size) {
 	return __irealloc(ptr,size);
 }
 
-XSTDAPI void XCALLAPI xfree(void *ptr) {
+XSTDMETHOD(void) xfree(void *ptr) {
 	__ifree(ptr);
 }
 
-XSTDAPI void XCALLAPI xfrees(void **ptrs, size_t n) {
+XSTDMETHOD(void) xfrees(void **ptrs, size_t n) {
 	if (!ptrs) return;
 	for (size_t i = 0; i < n; i++) __ifree(ptrs[i]);
 	__ifree(ptrs);
 }
 
 
-XSTDAPI void* XCALLAPI xmemset(void *s, int c, size_t n) {
+XSTDMETHOD(void*) xmemset(void *s, int c, size_t n) {
 	return __imemset(s,c,n);
 }
 
-XSTDAPI void* XCALLAPI xmemcpy(void *xrestrict dest, const void *xrestrict src,size_t n) {
+XSTDMETHOD(void*) xmemcpy(void *xrestrict dest, const void *xrestrict src,size_t n) {
 	return __imemcpy(dest,src,n);
 }
 
-XSTDAPI void* XCALLAPI xmemccpy(void *xrestrict dest, const void *xrestrict src,int c, size_t n) {
+XSTDMETHOD(void*) xmemccpy(void *xrestrict dest, const void *xrestrict src,int c, size_t n) {
 	return __imemccpy(dest,src,c,n);
 }
 
-XSTDAPI void* XCALLAPI xmemmove(void *dest, const void *src, size_t n) {
+XSTDMETHOD(void*) xmemmove(void *dest, const void *src, size_t n) {
 	return __imemmove(dest,src,n);
 }
 
-XSTDAPI int XCALLAPI xmemcmp(const void *s1,const void *s2,size_t n) {
+XSTDMETHOD(int) xmemcmp(const void *s1,const void *s2,size_t n) {
 	return __imemcmp(s1,s2,n);
 }
 
-XSTDAPI void* XCALLAPI xmempcpy(void *xrestrict dest,const void *xrestrict src, size_t n) {
+XSTDMETHOD(void*) xmempcpy(void *xrestrict dest,const void *xrestrict src, size_t n) {
 #ifdef __APPLE__
 	return (unsigned char*)__imemcpy(dest,src,n) + n;
 #else
@@ -150,7 +150,7 @@ XSTDAPI void* XCALLAPI xmempcpy(void *xrestrict dest,const void *xrestrict src, 
 #endif
 }
 
-XSTDAPI void* XCALLAPI xmemchr(const void* s,int c,size_t n) {
+XSTDMETHOD(void*) xmemchr(const void* s,int c,size_t n) {
 #ifdef __cplusplus
 	return const_cast<void*>(__imemchr(s,c,n));
 #else
@@ -159,15 +159,15 @@ XSTDAPI void* XCALLAPI xmemchr(const void* s,int c,size_t n) {
 }
 
 
-XSTDAPI wchar_t* XCALLAPI xwmemset(wchar_t *s, int c, size_t n) {
+XSTDMETHOD(wchar_t*) xwmemset(wchar_t *s, int c, size_t n) {
 	return __iwmemset(s,c,n);
 }
 
-XSTDAPI wchar_t* XCALLAPI xwmemcpy(wchar_t *xrestrict dest, const wchar_t *xrestrict src,size_t n) {
+XSTDMETHOD(wchar_t*) xwmemcpy(wchar_t *xrestrict dest, const wchar_t *xrestrict src,size_t n) {
 	return __iwmemcpy(dest,src,n);
 }
 
-XSTDAPI wchar_t* XCALLAPI xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,int c,size_t n) {
+XSTDMETHOD(wchar_t*) xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,int c,size_t n) {
 	wchar_t wc = (wchar_t)c;
 	for (size_t i = 0; i < n; ++i) {
 		dest[i] = src[i];
@@ -176,15 +176,15 @@ XSTDAPI wchar_t* XCALLAPI xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrest
 	return NULL;
 }
 
-XSTDAPI wchar_t* XCALLAPI xwmemmove(wchar_t *dest, const wchar_t *src, size_t n) {
+XSTDMETHOD(wchar_t*) xwmemmove(wchar_t *dest, const wchar_t *src, size_t n) {
 	return __iwmemmove(dest,src,n);
 }
 
-XSTDAPI int XCALLAPI xwmemcmp(const wchar_t *s1,const wchar_t *s2,size_t n) {
+XSTDMETHOD(int) xwmemcmp(const wchar_t *s1,const wchar_t *s2,size_t n) {
 	return __iwmemcmp(s1,s2,n);
 }
 
-XSTDAPI wchar_t* XCALLAPI xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src, size_t n) {
+XSTDMETHOD(wchar_t*) xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src, size_t n) {
 #ifdef __APPLE__
 	return __iwmemcpy(dest,src,n) + n;
 #else
@@ -192,7 +192,7 @@ XSTDAPI wchar_t* XCALLAPI xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrest
 #endif
 }
 
-XSTDAPI wchar_t* XCALLAPI xwmemchr(const wchar_t* s,int c,size_t n) {
+XSTDMETHOD(wchar_t*) xwmemchr(const wchar_t* s,int c,size_t n) {
 #ifdef __cplusplus
 	return const_cast<wchar_t*>(__iwmemchr(s,c,n));
 #else
@@ -200,15 +200,15 @@ XSTDAPI wchar_t* XCALLAPI xwmemchr(const wchar_t* s,int c,size_t n) {
 #endif
 }
 
-XSTDAPI int XCALLAPI xbcmp(const void *s1, const void *s2, size_t n) {
+XSTDMETHOD(int) xbcmp(const void *s1, const void *s2, size_t n) {
 	return __imemcmp(s1,s2,n);
 }
 
-XSTDAPI void XCALLAPI xbcopy(const void *src, void *dest, size_t n) {
+XSTDMETHOD(void) xbcopy(const void *src, void *dest, size_t n) {
 	__imemcpy(dest,src,n);
 }
 
-XSTDAPI void XCALLAPI xbzero(void *s, size_t n) {
+XSTDMETHOD(void) xbzero(void *s, size_t n) {
 	__imemset(s,0,n);
 }
 

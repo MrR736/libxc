@@ -27,8 +27,9 @@
 
 #include "xstdio.h"
 
+#ifndef XLOG_DEFAULT_TAG
 #define XLOG_DEFAULT_TAG "XLOG"
-#define XLOG_STREAM      stderr
+#endif
 
 typedef enum XLogPriority {
 	XLOG_UNKNOWN = 0,	/**< Internal use only */
@@ -47,6 +48,18 @@ typedef enum XLogPriority {
 #define xlog_print(prio,tag,fmt,...) xlog_cprint(prio,__LINE__,__FILE__,tag,fmt,##__VA_ARGS__)
 
 /** Standard log level macros */
+#define VXLOGE(tag,fmt,ap) xlog_vprint(XLOG_ERROR,tag,fmt,ap)
+#define VXLOGI(tag,fmt,ap) xlog_vprint(XLOG_INFO,tag,fmt,ap)
+#define VXLOGV(tag,fmt,ap) xlog_vprint(XLOG_VERBOSE,tag,fmt,ap)
+#define VXLOGW(tag,fmt,ap) xlog_vprint(XLOG_WARN, tag,fmt,ap)
+#define VXLOGF(tag,fmt,ap) xlog_vprint(XLOG_FATAL,tag,fmt,ap)
+
+#ifdef DEBUG
+# define VXLOGD(tag,fmt,ap) xlog_vprint(XLOG_DEBUG,tag,fmt,ap)
+#else
+# define VXLOGD(tag,fmt,ap) 0
+#endif
+
 #define XLOGE(tag,fmt,...) xlog_print(XLOG_ERROR,tag,fmt,##__VA_ARGS__)
 #define XLOGI(tag,fmt,...) xlog_print(XLOG_INFO,tag,fmt,##__VA_ARGS__)
 #define XLOGV(tag,fmt,...) xlog_print(XLOG_VERBOSE,tag,fmt,##__VA_ARGS__)
@@ -54,16 +67,18 @@ typedef enum XLogPriority {
 #define XLOGF(tag,fmt,...) xlog_print(XLOG_FATAL,tag,fmt,##__VA_ARGS__)
 
 #ifdef DEBUG
-#  define XLOGD(tag,fmt,...) xlog_print(XLOG_DEBUG,tag,fmt,##__VA_ARGS__)
-# else
-#  define XLOGD(tag,fmt,...) 0
+# define XLOGD(tag,fmt,...) xlog_print(XLOG_DEBUG,tag,fmt,##__VA_ARGS__)
+#else
+# define XLOGD(tag,fmt,...) 0
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char* tag,const char* fmt,va_list ap) {
+XSTDMETHOD(int) xlog_vcprint(int prio,int line,const char* file,const char* tag,const char* fmt,va_list ap) {
+	if (fmt == NULL) return -1;
+
 	va_list apc;
 	va_copy(apc, ap);
 
@@ -113,11 +128,6 @@ XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char*
 	va_end(apc);
 	return ret;
 #else
-	if (prio == XLOG_SILENT) {
-		va_end(apc);
-		return 0;
-	}
-
 	time_t now = time(NULL);
 	struct tm tm;
 
@@ -126,10 +136,12 @@ XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char*
 #else
 	localtime_r(&now, &tm);
 #endif
+	if (prio == XLOG_SILENT) return 0;
 	char timestamp[64];
 	strftime(timestamp,sizeof(timestamp),"%Y-%m-%d %H:%M:%S",&tm);
 
 	const char* priorityString;
+	FILE* xlog = stdout;
 	switch (prio) {
 		case XLOG_DEFAULT:
 			priorityString = "Default";
@@ -140,6 +152,7 @@ XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char*
 			break;
 
 		case XLOG_DEBUG:
+			xlog = stderr;
 			priorityString = "DEBUG";
 			break;
 
@@ -148,14 +161,17 @@ XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char*
 			break;
 
 		case XLOG_WARN:
+			xlog = stderr;
 			priorityString = "Warn";
 			break;
 
 		case XLOG_ERROR:
+			xlog = stderr;
 			priorityString = "ERROR";
 			break;
 
 		case XLOG_FATAL:
+			xlog = stderr;
 			priorityString = "FATAL";
 			break;
 
@@ -168,19 +184,19 @@ XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char*
 			break;
 
 	}
-	fprintf(XLOG_STREAM, "%s ", timestamp);
-	if (priorityString) fprintf(XLOG_STREAM,"[%s]\t",priorityString);
-	fprintf(XLOG_STREAM,"%s ",logTag);
-	if (file && line > 0) fprintf(XLOG_STREAM,"(%s:%d) ",xbasename(file),line);
-	int ret = vfprintf(XLOG_STREAM,fmt,apc);
+	fprintf(xlog, "%s ", timestamp);
+	if (priorityString) fprintf(xlog,"[%s]\t",priorityString);
+	fprintf(xlog,"%s ",logTag);
+	if (file && line > 0) fprintf(xlog,"(%s:%d) ",xbasename(file),line);
+	int ret = vfprintf(xlog,fmt,apc);
 	va_end(apc);
-	fputc('\n', XLOG_STREAM);
-	fflush(XLOG_STREAM);
+	fputc('\n', xlog);
+	fflush(xlog);
 	return ret;
 #endif
 }
 
-XSTDAPI int XCALLAPI xlog_cprint(int prio,int line,const char* file,const char* tag,const char* fmt,...) {
+XSTDMETHOD(int) xlog_cprint(int prio,int line,const char* file,const char* tag,const char* fmt,...) {
 	va_list ap;
 	va_start(ap,fmt);
 	int ret = xlog_vcprint(prio,line,file,tag,fmt,ap);
