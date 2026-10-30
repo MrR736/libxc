@@ -36,82 +36,82 @@
 extern "C" {
 #endif
 
-XSTDAPI void* XCALLAPI xrand(size_t size,unsigned int flags);
+XSTDMETHOD(void*) xrand(size_t size,unsigned int flags);
 
-XSTDAPI char* XCALLAPI xwcstombs_len(const wchar_t *xrestrict wcs,size_t* out_size);
+XSTDMETHOD(char*) xwcstombs_len(const wchar_t *xrestrict wcs,size_t* out_size);
 
-XSTDAPI char* XCALLAPI xwcstombs(const wchar_t *xrestrict wcs);
+XSTDMETHOD(char*) xwcstombs(const wchar_t *xrestrict wcs);
 
-XSTDAPI char** XCALLAPI xwcsstombss(const wchar_t **xrestrict wcs,size_t count);
+XSTDMETHOD(char**) xwcsstombss(const wchar_t **xrestrict wcs,size_t count);
 
-XSTDAPI wchar_t* XCALLAPI xmbstowcs_len(const char *xrestrict mbs, size_t *out_size);
+XSTDMETHOD(wchar_t*) xmbstowcs_len(const char *xrestrict mbs, size_t *out_size);
 
-XSTDAPI wchar_t* XCALLAPI xmbstowcs(const char *xrestrict mbs);
+XSTDMETHOD(wchar_t*) xmbstowcs(const char *xrestrict mbs);
 
-XSTDAPI wchar_t** XCALLAPI xmbsstowcss(const char **xrestrict mbs,size_t count);
+XSTDMETHOD(wchar_t**) xmbsstowcss(const char **xrestrict mbs,size_t count);
 
-XSTDAPI int XCALLAPI wsystem(const wchar_t *xrestrict __command);
+XSTDMETHOD(int) wsystem(const wchar_t *xrestrict __command);
 
-XSTDAPI void XCALLAPI wperror(const wchar_t *xrestrict __s);
-
-
-XSTDAPI int XCALLAPI vnxsystem(size_t __len, const char *xrestrict command, va_list ap);
-
-XSTDAPI int XCALLAPI nxsystem(size_t __len,const char *xrestrict command, ...);
-
-XSTDAPI int XCALLAPI vxsystem(const char *xrestrict command, va_list ap);
-
-XSTDAPI int XCALLAPI xsystem(const char *xrestrict command, ...);
-
-XSTDAPI int XCALLAPI vnxwsystem(size_t __len, const wchar_t *xrestrict command, va_list ap);
-
-XSTDAPI int XCALLAPI nxwsystem(size_t len,const wchar_t *xrestrict command, ...);
-
-XSTDAPI int XCALLAPI vxwsystem(const wchar_t *xrestrict command, va_list ap);
-
-XSTDAPI int XCALLAPI xwsystem(const wchar_t *xrestrict command, ...);
+XSTDMETHOD(void) wperror(const wchar_t *xrestrict __s);
 
 
-XSTDAPI void XCALLAPI vnxperror(size_t __len,const char*xrestrict __s, va_list ap);
+XSTDMETHOD(int) vnxsystem(size_t __len, const char *xrestrict command, va_list ap);
 
-XSTDAPI void XCALLAPI nxperror(size_t __len,const char*xrestrict __s, ...);
+XSTDMETHOD(int) nxsystem(size_t __len,const char *xrestrict command, ...);
 
-XSTDAPI void XCALLAPI vxperror(const char *xrestrict __s, va_list ap);
+XSTDMETHOD(int) vxsystem(const char *xrestrict command, va_list ap);
 
-XSTDAPI void XCALLAPI xperror(const char *xrestrict __s, ...);
+XSTDMETHOD(int) xsystem(const char *xrestrict command, ...);
 
-XSTDAPI void XCALLAPI vnxwperror(size_t __len,const wchar_t *xrestrict __s, va_list ap);
+XSTDMETHOD(int) vnxwsystem(size_t __len, const wchar_t *xrestrict command, va_list ap);
 
-XSTDAPI void XCALLAPI nxwperror(size_t __len,const wchar_t *xrestrict __s, ...);
+XSTDMETHOD(int) nxwsystem(size_t len,const wchar_t *xrestrict command, ...);
 
-XSTDAPI void XCALLAPI vxwperror(const wchar_t *xrestrict __s, va_list ap);
+XSTDMETHOD(int) vxwsystem(const wchar_t *xrestrict command, va_list ap);
 
-XSTDAPI void XCALLAPI xwperror(const wchar_t *xrestrict __s, ...);
+XSTDMETHOD(int) xwsystem(const wchar_t *xrestrict command, ...);
 
 
-XSTDAPI int XCALLAPI csystem(const char*xrestrict __command);
+XSTDMETHOD(void) vnxperror(size_t __len,const char*xrestrict __s, va_list ap);
 
-XSTDAPI int XCALLAPI wcsystem(const wchar_t *xrestrict __command);
+XSTDMETHOD(void) nxperror(size_t __len,const char*xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI vnxcsystem(size_t __len, const char *xrestrict command, va_list ap);
+XSTDMETHOD(void) vxperror(const char *xrestrict __s, va_list ap);
 
-XSTDAPI int XCALLAPI nxcsystem(size_t __len,const char *xrestrict command, ...);
+XSTDMETHOD(void) xperror(const char *xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI vxcsystem(const char *xrestrict command, va_list ap);
+XSTDMETHOD(void) vnxwperror(size_t __len,const wchar_t *xrestrict __s, va_list ap);
 
-XSTDAPI int XCALLAPI xcsystem(const char *xrestrict command, ...);
+XSTDMETHOD(void) nxwperror(size_t __len,const wchar_t *xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI vnxwcsystem(size_t __len, const wchar_t *xrestrict command, va_list ap);
+XSTDMETHOD(void) vxwperror(const wchar_t *xrestrict __s, va_list ap);
 
-XSTDAPI int XCALLAPI nxwcsystem(size_t len,const wchar_t *xrestrict command, ...);
+XSTDMETHOD(void) xwperror(const wchar_t *xrestrict __s, ...);
 
-XSTDAPI int XCALLAPI vxwcsystem(const wchar_t *xrestrict command, va_list ap);
 
-XSTDAPI int XCALLAPI xwcsystem(const wchar_t *xrestrict command, ...);
+XSTDMETHOD(int) csystem(const char*xrestrict __command);
 
-XSTDAPI int XCALLAPI xwcsstrcmp(const wchar_t* s1, const char* s2);
+XSTDMETHOD(int) wcsystem(const wchar_t *xrestrict __command);
 
-XSTDAPI int XCALLAPI xstrwcscmp(const char* s1, const wchar_t* s2);
+XSTDMETHOD(int) vnxcsystem(size_t __len, const char *xrestrict command, va_list ap);
+
+XSTDMETHOD(int) nxcsystem(size_t __len,const char *xrestrict command, ...);
+
+XSTDMETHOD(int) vxcsystem(const char *xrestrict command, va_list ap);
+
+XSTDMETHOD(int) xcsystem(const char *xrestrict command, ...);
+
+XSTDMETHOD(int) vnxwcsystem(size_t __len, const wchar_t *xrestrict command, va_list ap);
+
+XSTDMETHOD(int) nxwcsystem(size_t len,const wchar_t *xrestrict command, ...);
+
+XSTDMETHOD(int) vxwcsystem(const wchar_t *xrestrict command, va_list ap);
+
+XSTDMETHOD(int) xwcsystem(const wchar_t *xrestrict command, ...);
+
+XSTDMETHOD(int) xwcsstrcmp(const wchar_t* s1, const char* s2);
+
+XSTDMETHOD(int) xstrwcscmp(const char* s1, const wchar_t* s2);
 
 #ifdef __cplusplus
 }

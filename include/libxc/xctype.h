@@ -28,15 +28,15 @@
 extern "C" {
 #endif
 
-XSTDAPI char* XCALLAPI xtolower(const char* str);
+XSTDMETHOD(char*) xtolower(const char* str);
 
-XSTDAPI char* XCALLAPI xtolower_l(const char* str,xlocale_t l);
+XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l);
 
-XSTDAPI char* XCALLAPI xtoupper(const char* str);
+XSTDMETHOD(char*) xtoupper(const char* str);
 
-XSTDAPI char* XCALLAPI xtoupper_l(const char* str,xlocale_t l);
+XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l);
 
-XSTDAPI char* XCALLAPI xtoascii(const char* str);
+XSTDMETHOD(char*) xtoascii(const char* str);
 
 #ifdef __cplusplus
 }

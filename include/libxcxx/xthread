@@ -44,7 +44,7 @@ private:
 		explicit _thread_data(std::function<void()>&& f) : fn(std::move(f)) {}
 	};
 
-	static void* _thread_entry(void* arg) {
+	static inline void* _thread_entry(void* arg) {
 		std::unique_ptr<_thread_data> data(static_cast<_thread_data*>(arg));
 		try { data->fn(); }
 		catch (...) { std::terminate(); }
@@ -56,7 +56,7 @@ public:
 
 	xthread() noexcept = default;
 
-	template<class F, class... Args>
+	template<typename F, typename... Args>
 	explicit xthread(F&& f, Args&&... args) {
 		auto bound = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
 		std::unique_ptr<_thread_data> data(new _thread_data(std::function<void()>(std::move(bound))));

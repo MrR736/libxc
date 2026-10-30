@@ -52,7 +52,10 @@ using ::name##str LIBXC_USING_IF_EXISTS; \
 using ::name##casestr LIBXC_USING_IF_EXISTS; \
 using ::name##casecmp LIBXC_USING_IF_EXISTS; \
 using ::name##ncasecmp LIBXC_USING_IF_EXISTS; \
-using ::name##xfrm LIBXC_USING_IF_EXISTS;
+using ::name##xfrm LIBXC_USING_IF_EXISTS; \
+using ::name##basename LIBXC_USING_IF_EXISTS; \
+using ::name##cmbs LIBXC_USING_IF_EXISTS; \
+using ::name##cmps LIBXC_USING_IF_EXISTS;
 
 XSTD_USTRS(ustr8,char8_t,int)
 XSTD_USTRS(ustr16,char16_t,int)

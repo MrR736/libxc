@@ -52,37 +52,37 @@ typedef pthread_mutex_t xmutex_t;
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI xmutex_init(xmutex_t *m);
+XSTDMETHOD(int) xmutex_init(xmutex_t *m);
 
-XSTDAPI int XCALLAPI recursive_xmutex_init(xmutex_t *m);
+XSTDMETHOD(int) recursive_xmutex_init(xmutex_t *m);
 
-XSTDAPI void XCALLAPI xmutex_lock(xmutex_t *m);
+XSTDMETHOD(void) xmutex_lock(xmutex_t *m);
 
-XSTDAPI xthread_result_t XCALLAPI xmutex_trylock(xmutex_t *mutex);
+XSTDMETHOD(xthread_result_t) xmutex_trylock(xmutex_t *mutex);
 
-XSTDAPI void XCALLAPI xmutex_unlock(xmutex_t *m);
+XSTDMETHOD(void) xmutex_unlock(xmutex_t *m);
 
-XSTDAPI void XCALLAPI xmutex_destroy(xmutex_t *m);
+XSTDMETHOD(void) xmutex_destroy(xmutex_t *m);
 
-XSTDAPI xthread_t XCALLAPI xthread_self(void);
+XSTDMETHOD(xthread_t) xthread_self(void);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_create(xthread_t *thread,void *(XCALLAPI *start_routine)(void *),void *arg);
+XSTDMETHOD(xthread_result_t) xthread_create(xthread_t *thread,void *(XCALLAPI *start_routine)(void *),void *arg);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_createw(xthread_t* thread,LPTHREAD_START_ROUTINE lpStartAddress,LPVOID lpParameter);
+XSTDMETHOD(xthread_result_t) xthread_createw(xthread_t* thread,LPTHREAD_START_ROUTINE lpStartAddress,LPVOID lpParameter);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_join(xthread_t thread, void **retval);
+XSTDMETHOD(xthread_result_t) xthread_join(xthread_t thread, void **retval);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_detach(xthread_t thread);
+XSTDMETHOD(xthread_result_t) xthread_detach(xthread_t thread);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_equal(xthread_t t1, xthread_t t2);
+XSTDMETHOD(xthread_result_t) xthread_equal(xthread_t t1, xthread_t t2);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_cancel(xthread_t th);
+XSTDMETHOD(xthread_result_t) xthread_cancel(xthread_t th);
 
-XSTDAPI xthread_result_t XCALLAPI xthread_setcanceltype(int type, int *oldtype);
+XSTDMETHOD(xthread_result_t) xthread_setcanceltype(int type, int *oldtype);
 
-XSTDAPI int XCALLAPI xthread_setcancelstate(int state, int *oldstate);
+XSTDMETHOD(int) xthread_setcancelstate(int state, int *oldstate);
 
-XSTDAPI void XCALLAPI xthread_testcancel(void);
+XSTDMETHOD(void) xthread_testcancel(void);
 
 #ifdef __cplusplus
 }

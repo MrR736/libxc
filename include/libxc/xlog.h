@@ -27,8 +27,9 @@
 
 #include "xstddef.h"
 
+#ifndef XLOG_DEFAULT_TAG
 #define XLOG_DEFAULT_TAG "XLOG"
-#define XLOG_STREAM stderr
+#endif
 
 typedef enum XLogPriority {
 	XLOG_UNKNOWN = 0,	/**< Internal use only */
@@ -47,6 +48,18 @@ typedef enum XLogPriority {
 #define xlog_print(prio,tag,fmt,...) xlog_cprint(prio,__LINE__,__FILE__,tag,fmt,##__VA_ARGS__)
 
 /** Standard log level macros */
+#define VXLOGE(tag,fmt,ap) xlog_vprint(XLOG_ERROR,tag,fmt,ap)
+#define VXLOGI(tag,fmt,ap) xlog_vprint(XLOG_INFO,tag,fmt,ap)
+#define VXLOGV(tag,fmt,ap) xlog_vprint(XLOG_VERBOSE,tag,fmt,ap)
+#define VXLOGW(tag,fmt,ap) xlog_vprint(XLOG_WARN, tag,fmt,ap)
+#define VXLOGF(tag,fmt,ap) xlog_vprint(XLOG_FATAL,tag,fmt,ap)
+
+#ifdef DEBUG
+# define VXLOGD(tag,fmt,ap) xlog_vprint(XLOG_DEBUG,tag,fmt,ap)
+#else
+# define VXLOGD(tag,fmt,ap) 0
+#endif
+
 #define XLOGE(tag,fmt,...) xlog_print(XLOG_ERROR,tag,fmt,##__VA_ARGS__)
 #define XLOGI(tag,fmt,...) xlog_print(XLOG_INFO,tag,fmt,##__VA_ARGS__)
 #define XLOGV(tag,fmt,...) xlog_print(XLOG_VERBOSE,tag,fmt,##__VA_ARGS__)
@@ -64,9 +77,9 @@ typedef enum XLogPriority {
 extern "C" {
 #endif
 
-XSTDAPI int XCALLAPI xlog_vcprint(int prio,int line,const char* file,const char* tag,const char* fmt,va_list ap);
+XSTDMETHOD(int) xlog_vcprint(int prio,int line,const char* file,const char* tag,const char* fmt,va_list ap);
 
-XSTDAPI int XCALLAPI xlog_cprint(int prio,int line,const char* file,const char* tag,const char* fmt,...);
+XSTDMETHOD(int) xlog_cprint(int prio,int line,const char* file,const char* tag,const char* fmt,...);
 
 #ifdef __cplusplus
 }
