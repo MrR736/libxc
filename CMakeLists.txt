@@ -279,7 +279,6 @@ if (LIBXC_BUILD_TESTS)
 
 	# Add executables for each test
 	add_test_executable(test_xthread  ${CMAKE_SOURCE_DIR}/test/test_xthread.cpp)
-	add_test_executable(test_xxlocale  ${CMAKE_SOURCE_DIR}/test/test_xxlocale.c)
 	add_test_executable(test_xlog      ${CMAKE_SOURCE_DIR}/test/test_xlog.c)
 	add_test_executable(test_xstdio    ${CMAKE_SOURCE_DIR}/test/test_xstdio.c)
 	add_test_executable(test_xstdlib   ${CMAKE_SOURCE_DIR}/test/test_xstdlib.c)
@@ -321,4 +320,8 @@ if (LIBXC_BUILD_TESTS)
 	endif()
 
 	add_test_executable(test_xmap      ${CMAKE_SOURCE_DIR}/test/test_xmap.cc)
+
+	if(LIBXC_DISABLE_LOCALE)
+		add_test_executable(test_xxlocale ${CMAKE_SOURCE_DIR}/test/test_xxlocale.c)
+	endif()
 endif()

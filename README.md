@@ -2,14 +2,16 @@
 
 [![License: GPL-3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
-`libxc` is a lightweight C/C++ library providing extended standard utilities, including:
+`libxc` is a lightweight C/C++ utility library that extends the standard library with additional functionality, including:
 
 - String, memory, and wide-character manipulation
-- File I/O helpers and safer printf variants
+- File I/O utilities and safer `printf`-style functions
 - Extended standard types and macros
 - Locale and map utilities
 
-It is designed to complement the C standard library with convenient, safe, and portable extensions.
+Designed to complement the C standard library, `libxc` provides convenient, safe, and portable extensions for C and C++ applications.
+
+> **Note for Android users:** Upgrade to **libxc 1.1.0 or later** to benefit from Android compatibility fixes and improvements.
 
 ---
 
