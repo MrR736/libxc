@@ -61,17 +61,17 @@
 
 #define __LIBXC_VERSION ((__LIBXC_VERSION_MAJOR * 1000) + (__LIBXC_VERSION_MINOR * 100) + __LIBXC_VERSION_PATCH)
 
-#define __LIBXC_VERSION_AT_LEAST(major,minor,patch) \
-	(((major * 1000) + (minor * 100) + patch) <= __LIBXC_VERSION)
+#define __LIBXC_VERSION_LE(major,minor,patch) (((major * 1000) + (minor * 100) + patch) <= __LIBXC_VERSION)
 
-#define __LIBXC_VERSION_AT_MOST(major,minor,patch) \
-	(((major * 1000) + (minor * 100) + patch) >= __LIBXC_VERSION)
+#define __LIBXC_VERSION_GE(major,minor,patch) (((major * 1000) + (minor * 100) + patch) >= __LIBXC_VERSION)
 
-#define __LIBXC_VERSION_EQ(major,minor,patch) \
-	(((major * 1000) + (minor * 100) + patch) == __LIBXC_VERSION)
+#define __LIBXC_VERSION_EQ(major,minor,patch) (((major * 1000) + (minor * 100) + patch) == __LIBXC_VERSION)
 
-#define __LIBXC_VERSION_NE(major,minor,patch) \
-	(((major * 1000) + (minor * 100) + patch) != __LIBXC_VERSION)
+#define __LIBXC_VERSION_NE(major,minor,patch) (((major * 1000) + (minor * 100) + patch) != __LIBXC_VERSION)
+
+#define __LIBXC_VERSION_LT(major,minor,patch) (((major * 1000) + (minor * 100) + patch) < __LIBXC_VERSION)
+
+#define __LIBXC_VERSION_GT(major,minor,patch) (((major * 1000) + (minor * 100) + patch) > __LIBXC_VERSION)
 
 /* ----------------- C Standard Versions ----------------- */
 #define STDC94		199409L  /**< C90 amendment (ISO/IEC 9899:1990 + 1994) */
@@ -80,7 +80,13 @@
 #define STDC1X		STDC11   /**< C++1x */
 #define STDC17		201710L  /**< C17 / C18 (ISO/IEC 9899:2017/2018) */
 #define STDC18		STDC17   /**< Alias for C17 */
-#define STDC23		202311L  /**< C23 (ISO/IEC 9899:2023) */
+
+#if __STDC_VERSION__ == 202000L  /**< C23 (ISO/IEC 9899:2024) */
+#define STDC23		202000L
+#else
+#define STDC23		202311L
+#endif
+
 #define STDC2X		STDC23   /**< Alias for C23 */
 
 /* ----------------- C++ Standard Versions ----------------- */
@@ -227,18 +233,9 @@ defined(__aarch64__) || defined(__LP64__) || defined(_LP64) || defined(__amd64__
 #ifndef __libxc_types_compatible_p
 # ifdef __cplusplus
 extern "C++" {
-#  if CPLUSPLUS_GE(STDC20PP)
+#  if CPLUSPLUS_GE(STDC11PP)
 #   include <type_traits>
-#   define __libxc_types_compatible_p(t1, t2) \
-	std::is_same_v<std::remove_cvref_t<t1>, std::remove_cvref_t<t2>>
-#  elif CPLUSPLUS_GE(STDC17PP)
-#   include <type_traits>
-#   define __libxc_types_compatible_p(t1, t2) \
-	std::is_same_v<std::remove_cv_t<t1>, std::remove_cv_t<t2>>
-#  elif CPLUSPLUS_GE(STDC11PP)
-#   include <type_traits>
-#   define __libxc_types_compatible_p(t1, t2) \
-	std::is_same<typename std::remove_cv<t1>::type,typename std::remove_cv<t2>::type>::value
+#   define __libxc_types_compatible_p(t1, t2) std::is_same_v<t1,t2>
 #  else
 template <typename T1, typename T2>
 struct __xstd_types_compatible_impl {
@@ -291,30 +288,33 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 
 #define countof(a) \
 	(0 * sizeof(struct { \
-		int _type_check: \
-			!__libxc_types_compatible_p(typeof(a), typeof(&(a)[0])); \
+		int _type_check: !__libxc_types_compatible_p(typeof(a), typeof(&(a)[0])); \
 	}) + (sizeof(a) / sizeof((a)[0])))
 
-#if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(inline)
-#define inline __inline
+#if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(__cplusplus) && !defined(inline)
+# define inline __inline
+#endif
+
+#ifndef __has_xattribute
+#ifndef __has_attribute
+# define __has_attribute(x) 0
+#else
+# define __has_xattribute(x) __has_attribute(x)
+#endif
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
 # define __xattribute__(V) __attribute__( V )
 # ifdef __has_attribute
-#  define __has_xattribute(V) __has_attribute(V)
 #  if __has_xattribute(visibility)
-#   define __xvisibility__(V) __attribute__((visibility(#V)))
+#   define __xvisibility__(V) __attribute__( (visibility( #V )) )
 #  else
 #   define __xvisibility__(V)
 #  endif
 # else
-#  define __has_xattribute(V)
 #  define __xvisibility__(V)
 # endif
-
 #else
-# define __has_xattribute(V)
 # define __xattribute__(V)
 # define __xvisibility__(V)
 #endif
@@ -387,6 +387,8 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 #ifndef XSTDAPI
 # ifdef XSTDAPI_STATIC
 #  define XSTDAPI
+# elif defined(XSTDAPI_STATIC_BUILD)
+#  define XSTDAPI XSTDDEF_INLINE_API
 # elif defined(XSTDAPI_BUILD)
 #  define XSTDAPI XSTDDEF_EXPORT_API
 # else
@@ -439,6 +441,8 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 #ifndef __xstdcall
 #ifdef _MSC_VER
 # define __xstdcall __msstdcall
+#elif defined(_WIN32)
+# define __xstdcall __stdcall
 #elif defined(__GNUC__) || defined(__clang__)
 # ifdef _XSTD_i386
 #  if __has_xattribute(stdcall)
@@ -467,6 +471,8 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 #ifndef __xcdecl
 #ifdef _MSC_VER
 # define __xcdecl __mscdecl
+#elif defined(_WIN32)
+# define __xcdecl __cdecl
 #elif defined(__GNUC__) || defined(__clang__)
 # ifdef _XSTD_i386
 #  if __has_xattribute(cdecl)
@@ -484,7 +490,7 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 
 #ifndef XCALLAPI
 #ifdef _WIN32
-#define XCALLAPI	__xstdcall
+#define XCALLAPI	__stdcall
 #else
 #define XCALLAPI
 #endif

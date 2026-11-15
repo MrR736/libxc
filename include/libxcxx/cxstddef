@@ -34,31 +34,6 @@
 
 #include "xstddef.h"
 
-// C++ standard version compatibility
-#ifndef CPLUSPLUS_GE
-# define CPLUSPLUS_GE(v) (__cplusplus >= (v))
-#endif
-
-#ifndef CPLUSPLUS_LE
-# define CPLUSPLUS_LE(v) (__cplusplus <= (v))
-#endif
-
-#ifndef CPLUSPLUS_EQ
-# define CPLUSPLUS_EQ(v) (__cplusplus == (v))
-#endif
-
-#ifndef CPLUSPLUS_NE
-# define CPLUSPLUS_NE(v) (__cplusplus != (v))
-#endif
-
-#ifndef CPLUSPLUS_LT
-# define CPLUSPLUS_LT(v) (__cplusplus < (v))
-#endif
-
-#ifndef CPLUSPLUS_GT
-# define CPLUSPLUS_GT(v) (__cplusplus > (v))
-#endif
-
 // C++ standard library compatibility
 namespace xstd {
 	/*

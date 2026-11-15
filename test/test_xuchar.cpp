@@ -33,6 +33,8 @@
 #define XC16(c) u##c
 #define XC32(c) U##c
 
+#define XW(s) L##s
+
 static unsigned long tests_run = 0;
 
 #define CHECK(expr) do { \

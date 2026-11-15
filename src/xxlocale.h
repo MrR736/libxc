@@ -21,7 +21,7 @@
  */
 
 #ifdef LIBXC_DISABLE_LOCALE
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(_WIN32)
 #pragma message("WARNING: libxc locale support is disabled.")
 #else
 #warning "libxc: locale support is disabled."
@@ -358,7 +358,8 @@ XSTDMETHOD(xlocale_t) xnewlocale(int category_mask,const char *req_locale,xlocal
 	static const char *utf8_aliases[] = {"C.UTF-8","en_US.UTF-8","UTF-8",".UTF8",".utf8","utf-8",".65001",NULL};
 
 #ifdef _WIN32
-	/* Windows path ----------------------------------------------------- */
+	/* Windows path */
+	(void)category_mask;
 	(void)base;
 
 	/*
@@ -366,9 +367,7 @@ XSTDMETHOD(xlocale_t) xnewlocale(int category_mask,const char *req_locale,xlocal
 	 * category mask used by xnewlocale().
 	 *
 	 * Create one complete Windows locale object instead.
-	 */
-
-	/*
+	 *
 	 * If no locale name is supplied, use the base locale when
 	 * available. Otherwise create the "C" locale.
 	 */

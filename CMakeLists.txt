@@ -70,6 +70,9 @@ string(REPLACE ";" " " ILIBXC_LDFLAGS "${ILIBXC_LDFLAGS}")
 if (LIBXC_BUILD_SHARED)
 	add_library(libxc SHARED ${LIBXC_SOURCES})
 	target_compile_definitions(libxc PRIVATE XSTDAPI_BUILD)
+	if(WIN32)
+		target_compile_options(libxc PRIVATE -Wno-unused-but-set-variable -Wno-c++20-compat)
+	endif()
 	target_compile_options(libxc PRIVATE -Wall -Wextra -Wpedantic)
 
 	# Set library version
@@ -112,6 +115,10 @@ endif()
 if (LIBXC_BUILD_STATIC)
 	add_library(libxc-static STATIC ${LIBXC_SOURCES})
 	target_compile_definitions(libxc-static PUBLIC XSTDAPI_STATIC)
+	if(WIN32)
+		target_compile_options(libxc-static PRIVATE -Wno-unused-but-set-variable -Wno-c++20-compat)
+	endif()
+	target_compile_options(libxc-static PRIVATE -Wall -Wextra -Wpedantic)
 	set_target_properties(libxc-static PROPERTIES OUTPUT_NAME "libxc")
 	target_include_directories(libxc-static
 		PUBLIC

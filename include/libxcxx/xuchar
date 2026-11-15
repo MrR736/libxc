@@ -23,19 +23,25 @@
 #ifndef __XUCHAR__
 #define __XUCHAR__
 
+#include <vector>
+
+#include "xstdlib.h"
+#include "xwchar.h"
 #include "xuchar.h"
 
 namespace xstd __xvisibility__(default) {
 
 #define XSTD_USTR_DISPATCH(T, name, ...) \
-	if constexpr (std::is_same_v<T, char8_t>) { \
+	if constexpr (__libxc_types_compatible_p(T,char8_t)) { \
 		return ustr8##name(__VA_ARGS__); \
-	} else if constexpr (std::is_same_v<T, char16_t>) { \
+	} else if constexpr (__libxc_types_compatible_p(T,wchar_t)) { \
+		return wcs##name(__VA_ARGS__); \
+	} else if constexpr (__libxc_types_compatible_p(T,char16_t)) { \
 		return ustr16##name(__VA_ARGS__); \
-	} else if constexpr (std::is_same_v<T, char32_t>) { \
+	} else if constexpr (__libxc_types_compatible_p(T,char32_t)) { \
 		return ustr32##name(__VA_ARGS__); \
 	} else { \
-		LIBXC_STATIC_ASSERT(std::is_same_v<T, void>,"Unsupported character type"); \
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(T,void),"Unsupported character type"); \
 	}
 
 
@@ -130,13 +136,13 @@ inline std::size_t XCALLAPI ustrcspn(const CharT* xrestrict s, const CharT *reje
 }
 
 template<typename CharT>
-inline CharT* XCALLAPI ustrtok_r(CharT *xrestrict s,const CharT *xrestrict delim,CharT **xrestrict save_ptr) {
+inline CharT* XCALLAPI ustrtok_r(CharT * xrestrict s,const CharT * xrestrict delim,CharT * const* xrestrict save_ptr) {
 	XSTD_USTR_DISPATCH(CharT,tok_r,s,delim,save_ptr)
 	return nullptr;
 }
 
 template<typename CharT>
-inline CharT* XCALLAPI ustrtok(CharT *xrestrict s,const CharT *xrestrict delim) {
+inline CharT* XCALLAPI ustrtok(CharT * xrestrict s,const CharT * xrestrict delim) {
 	XSTD_USTR_DISPATCH(CharT,tok,s,delim)
 	return nullptr;
 }
@@ -179,53 +185,97 @@ inline std::size_t XCALLAPI ustrxfrm(CharT* xrestrict dest,const CharT* xrestric
 
 template<typename CharT>
 inline const CharT* XCALLAPI ustrbasename(const CharT* xrestrict src) {
-	XSTD_USTR_DISPATCH(CharT, basename,src)
+	if constexpr (__libxc_types_compatible_p(CharT,char8_t)) {
+		return ustr8basename(src);
+	} else if constexpr (__libxc_types_compatible_p(CharT,wchar_t)) {
+		return xwbasename(src);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char16_t)) {
+		return ustr16basename(src);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char32_t)) {
+		return ustr32basename(src);
+	} else {
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(CharT,void), "Unsupported character type");
+	}
 	return nullptr;
 }
 
 template<typename CharT>
-inline CharT* XCALLAPI ustrcmbs(const CharT** xrestrict src, std::size_t n) {
-	XSTD_USTR_DISPATCH(CharT, cmbs,src,n)
+inline CharT* XCALLAPI ustrcmbs(const CharT* const* xrestrict src, std::size_t n) {
+	if constexpr (__libxc_types_compatible_p(CharT,char8_t)) {
+		return ustr8cmbs(src, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,wchar_t)) {
+		return xwcscmbs(src, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char16_t)) {
+		return ustr16cmbs(src, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char32_t)) {
+		return ustr32cmbs(src, n);
+	} else {
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(CharT,void), "Unsupported character type");
+	}
 	return nullptr;
 }
 
 template<typename CharT>
-inline CharT* XCALLAPI ustrcmps(const CharT* xrestrict s1,const CharT** xrestrict s2, std::size_t n) {
-	XSTD_USTR_DISPATCH(CharT, cmps,s1,s2,n)
+inline CharT* XCALLAPI ustrcmbs(const std::vector<CharT*>& s) {
+	return ustrcmbs<CharT>(s.data(),s.size());
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcmps(const CharT* xrestrict s1,const CharT* const* xrestrict s2, std::size_t n) {
+	if constexpr (__libxc_types_compatible_p(CharT,char8_t)) {
+		return ustr8cmps(s1, s2, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,wchar_t)) {
+		return xwcscmp(s1, s2, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char16_t)) {
+		return ustr16cmps(s1, s2, n);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char32_t)) {
+		return ustr32cmps(s1, s2, n);
+	} else {
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(CharT,void), "Unsupported character type");
+	}
 	return nullptr;
+}
+
+template<typename CharT>
+inline CharT* XCALLAPI ustrcmps(const CharT* xrestrict s1,const std::vector<CharT*>& s2) {
+	return ustrcmps<CharT>(s1,s2.data(),s2.size());
 }
 
 #undef XSTD_USTR_DISPATCH
 
 template<typename CharT>
 inline char* XCALLAPI xmbrtoc_len(const CharT* xrestrict pc8,size_t* out_size) {
-	if constexpr (std::is_same_v<CharT,char8_t>) {
+	if constexpr (__libxc_types_compatible_p(CharT,char8_t)) {
 		return xmbrtoc8_len(pc8,out_size);
-	} else if constexpr (std::is_same_v<CharT,char16_t>) {
+	} else if constexpr (__libxc_types_compatible_p(CharT,wchar_t)) {
+		return xwcstombs_len(pc8,out_size);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char16_t)) {
 		return xmbrtoc16_len(pc8,out_size);
-	} else if constexpr (std::is_same_v<CharT,char32_t>) {
+	} else if constexpr (__libxc_types_compatible_p(CharT,char32_t)) {
 		return xmbrtoc32_len(pc8,out_size);
 	} else {
-		LIBXC_STATIC_ASSERT(std::is_same_v<CharT,void>,"Unsupported character type");
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(CharT,void),"Unsupported character type");
 		return nullptr;
 	}
 }
 
 template<typename CharT>
 inline char* XCALLAPI xmbrtoc(const CharT* xrestrict pc8) {
-	return xmbrtoc_len(pc8,nullptr);
+	return xmbrtoc_len<CharT>(pc8,nullptr);
 }
 
 template<typename CharT>
 inline CharT* XCALLAPI xcrtomb_len(const char* xrestrict pc8,size_t* out_size) {
-	if constexpr (std::is_same_v<CharT,char8_t>) {
+	if constexpr (__libxc_types_compatible_p(CharT,char8_t)) {
 		return xc8rtomb_len(pc8,out_size);
-	} else if constexpr (std::is_same_v<CharT,char16_t>) {
+	} else if constexpr (__libxc_types_compatible_p(CharT,wchar_t)) {
+		return xmbstowcs_len(pc8,out_size);
+	} else if constexpr (__libxc_types_compatible_p(CharT,char16_t)) {
 		return xc16rtomb_len(pc8,out_size);
-	} else if constexpr (std::is_same_v<CharT,char32_t>) {
+	} else if constexpr (__libxc_types_compatible_p(CharT,char32_t)) {
 		return xc32rtomb_len(pc8,out_size);
 	} else {
-		LIBXC_STATIC_ASSERT(std::is_same_v<CharT,void>,"Unsupported character type");
+		LIBXC_STATIC_ASSERT(__libxc_types_compatible_p(CharT,void),"Unsupported character type");
 		return nullptr;
 	}
 }

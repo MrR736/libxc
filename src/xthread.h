@@ -258,7 +258,9 @@ XSTDMETHOD(xthread_result_t) xthread_equal(xthread_t t1, xthread_t t2) {
 
 XSTDMETHOD(xthread_result_t) xthread_cancel(xthread_t th) {
 #ifdef _WIN32
-	return ENOSYS;
+	if (th == NULL) return ERROR_INVALID_HANDLE;
+	if (!TerminateThread(th,0)) return GetLastError();
+	return 0;
 #elif defined(__ANDROID__)
 	return pthread_kill(th,SIGUSR1);
 #else

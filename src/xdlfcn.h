@@ -603,8 +603,7 @@ XSTDMETHOD(int) xwdladdr(const void *addr, XWDl_info *info) {
 	}
 
 #ifdef _WIN32
-#define xwdl_range_valid(size,offset,length) \
-	((offset) <= (size) && (length) <= (size) - (offset))
+#define xwdl_range_valid(size,offset,length) ((offset) <= (size) && (length) <= (size) - (offset))
 
 	static xthread_local wchar_t xdladdr_filename[XDLFCN_PATH_BUFFER];
 	static xthread_local wchar_t xdladdr_symbol[XDLFCN_MAX_SYM_NAME];
@@ -703,7 +702,7 @@ XSTDMETHOD(int) xwdladdr(const void *addr, XWDl_info *info) {
 	 * Validate the DOS header.
 	 */
 	{
-		if (!xwdl_range_valid(image_size, 0, sizeof(IMAGE_DOS_HEADER))) {
+		if (image_size < sizeof(IMAGE_DOS_HEADER)) {
 			goto cleanup;
 		}
 

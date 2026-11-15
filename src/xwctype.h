@@ -76,6 +76,11 @@ XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str) {
 	}
 
 	size_t len = wcslen(str);
+	if (len > SIZE_MAX / sizeof(wchar_t) - 1) {
+		errno = EOVERFLOW;
+		return NULL;
+	}
+
 	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
 	if (!ret) {
 		errno = ENOMEM;
@@ -84,11 +89,12 @@ XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str) {
 
 	size_t j = 0;
 	for (size_t i = 0; i < len; i++) {
-		if (str[i] >= 0 && str[i] <= UCHAR_MAX) ret[j++] = (wchar_t)str[i];
+		uintmax_t ch = (uintmax_t)str[i];
+		if (ch <= 0x7F) ret[j++] = (wchar_t)ch;
 		else ret[j++] = L'?';
 	}
 
-	ret[j] = '\0';
+	ret[j] = L'\0';
 	return ret;
 }
 

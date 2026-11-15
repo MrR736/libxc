@@ -246,7 +246,7 @@ XSTDMETHOD(size_t) fpsize(FILE *fp) {
 	}
 
 	long diff = end_pos - original_pos;
-	if (diff < 0 || (unsigned long)diff > SIZE_MAX) {
+	if (diff < 0 || (size_t)diff > SIZE_MAX) {
 		errno = EOVERFLOW;
 		return (size_t)-1;
 	}
