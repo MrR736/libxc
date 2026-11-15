@@ -36,10 +36,8 @@ XSTDMETHOD(size_t) xstrlen(const char *xrestrict __s, ...);
 XSTDMETHOD(int) xstrcmp(const char *s1, const char **s2, size_t n);
 
 XSTDMETHOD(int) xstrcasecmp(const char *s1, const char *s2);
-XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l);
 
 XSTDMETHOD(int) xstricmp(const char *s1, const char *s2);
-XSTDMETHOD(int) xstricmp_l(const char *s1, const char *s2,xlocale_t l);
 
 XSTDMETHOD(char*) xstrdup(const char *s);
 
@@ -49,6 +47,13 @@ XSTDMETHOD(char*) xstrcmbs(const char** ss, size_t n);
 XSTDMETHOD(const char*) xbasename(const char* path);
 
 XSTDMETHOD(char**) xstrsdup(const char** strs, size_t n);
+
+XSTDMETHOD(char*) strrep(const char* str, int c1, int c2);
+
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l);
+XSTDMETHOD(int) xstricmp_l(const char *s1, const char *s2,xlocale_t l);
+#endif
 
 #ifdef __cplusplus
 }

@@ -24,10 +24,12 @@
 #define __XTYPES_H__
 
 #include "xstddef.h"
-#include <locale.h>
 
+#ifndef LIBXC_DISABLE_LOCALE
+#include <locale.h>
 #ifdef __APPLE__
 #include <xlocale.h>
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -36,7 +38,9 @@ extern "C" {
 
 #ifdef _WIN32
 typedef _mode_t xmode_t;
+#ifndef LIBXC_DISABLE_LOCALE
 typedef _locale_t xlocale_t;
+#endif
 #else
 typedef uint32_t DWORD;
 typedef void *PVOID;
@@ -60,7 +64,9 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 #endif
 
 typedef mode_t xmode_t;
+#ifndef LIBXC_DISABLE_LOCALE
 typedef locale_t xlocale_t;
+#endif
 #endif
 
 typedef HMODULE xhandle_t;

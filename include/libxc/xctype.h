@@ -30,13 +30,15 @@ extern "C" {
 
 XSTDMETHOD(char*) xtolower(const char* str);
 
-XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l);
-
 XSTDMETHOD(char*) xtoupper(const char* str);
 
-XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l);
-
 XSTDMETHOD(char*) xtoascii(const char* str);
+
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l);
+
+XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l);
+#endif
 
 #ifdef __cplusplus
 }

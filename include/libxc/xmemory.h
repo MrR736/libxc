@@ -35,6 +35,10 @@ XSTDMETHOD(void*) xcalloc(size_t nmemb, size_t size);
 
 XSTDMETHOD(void*) xrealloc(void *ptr, size_t size);
 
+XSTDMETHOD(void*) xalloca(size_t size);
+
+XSTDMETHOD(void*) xreallocarray(void *ptr, size_t nmemb, size_t size);
+
 XSTDMETHOD(void) xfree(void *ptr);
 
 XSTDMETHOD(void) xfrees(void **ptrs, size_t n);
@@ -55,11 +59,11 @@ XSTDMETHOD(void*) xmempcpy(void *xrestrict dest,const void *xrestrict src, size_
 XSTDMETHOD(void*) xmemchr(const void* s,int c,size_t n);
 
 
-XSTDMETHOD(wchar_t*) xwmemset(wchar_t *s, int c, size_t n);
+XSTDMETHOD(wchar_t*) xwmemset(wchar_t *s, wchar_t c, size_t n);
 
 XSTDMETHOD(wchar_t*) xwmemcpy(wchar_t *xrestrict dest, const wchar_t *xrestrict src,size_t n);
 
-XSTDMETHOD(wchar_t*) xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,int c,size_t n);
+XSTDMETHOD(wchar_t*) xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,wchar_t c,size_t n);
 
 XSTDMETHOD(wchar_t*) xwmemmove(wchar_t *dest, const wchar_t *src, size_t n);
 
@@ -67,7 +71,7 @@ XSTDMETHOD(int) xwmemcmp(const wchar_t *s1,const wchar_t *s2,size_t n);
 
 XSTDMETHOD(wchar_t*) xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src, size_t n);
 
-XSTDMETHOD(wchar_t*) xwmemchr(const wchar_t* s,int c,size_t n);
+XSTDMETHOD(wchar_t*) xwmemchr(const wchar_t* s,wchar_t c,size_t n);
 
 
 XSTDMETHOD(int) xbcmp(const void *s1, const void *s2, size_t n);

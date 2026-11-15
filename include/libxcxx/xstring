@@ -100,21 +100,22 @@ private:
 		}
 	}
 
-	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
-		if (_upper == nullptr || _uppersource != c_str()) {
-			char* result = xtoupper_l(c_str(),l);
-			if (_upper) xfree(_upper);
-			_upper = result;
-			_uppersource = c_str();
-		}
-	}
-
 	void update_lower() const LIBXC_NOEXCEPT {
 		if (_lower == nullptr || _lowersource != c_str()) {
 			char* result = xtolower(c_str());
 			if (_lower) xfree(_lower);
 			_lower = result;
 			_lowersource = c_str();
+		}
+	}
+
+#ifndef LIBXC_DISABLE_LOCALE
+	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			char* result = xtoupper_l(c_str(),l);
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
 		}
 	}
 
@@ -126,6 +127,7 @@ private:
 			_lowersource = c_str();
 		}
 	}
+#endif
 
 public:
 	xstring() : std::string(), _wdata(nullptr), _upper(nullptr), _lower(nullptr) {}
@@ -238,20 +240,22 @@ public:
 		return _lower;
 	}
 
-	const char* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
-		update_lower(l);
-		return _lower;
-	}
-
 	const char* toupper() const LIBXC_NOEXCEPT {
 		update_upper();
 		return _upper;
+	}
+
+#ifndef LIBXC_DISABLE_LOCALE
+	const char* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_lower(l);
+		return _lower;
 	}
 
 	const char* toupper(xlocale_t l) const LIBXC_NOEXCEPT {
 		update_upper(l);
 		return _upper;
 	}
+#endif
 
 	int compares(const char *const *s, size_t n) const LIBXC_NOEXCEPT {
 		if (!s) return 1;
@@ -361,21 +365,22 @@ private:
 		}
 	}
 
-	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
-		if (_upper == nullptr || _uppersource != c_str()) {
-			wchar_t* result = xtowupper_l(c_str(),l);
-			if (_upper) xfree(_upper);
-			_upper = result;
-			_uppersource = c_str();
-		}
-	}
-
 	void update_lower() const LIBXC_NOEXCEPT {
 		if (_lower == nullptr || _lowersource != c_str()) {
 			wchar_t* result = xtowlower(c_str());
 			if (_lower) xfree(_lower);
 			_lower = result;
 			_lowersource = c_str();
+		}
+	}
+
+#ifndef LIBXC_DISABLE_LOCALE
+	void update_upper(xlocale_t l) const LIBXC_NOEXCEPT {
+		if (_upper == nullptr || _uppersource != c_str()) {
+			wchar_t* result = xtowupper_l(c_str(),l);
+			if (_upper) xfree(_upper);
+			_upper = result;
+			_uppersource = c_str();
 		}
 	}
 
@@ -387,6 +392,7 @@ private:
 			_lowersource = c_str();
 		}
 	}
+#endif
 public:
 	xwstring() : std::wstring(), _cdata(nullptr), _upper(nullptr), _lower(nullptr) {}
 
@@ -498,20 +504,22 @@ public:
 		return _lower;
 	}
 
-	const wchar_t* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
-		update_lower(l);
-		return _lower;
-	}
-
 	const wchar_t* toupper() const LIBXC_NOEXCEPT {
 		update_upper();
 		return _upper;
+	}
+
+#ifndef LIBXC_DISABLE_LOCALE
+	const wchar_t* tolower(xlocale_t l) const LIBXC_NOEXCEPT {
+		update_lower(l);
+		return _lower;
 	}
 
 	const wchar_t* toupper(xlocale_t l) const LIBXC_NOEXCEPT {
 		update_upper(l);
 		return _upper;
 	}
+#endif
 
 	int compares(const wchar_t *const *s, size_t n) const LIBXC_NOEXCEPT {
 		if (!s) return 1;

@@ -35,10 +35,13 @@ using ::xstrlen LIBXC_USING_IF_EXISTS;
 using ::xstrcmp LIBXC_USING_IF_EXISTS;
 
 using ::xstrcasecmp LIBXC_USING_IF_EXISTS;
-using ::xstrcasecmp_l LIBXC_USING_IF_EXISTS;
 
 using ::xstricmp LIBXC_USING_IF_EXISTS;
+
+#ifndef LIBXC_DISABLE_LOCALE
+using ::xstrcasecmp_l LIBXC_USING_IF_EXISTS;
 using ::xstricmp_l LIBXC_USING_IF_EXISTS;
+#endif
 
 using ::xstrdup LIBXC_USING_IF_EXISTS;
 
@@ -48,6 +51,8 @@ using ::xstrcmbs LIBXC_USING_IF_EXISTS;
 using ::xbasename LIBXC_USING_IF_EXISTS;
 
 using ::xstrsdup LIBXC_USING_IF_EXISTS;
+
+using ::xstrrep LIBXC_USING_IF_EXISTS;
 
 }
 

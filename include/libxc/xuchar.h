@@ -45,8 +45,8 @@ XSTDMETHOD(type*) name##chr(const type *s, type1 c); \
 XSTDMETHOD(type*) name##chrnul(const type *s, type1 c); \
 XSTDMETHOD(size_t) name##cspn(const type *s, const type *reject); \
 XSTDMETHOD(size_t) name##spn(const type *s, const type *accept); \
-XSTDMETHOD(type*) name##tok_r(type *xrestrict s,const type *xrestrict delim,type **xrestrict save_ptr); \
-XSTDMETHOD(type*) name##tok(type *xrestrict s, const type *xrestrict delim); \
+XSTDMETHOD(type*) name##tok_r(type *s,const type *delim,type **save_ptr); \
+XSTDMETHOD(type*) name##tok(type *s, const type *delim); \
 XSTDMETHOD(type*) name##pbrk(const type *s, const type *accept); \
 XSTDMETHOD(type*) name##str(const type *haystack, const type *needle); \
 XSTDMETHOD(type*) name##casestr(const type *haystack, const type *needle); \

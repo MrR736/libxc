@@ -20,6 +20,13 @@
  * can be found in /usr/share/common-licenses/GPL-3 file.
  */
 
+#ifdef LIBXC_DISABLE_LOCALE
+#if defined(_MSC_VER)
+#pragma message("WARNING: libxc locale support is disabled.")
+#else
+#warning "libxc: locale support is disabled."
+#endif
+#else
 #ifndef __XXLOCALE_H__
 #define __XXLOCALE_H__
 
@@ -103,3 +110,4 @@ XSTDMETHOD(void) xinit_console_wutf(void);
 #endif
 
 #endif // __XXLOCALE_H__
+#endif // LIBXC_DISABLE_LOCALE

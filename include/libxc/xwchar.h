@@ -36,10 +36,12 @@ XSTDMETHOD(size_t) xwcslen(const wchar_t *xrestrict __s, ...);
 XSTDMETHOD(int) xwcscmp(const wchar_t *s1, const wchar_t **s2, size_t n);
 
 XSTDMETHOD(int) xwcscasecmp(const wchar_t *s1, const wchar_t *s2);
-XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
-
 XSTDMETHOD(int) xwcsicmp(const wchar_t *s1, const wchar_t *s2);
+
+#ifndef LIBXC_DISABLE_LOCALE
 XSTDMETHOD(int) xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
+XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l);
+#endif
 
 XSTDMETHOD(wchar_t*) xwcsdup(const wchar_t *s);
 
@@ -49,6 +51,8 @@ XSTDMETHOD(wchar_t*) xwcscmbs(const wchar_t** ss, size_t n);
 XSTDMETHOD(const wchar_t*) xwbasename(const wchar_t* path);
 
 XSTDMETHOD(wchar_t**) xwcssdup(const wchar_t** strs, size_t n);
+
+XSTDMETHOD(wchar_t*) xwcsrep(const wchar_t* str, wchar_t c1, wchar_t c2);
 
 #ifdef __cplusplus
 }

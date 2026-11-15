@@ -30,13 +30,15 @@ extern "C" {
 
 XSTDMETHOD(wchar_t*) xtowlower(const wchar_t* str);
 
-XSTDMETHOD(wchar_t*) xtowlower_l(const wchar_t* str,xlocale_t l);
-
 XSTDMETHOD(wchar_t*) xtowupper(const wchar_t* str);
 
-XSTDMETHOD(wchar_t*) xtowupper_l(const wchar_t* str,xlocale_t l);
-
 XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str);
+
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(wchar_t*) xtowlower_l(const wchar_t* str,xlocale_t l);
+
+XSTDMETHOD(wchar_t*) xtowupper_l(const wchar_t* str,xlocale_t l);
+#endif
 
 #ifdef __cplusplus
 }

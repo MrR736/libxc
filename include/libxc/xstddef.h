@@ -53,10 +53,10 @@
 #define __LIBXC_VERSION_MAJOR 1
 #endif
 #ifndef __LIBXC_VERSION_MINOR
-#define __LIBXC_VERSION_MINOR 0
+#define __LIBXC_VERSION_MINOR 1
 #endif
 #ifndef __LIBXC_VERSION_PATCH
-#define __LIBXC_VERSION_PATCH 9
+#define __LIBXC_VERSION_PATCH 0
 #endif
 
 #define __LIBXC_VERSION ((__LIBXC_VERSION_MAJOR * 1000) + (__LIBXC_VERSION_MINOR * 100) + __LIBXC_VERSION_PATCH)
@@ -338,20 +338,22 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 #endif
 
 #ifndef XTHREAD_LOCAL
-# if defined(__cplusplus)
-#  if __cplusplus >= 201103L
+# ifdef __cplusplus
+#  if CPLUSPLUS_GE(STDC11PP)
 #   define XTHREAD_LOCAL thread_local
 #  elif defined(_MSC_VER)
 #   define XTHREAD_LOCAL __declspec(thread)
 #  elif defined(__GNUC__) || defined(__clang__)
 #   define XTHREAD_LOCAL __thread
 #  endif
-# elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+# elif STDC_VERSION_GE(STDC11)
 #  define XTHREAD_LOCAL _Thread_local
 # elif defined(_MSC_VER)
 #  define XTHREAD_LOCAL __declspec(thread)
 # elif defined(__GNUC__) || defined(__clang__)
 #  define XTHREAD_LOCAL __thread
+# else
+#  error "Thread-local storage is not supported by this compiler"
 # endif
 #endif
 
@@ -392,9 +394,97 @@ struct __xstd_types_compatible_impl<T, const volatile T> {
 # endif
 #endif
 
+#ifndef __msstdcall
+# ifdef __stdcall
+#  define __msstdcall __stdcall
+# elif defined (_XSTD_i386)
+#  ifdef __GNUC__
+#   if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2)) || defined(__APPLE__)
+#    define __msstdcall __attribute__((__stdcall__)) __attribute__((__force_align_arg_pointer__))
+#   else
+#    define __msstdcall __attribute__((__stdcall__))
+#   endif
+#  else
+#   error You need to define __msstdcall for your compiler
+#  endif
+# elif defined(_XSTD_x86_64) && defined (__GNUC__)
+#  if __has_xattribute(__force_align_arg_pointer__)
+#   define __msstdcall __attribute__((ms_abi)) __attribute__((__force_align_arg_pointer__))
+#  else
+#   define __msstdcall __attribute__((ms_abi))
+#  endif
+# elif defined(_XSTD_ARM) && defined (__GNUC__) && !defined(__SOFTFP__) && !defined(__MINGW32__) && !defined(__CYGWIN__)
+#   define __msstdcall __attribute__((pcs("aapcs-vfp")))
+# elif defined(_XSTD_ARM64) && defined (__GNUC__) && __has_xattribute(ms_abi)
+#  define __msstdcall __attribute__((ms_abi))
+# else  /* _XSTD_i386 */
+#  define __msstdcall
+# endif  /* _XSTD_i386 */
+#endif
+
+#ifndef __mscdecl
+# ifdef __cdecl
+#  define __mscdecl __cdecl
+# elif defined(_XSTD_i386) && defined(__GNUC__)
+#  if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 2)) || defined(__APPLE__)
+#   define __mscdecl __attribute__((__cdecl__)) __attribute__((__force_align_arg_pointer__))
+#  else
+#   define __mscdecl __attribute__((__cdecl__))
+#  endif
+# else
+#  define __mscdecl __msstdcall
+# endif
+#endif
+
+#ifndef __xstdcall
+#ifdef _MSC_VER
+# define __xstdcall __msstdcall
+#elif defined(__GNUC__) || defined(__clang__)
+# ifdef _XSTD_i386
+#  if __has_xattribute(stdcall)
+#   define __xstdcall __attribute__((stdcall))
+#  else
+#   define __xstdcall
+#  endif
+# elif defined(_XSTD_x86_64)
+#  define __xstdcall
+# elif defined(_XSTD_ARM)
+# if !defined(__SOFTFP__) && !defined(__MINGW32__) && !defined(__CYGWIN__) && __has_xattribute(pcs)
+#  define __xstdcall __attribute__((pcs("aapcs-vfp")))
+# else
+#  define __xstdcall
+# endif
+# elif defined(_XSTD_ARM64)
+#  define __xstdcall
+# else
+#  define __xstdcall
+# endif
+#else
+# define __xstdcall
+#endif
+#endif /* __xstdcall */
+
+#ifndef __xcdecl
+#ifdef _MSC_VER
+# define __xcdecl __mscdecl
+#elif defined(__GNUC__) || defined(__clang__)
+# ifdef _XSTD_i386
+#  if __has_xattribute(cdecl)
+#   define __xcdecl __attribute__((cdecl))
+#  else
+#   define __xcdecl
+#  endif
+# else
+#  define __xcdecl
+# endif
+#else
+# define __xcdecl
+#endif
+#endif /* __xcdecl */
+
 #ifndef XCALLAPI
 #ifdef _WIN32
-#define XCALLAPI	WINAPI
+#define XCALLAPI	__xstdcall
 #else
 #define XCALLAPI
 #endif
@@ -526,6 +616,14 @@ typedef char xstd_static_assertion[(condition) ? 1 : -1]
 
 #ifndef XSTDMETHOD
 #define XSTDMETHOD(type) XSTDAPI type XCALLAPI
+#endif
+
+#if defined(__GNUC__)
+#define LIBXC_GNU 1
+#endif
+
+#if defined(__clang__)
+#define LIBXC_CLANG 1
 #endif
 
 #endif // __XSTDDEF_H__
