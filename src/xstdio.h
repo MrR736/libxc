@@ -54,7 +54,7 @@ XSTDMETHOD(FILE*) fopenm(const char *xrestrict filename, int oflag, ...) {
 	if (oflag & O_CREAT) {
 		va_list ap;
 		va_start(ap, oflag);
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__ANDROID__)
 		permissions = (xmode_t)va_arg(ap, int);
 #else
 		permissions = va_arg(ap, xmode_t);
@@ -119,7 +119,7 @@ XSTDMETHOD(FILE*) fdopenm(int fd, int oflag, ...) {
 	if (oflag & O_CREAT) {
 		va_list ap;
 		va_start(ap, oflag);
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__ANDROID__)
 		permissions = (xmode_t)va_arg(ap, int);
 #else
 		permissions = va_arg(ap, xmode_t);
@@ -261,6 +261,8 @@ XSTDMETHOD(void*) furead(FILE *fp, size_t *out_size) {
 		return NULL;
 	}
 
+	if (out_size) *out_size = 0;
+
 	size_t size = fpsize(fp);
 	if (size == (size_t)-1) return NULL;
 
@@ -332,7 +334,7 @@ XSTDMETHOD(void*) fduread(int fd, size_t *out_size) {
 		return NULL;
 	}
 
-	unsigned char *buf = (unsigned char *)xmalloc(cap + 1);
+	unsigned char *buf = (unsigned char*)xmalloc(cap + 1);
 	if (!buf) return NULL;
 
 	size_t len = 0;
@@ -361,7 +363,6 @@ XSTDMETHOD(void*) fduread(int fd, size_t *out_size) {
 
 XSTDMETHOD(char*) vcprintf(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return NULL;
-	va_list apc;
 
 	size_t len = vxstrlen(fmt, ap);
 	if (len == (size_t)-1) return NULL;
@@ -369,6 +370,7 @@ XSTDMETHOD(char*) vcprintf(const char *xrestrict fmt, va_list ap) {
 	char *s = (char*)xmalloc(len + 1);
 	if (!s) return NULL;
 
+	va_list apc;
 	va_copy(apc, ap);
 	int written = vsnprintf(s, len + 1, fmt, apc);
 	va_end(apc);
@@ -485,7 +487,7 @@ XSTDMETHOD(FILE*) wfopenm(const wchar_t *xrestrict filename, int oflag, ...) {
 	if (oflag & O_CREAT) {
 		va_list ap;
 		va_start(ap, oflag);
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__ANDROID__)
 		permissions = (xmode_t)va_arg(ap, int);
 #else
 		permissions = va_arg(ap, xmode_t);
@@ -558,10 +560,7 @@ XSTDMETHOD(int) wremove(const wchar_t *xrestrict fmt) {
 
 XSTDMETHOD(int) vxremove(const char *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
-	va_list apc;
-	va_copy(apc,ap);
-	char *s = vcprintf(fmt,apc);
-	va_end(apc);
+	char *s = vcprintf(fmt,ap);
 	if (!s) return -1;
 	int ret = remove(s);
 	xfree(s);
@@ -578,10 +577,7 @@ XSTDMETHOD(int) xremove(const char *xrestrict fmt, ...) {
 
 XSTDMETHOD(int) vxwremove(const wchar_t *xrestrict fmt, va_list ap) {
 	if (!fmt) return -1;
-	va_list apc;
-	va_copy(apc, ap);
-	wchar_t *s = vwcprintf(fmt,apc);
-	va_end(apc);
+	wchar_t *s = vwcprintf(fmt,ap);
 	int ret = wremove(s);
 	xfree(s);
 	return ret;
@@ -602,7 +598,6 @@ XSTDMETHOD(char*) getcurrentdirectory_size(size_t n) {
 		return NULL;
 	}
 	size_t current_size = n;
-	size_t len;
 #ifdef _WIN32
 	DWORD result = 0;
 	while (1) {
@@ -612,7 +607,7 @@ XSTDMETHOD(char*) getcurrentdirectory_size(size_t n) {
 			errno = EINVAL;
 			return NULL;
 		}
-		if (result < current_size) break;
+		if ((size_t)result < current_size) break;
 #else
 	ssize_t result = 0;
 	while (1) {
@@ -621,7 +616,7 @@ XSTDMETHOD(char*) getcurrentdirectory_size(size_t n) {
 			xfree(abs_path);
 			return NULL;
 		}
-		if (result < current_size - 1) break;
+		if ((size_t)result < current_size - 1) break;
 #endif
 		current_size *= 2;
 		abs_path = (char*)realloc(abs_path, current_size);

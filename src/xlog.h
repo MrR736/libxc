@@ -53,6 +53,8 @@ typedef enum XLogPriority {
 #define VXLOGV(tag,fmt,ap) xlog_vprint(XLOG_VERBOSE,tag,fmt,ap)
 #define VXLOGW(tag,fmt,ap) xlog_vprint(XLOG_WARN, tag,fmt,ap)
 #define VXLOGF(tag,fmt,ap) xlog_vprint(XLOG_FATAL,tag,fmt,ap)
+#define VXLOGS(tag,fmt,ap) xlog_vprint(XLOG_SILENT,tag,fmt,ap)
+#define VXLOGU(tag,fmt,ap) xlog_vprint(XLOG_UNKNOWN,tag,fmt,ap)
 
 #ifdef DEBUG
 # define VXLOGD(tag,fmt,ap) xlog_vprint(XLOG_DEBUG,tag,fmt,ap)
@@ -65,6 +67,8 @@ typedef enum XLogPriority {
 #define XLOGV(tag,fmt,...) xlog_print(XLOG_VERBOSE,tag,fmt,##__VA_ARGS__)
 #define XLOGW(tag,fmt,...) xlog_print(XLOG_WARN, tag,fmt,##__VA_ARGS__)
 #define XLOGF(tag,fmt,...) xlog_print(XLOG_FATAL,tag,fmt,##__VA_ARGS__)
+#define XLOGS(tag,fmt,...) xlog_print(XLOG_SILENT,tag,fmt,##__VA_ARGS__)
+#define XLOGU(tag,fmt,...) xlog_print(XLOG_UNKNOWN,tag,fmt,##__VA_ARGS__)
 
 #ifdef DEBUG
 # define XLOGD(tag,fmt,...) xlog_print(XLOG_DEBUG,tag,fmt,##__VA_ARGS__)
@@ -128,6 +132,8 @@ XSTDMETHOD(int) xlog_vcprint(int prio,int line,const char* file,const char* tag,
 	va_end(apc);
 	return ret;
 #else
+	if (prio == XLOG_SILENT) return 0;
+
 	time_t now = time(NULL);
 	struct tm tm;
 
@@ -136,7 +142,7 @@ XSTDMETHOD(int) xlog_vcprint(int prio,int line,const char* file,const char* tag,
 #else
 	localtime_r(&now, &tm);
 #endif
-	if (prio == XLOG_SILENT) return 0;
+
 	char timestamp[64];
 	strftime(timestamp,sizeof(timestamp),"%Y-%m-%d %H:%M:%S",&tm);
 
@@ -175,14 +181,9 @@ XSTDMETHOD(int) xlog_vcprint(int prio,int line,const char* file,const char* tag,
 			priorityString = "FATAL";
 			break;
 
-		case XLOG_SILENT:
-			priorityString = NULL;
-			break;
-
 		default:
 			priorityString = "Unknown";
 			break;
-
 	}
 	fprintf(xlog, "%s ", timestamp);
 	if (priorityString) fprintf(xlog,"[%s]\t",priorityString);

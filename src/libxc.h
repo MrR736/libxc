@@ -27,7 +27,6 @@
 #include "xtypes.h"
 
 #include "xmemory.h"
-#include "xxlocale.h"
 #include "xlog.h"
 #include "xstdio.h"
 #include "xstdlib.h"
@@ -39,5 +38,9 @@
 #include "xwctype.h"
 #include "xstat.h"
 #include "xdlfcn.h"
+
+#ifndef LIBXC_DISABLE_LOCALE
+#include "xxlocale.h"
+#endif
 
 #endif

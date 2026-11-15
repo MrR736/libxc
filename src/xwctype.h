@@ -69,6 +69,30 @@ XSTDMETHOD(wchar_t*) xtowupper(const wchar_t* str) {
 	return ret;
 }
 
+XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t len = wcslen(str);
+	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	size_t j = 0;
+	for (size_t i = 0; i < len; i++) {
+		if (str[i] >= 0 && str[i] <= UCHAR_MAX) ret[j++] = (wchar_t)str[i];
+		else ret[j++] = L'?';
+	}
+
+	ret[j] = '\0';
+	return ret;
+}
+
+#ifndef LIBXC_DISABLE_LOCALE
 XSTDMETHOD(wchar_t*) xtowlower_l(const wchar_t* str,xlocale_t l) {
 	if (str == NULL) {
 		errno = EINVAL;
@@ -114,29 +138,7 @@ XSTDMETHOD(wchar_t*) xtowupper_l(const wchar_t* str,xlocale_t l) {
 	ret[len] = L'\0';
 	return ret;
 }
-
-XSTDMETHOD(wchar_t*) xtowascii(const wchar_t* str) {
-	if (str == NULL) {
-		errno = EINVAL;
-		return NULL;
-	}
-
-	size_t len = wcslen(str);
-	wchar_t* ret = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
-	if (!ret) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	size_t j = 0;
-	for (size_t i = 0; i < len; i++) {
-		if (str[i] >= 0 && str[i] <= UCHAR_MAX) ret[j++] = (wchar_t)str[i];
-		else ret[j++] = L'?';
-	}
-
-	ret[j] = '\0';
-	return ret;
-}
+#endif
 
 #ifdef __cplusplus
 }

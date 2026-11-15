@@ -43,26 +43,15 @@ typedef struct {
 # include <pthread.h>
 # ifdef __ANDROID__
 #  include <signal.h>
-#  define SETUP_SIG_HANDLER(sig) \
-do { \
-	struct sigaction sa; \
-	sa.sa_handler = signal_handler; \
-	sa.sa_flags = 0; \
-	sigemptyset(&sa.sa_mask); \
-	sigaction(sig, &sa, NULL); \
-} while (0)
 
-#  define ENABLE_SIGNAL(sig) \
-do { \
-	SETUP_SIG_HANDLER(sig);  /* Ensure SIG is handled by empty_signal_handler */ \
+#  define ENABLE_SIGNAL(sig) do { \
 	sigset_t set; \
 	sigemptyset(&set); \
 	sigaddset(&set, sig); \
 	pthread_sigmask(SIG_UNBLOCK, &set, NULL); \
 } while (0)
 
-#  define DISABLE_SIGNAL(sig) \
-do { \
+#  define DISABLE_SIGNAL(sig) do { \
 	sigset_t set; \
 	sigemptyset(&set); \
 	sigaddset(&set, sig); \
@@ -73,6 +62,8 @@ do { \
 # ifdef __ANDROID__
 #  define XTHREAD_CANCEL_ENABLE  1
 #  define XTHREAD_CANCEL_DISABLE 0
+#  define XTHREAD_CANCEL_DEFERRED      0
+#  define XTHREAD_CANCEL_ASYNCHRONOUS  1
 # else
 #  define XTHREAD_CANCEL_ENABLE  PTHREAD_CANCEL_ENABLE
 #  define XTHREAD_CANCEL_DISABLE PTHREAD_CANCEL_DISABLE
@@ -100,11 +91,24 @@ XSTDDEF_INLINE_API DWORD XCALLAPI __xthread_wrapper(LPVOID arg) {
 	return 0;
 }
 #else
-XSTDDEF_INLINE_API void* XCALLAPI __xthread_wrapper(void *arg) {
+XSTDDEF_INLINE_API void* XCALLAPI __xthread_wrapper(void* arg) {
 	__xthread_t *data = (__xthread_t *)arg;
 	data->result = data->lpStartAddress(data->lpParameter);
 	return NULL;
 }
+
+#ifdef __ANDROID__
+static xthread_local volatile sig_atomic_t thread_cancel_requested = 0;
+
+static xthread_local int thread_cancel_state = XTHREAD_CANCEL_ENABLE;
+
+/* Cancellation type should have its own constants. */
+static xthread_local int thread_cancel_type = XTHREAD_CANCEL_DEFERRED;
+
+XSTDDEF_INLINE_API void XCALLAPI signal_handler(int signo) {
+	if (signo == SIGUSR1) thread_cancel_requested = 1;
+}
+#endif
 #endif
 
 XSTDMETHOD(int) xmutex_init(xmutex_t *m) {
@@ -269,11 +273,9 @@ XSTDMETHOD(xthread_result_t) xthread_setcanceltype(int type, int *oldtype) {
 	cancel_state = type;
 	return 0;
 #elif defined(__ANDROID__)
-	static xthread_local int cancel_type = XTHREAD_CANCEL_ENABLE;
-	if (oldtype) *oldtype = cancel_type;
-	cancel_type = type;
-	if (type == XTHREAD_CANCEL_ENABLE) ENABLE_SIGNAL(SIGUSR1);
-	else if (type == XTHREAD_CANCEL_DISABLE) DISABLE_SIGNAL(SIGUSR1);
+	if (type != XTHREAD_CANCEL_DEFERRED && type != XTHREAD_CANCEL_ASYNCHRONOUS) return EINVAL;
+	if (oldtype) *oldtype = thread_cancel_type;
+	thread_cancel_type = type;
 	return 0;
 #else
 	return pthread_setcanceltype(type, oldtype);
@@ -281,17 +283,15 @@ XSTDMETHOD(xthread_result_t) xthread_setcanceltype(int type, int *oldtype) {
 }
 
 XSTDMETHOD(int) xthread_setcancelstate(int state, int *oldstate) {
-	static xthread_local int cancel_state = XTHREAD_CANCEL_ENABLE; // per-thread
 #ifdef __ANDROID__
-	if (oldstate != NULL) *(int*)oldstate = thread_cancel_state;
-	if (state == XTHREAD_CANCEL_ENABLE) {
-		thread_cancel_state = XTHREAD_CANCEL_ENABLE;
-		ENABLE_SIGNAL(SIGUSR1);
-	} else if (state == XTHREAD_CANCEL_DISABLE) {
-		thread_cancel_state = XTHREAD_CANCEL_DISABLE;
-		DISABLE_SIGNAL(SIGUSR1);
-	}
+	if (state != XTHREAD_CANCEL_ENABLE && state != XTHREAD_CANCEL_DISABLE) return EINVAL;
+	if (oldstate) *oldstate = thread_cancel_state;
+	thread_cancel_state = state;
+	if (state == XTHREAD_CANCEL_ENABLE) ENABLE_SIGNAL(SIGUSR1);
+	else DISABLE_SIGNAL(SIGUSR1);
+	return 0;
 #elif defined (_WIN32)
+	static xthread_local int cancel_state = XTHREAD_CANCEL_ENABLE; // per-thread
 	if (oldstate) *oldstate = cancel_state;
 	cancel_state = state;
 	return 0;
@@ -301,7 +301,7 @@ XSTDMETHOD(int) xthread_setcancelstate(int state, int *oldstate) {
 }
 
 XSTDMETHOD(void) xthread_testcancel(void) {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__ANDROID__)
 	return;
 #else
 	pthread_testcancel();
@@ -309,7 +309,6 @@ XSTDMETHOD(void) xthread_testcancel(void) {
 }
 
 #ifdef __ANDROID__
-#undef SETUP_SIG_HANDLER
 #undef ENABLE_SIGNAL
 #undef DISABLE_SIGNAL
 #endif

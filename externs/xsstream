@@ -1,0 +1,88 @@
+/**
+ * xsstream: Extern Library for sstream in C++
+ *
+ * Copyright (C) 2026 MrR736 <MrR736@users.github.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The complete text of the GNU General Public License
+ * can be found in /usr/share/common-licenses/GPL-3 file.
+ */
+
+#ifndef __XSSTREAM__
+#define __XSSTREAM__
+
+
+#include <sstream>
+#include <string>
+#include <utility>
+
+#include "xstring"
+
+namespace xstd __xvisibility__(default) {
+
+class ixstringstream : public std::istringstream {
+public:
+	ixstringstream() = default;
+
+	ixstringstream(const xstring& s): std::istringstream(s) {}
+	ixstringstream(xstring&& s) : std::istringstream(s) {}
+	ixstringstream(const std::string& s) : std::istringstream(s) {}
+	ixstringstream(std::string&& s) : std::istringstream(std::move(s)) {}
+	ixstringstream(const char* s) : std::istringstream(s ? s : "") { }
+
+	xstring xstr() const {
+		return str();
+	}
+
+	void xstr(const xstring& s) {
+		std::istringstream::str(static_cast<const std::string&>(s));
+	}
+
+#if CPLUSPLUS_GE(STDC20PP)
+	void xstr(xstring&& s) {
+		std::istringstream::str(static_cast<std::string&&>(s));
+	}
+
+	template<class Allocator>
+	std::basic_string<char, std::char_traits<char>, Allocator>
+	xstr(const Allocator& alloc) const {
+		return std::istringstream::str(alloc);
+	}
+#endif
+
+	xwstring xwstr() const {
+		return xwstring(std::istringstream::str());
+	}
+
+	void xwstr(const xwstring& s) {
+		std::istringstream::str(static_cast<const std::string&>(s.c_cstr()));
+	}
+
+#if CPLUSPLUS_GE(STDC20PP)
+	void xwstr(xstring&& s) {
+		std::istringstream::str(static_cast<std::string&&>(s));
+	}
+
+	template<class Allocator>
+	std::basic_string<wchar_t, std::char_traits<wchar_t>, Allocator>
+	xwstr(const Allocator& alloc) const {
+		return std::istringstream::str(alloc);
+	}
+#endif
+};
+
+}
+
+#endif

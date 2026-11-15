@@ -45,7 +45,7 @@ XSTDMETHOD(char*) xtolower(const char* str) {
 	for (size_t i = 0; i < len; i++)
 		ret[i] = (char)tolower((unsigned char)str[i]);
 
-	ret[len] = 0;
+	ret[len] = '\0';
 	return ret;
 }
 
@@ -63,51 +63,6 @@ XSTDMETHOD(char*) xtoupper(const char* str) {
 
 	for (size_t i = 0; i < len; i++)
 		ret[i] = (char)toupper((unsigned char)str[i]);
-
-	ret[len] = 0;
-	return ret;
-}
-
-XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l) {
-	if (str == NULL) {
-		errno = EINVAL;
-		return NULL;
-	}
-	size_t len = strlen(str);
-	char* ret = (char*)xmalloc(len + 1);
-	if (!ret) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	for (size_t i = 0; i < len; i++)
-#ifdef _WIN32
-		ret[i] = (char)_tolower_l((unsigned char)str[i],l);
-#else
-		ret[i] = (char)tolower_l((unsigned char)str[i],l);
-#endif
-	ret[len] = 0;
-	return ret;
-}
-
-XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l) {
-	if (str == NULL) {
-		errno = EINVAL;
-		return NULL;
-	}
-	size_t len = strlen(str);
-	char* ret = (char*)xmalloc(len + 1);
-	if (!ret) {
-		errno = ENOMEM;
-		return NULL;
-	}
-
-	for (size_t i = 0; i < len; i++)
-#ifdef _WIN32
-		ret[i] = (char)_toupper_l((unsigned char)str[i],l);
-#else
-		ret[i] = (char)toupper_l((unsigned char)str[i],l);
-#endif
 
 	ret[len] = 0;
 	return ret;
@@ -134,6 +89,54 @@ XSTDMETHOD(char*) xtoascii(const char* str) {
 	ret[j] = '\0';
 	return ret;
 }
+
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(char*) xtolower_l(const char* str,xlocale_t l) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+	size_t len = strlen(str);
+	char* ret = (char*)xmalloc(len + 1);
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	for (size_t i = 0; i < len; i++)
+#ifdef _WIN32
+		ret[i] = (char)_tolower_l((unsigned char)str[i],l);
+#else
+		ret[i] = (char)tolower_l((unsigned char)str[i],l);
+#endif
+
+	ret[len] = '\0';
+	return ret;
+}
+
+XSTDMETHOD(char*) xtoupper_l(const char* str,xlocale_t l) {
+	if (str == NULL) {
+		errno = EINVAL;
+		return NULL;
+	}
+	size_t len = strlen(str);
+	char* ret = (char*)xmalloc(len + 1);
+	if (!ret) {
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	for (size_t i = 0; i < len; i++)
+#ifdef _WIN32
+		ret[i] = (char)_toupper_l((unsigned char)str[i],l);
+#else
+		ret[i] = (char)toupper_l((unsigned char)str[i],l);
+#endif
+
+	ret[len] = '\0';
+	return ret;
+}
+#endif
 
 #ifdef __cplusplus
 }

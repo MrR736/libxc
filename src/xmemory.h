@@ -25,6 +25,10 @@
 
 #include "xstddef.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __imalloc
 #define __imalloc(s) malloc(s)
 #endif
@@ -35,6 +39,10 @@
 
 #ifndef __irealloc
 #define __irealloc(ptr,size) realloc(ptr,size)
+#endif
+
+#ifndef __ialloca
+#define __ialloca(size) alloca(size)
 #endif
 
 #ifndef __ifree
@@ -51,7 +59,22 @@
 #endif
 
 #ifndef __imemccpy
+#if defined(LIBXC_GNU) && STDC_VERSION_GE(STDC23)
 #define __imemccpy(dest,src,c,n) memccpy(dest,src,c,n)
+#else
+XSTDDEF_INLINE_API void* XCALLAPI __imemccpy(void *dest, const void *src, int c, size_t n) {
+	unsigned char *d = (unsigned char *)dest;
+	const unsigned char *s = (const unsigned char *)src;
+	unsigned char ch = (unsigned char)c;
+	while (n != 0) {
+		unsigned char value = *s++;
+		*d++ = value;
+		if (value == ch) return d;
+		--n;
+	}
+	return NULL;
+}
+#endif
 #endif
 
 #ifndef __imemmove
@@ -63,7 +86,7 @@
 #endif
 
 #ifndef __imempcpy
-#define __imempcpy(dest,src,n) mempcpy(dest,src,n)
+#define __imempcpy(dest,src,n) ((void *)((unsigned char *)__imemcpy((dest), (src), (n)) + (n)))
 #endif
 
 #ifndef __imemchr
@@ -88,15 +111,11 @@
 #endif
 
 #ifndef __iwmempcpy
-#define __iwmempcpy(dest,src,n) wmempcpy(dest,src,n)
+#define __iwmempcpy(dest,src,n) (__iwmemcpy((dest),(src),(n)) + (n))
 #endif
 
 #ifndef __iwmemchr
 #define __iwmemchr(s,c,n) wmemchr(s,c,n)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 XSTDMETHOD(void*) xmalloc(size_t size) {
@@ -109,6 +128,14 @@ XSTDMETHOD(void*) xcalloc(size_t nmemb, size_t size) {
 
 XSTDMETHOD(void*) xrealloc(void *ptr, size_t size) {
 	return __irealloc(ptr,size);
+}
+
+XSTDMETHOD(void*) xalloca(size_t size) {
+	return __ialloca(size);
+}
+
+XSTDMETHOD(void*) xreallocarray(void *ptr, size_t nmemb, size_t size) {
+	return __irealloc(ptr, nmemb * size);
 }
 
 XSTDMETHOD(void) xfree(void *ptr) {
@@ -159,7 +186,7 @@ XSTDMETHOD(void*) xmemchr(const void* s,int c,size_t n) {
 }
 
 
-XSTDMETHOD(wchar_t*) xwmemset(wchar_t *s, int c, size_t n) {
+XSTDMETHOD(wchar_t*) xwmemset(wchar_t *s, wchar_t c, size_t n) {
 	return __iwmemset(s,c,n);
 }
 
@@ -167,11 +194,10 @@ XSTDMETHOD(wchar_t*) xwmemcpy(wchar_t *xrestrict dest, const wchar_t *xrestrict 
 	return __iwmemcpy(dest,src,n);
 }
 
-XSTDMETHOD(wchar_t*) xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,int c,size_t n) {
-	wchar_t wc = (wchar_t)c;
+XSTDMETHOD(wchar_t*) xwmemccpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src,wchar_t c,size_t n) {
 	for (size_t i = 0; i < n; ++i) {
 		dest[i] = src[i];
-		if (src[i] == wc) return dest + i + 1;
+		if (src[i] == c) return dest + i + 1;
 	}
 	return NULL;
 }
@@ -185,14 +211,14 @@ XSTDMETHOD(int) xwmemcmp(const wchar_t *s1,const wchar_t *s2,size_t n) {
 }
 
 XSTDMETHOD(wchar_t*) xwmempcpy(wchar_t *xrestrict dest,const wchar_t *xrestrict src, size_t n) {
-#ifdef __APPLE__
+#if defined(__APPLE__)
 	return __iwmemcpy(dest,src,n) + n;
 #else
 	return __iwmempcpy(dest,src,n);
 #endif
 }
 
-XSTDMETHOD(wchar_t*) xwmemchr(const wchar_t* s,int c,size_t n) {
+XSTDMETHOD(wchar_t*) xwmemchr(const wchar_t* s,wchar_t c,size_t n) {
 #ifdef __cplusplus
 	return const_cast<wchar_t*>(__iwmemchr(s,c,n));
 #else

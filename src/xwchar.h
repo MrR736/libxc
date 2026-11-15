@@ -41,9 +41,14 @@ XSTDMETHOD(size_t) vxwcslen(const wchar_t *xrestrict fmt, va_list ap) {
 	va_end(apc);
 	return (len < 0) ? (size_t)-1 : (size_t)len;
 #else
+#ifndef __ANDROID__
 	int len = vswprintf(NULL, 0, fmt, apc);
 	va_end(apc);
 	if (len >= 0) return (size_t)len;
+#else
+	va_end(apc);
+#endif
+
 	size_t bufSize = 256;
 	const size_t LIMIT = (SIZE_MAX / sizeof(wchar_t)) / 4;
 	while (bufSize < LIMIT) {
@@ -96,16 +101,19 @@ XSTDMETHOD(int) xwcscmp(const wchar_t * s1, const wchar_t ** s2, size_t n) {
 XSTDMETHOD(int) xwcscasecmp(const wchar_t *s1, const wchar_t *s2) {
 #ifdef _WIN32
 	return _wcsicmp(s1,s2);
-#else
+#elif defined(__APPLE__) || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L)
 	return wcscasecmp(s1,s2);
-#endif
-}
-
-XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
-#ifdef _WIN32
-	return _wcsicmp_l(s1,s2,l);
 #else
-	return wcscasecmp_l(s1,s2,l);
+	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL);
+	while (*s1 != L'\0' && *s2 != L'\0') {
+		wchar_t c1 = *s1;
+		wchar_t c2 = *s2;
+		if (c1 >= L'A' && c1 <= L'Z') c1 = (wchar_t)(c1 + (L'a' - L'A'));
+		if (c2 >= L'A' && c2 <= L'Z') c2 = (wchar_t)(c2 + (L'a' - L'A'));
+		if (c1 != c2) return (c1 > c2) - (c1 < c2);
+		++s1; ++s2;
+	}
+	return (*s1 != L'\0') - (*s2 != L'\0');
 #endif
 }
 
@@ -113,16 +121,30 @@ XSTDMETHOD(int) xwcsicmp(const wchar_t *s1, const wchar_t *s2) {
 	return xwcscasecmp(s1,s2);
 }
 
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(int) xwcscasecmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
+#ifdef _WIN32
+	return _wcsicmp_l(s1,s2,l);
+#elif defined(__APPLE__) || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L) || \
+	  (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 23)
+	return wcscasecmp_l(s1,s2,l);
+#else
+	(void)l;
+	return xwcscasecmp(s1,s2);
+#endif
+}
+
 XSTDMETHOD(int) xwcsicmp_l(const wchar_t *s1, const wchar_t *s2,xlocale_t l) {
 	return xwcscasecmp_l(s1,s2,l);
 }
+#endif
 
 XSTDMETHOD(wchar_t*) xwcsdup(const wchar_t *s) {
 	if (!s) return NULL;
 	size_t len = wcslen(s);
 	wchar_t *d = (wchar_t*)xmalloc((len + 1) * sizeof(wchar_t));
 	if (!d) return NULL;
-	memcpy(d, s, (len + 1) * sizeof(wchar_t));
+	xmemcpy(d, s, (len + 1) * sizeof(wchar_t));
 	return d;
 }
 
@@ -193,8 +215,7 @@ XSTDMETHOD(wchar_t**) xwcssdup(const wchar_t** strs, size_t n) {
 		return NULL;
 	}
 
-	for (i = 0; i <= n; ++i)
-		result[i] = NULL;
+	for (i = 0; i <= n; ++i) result[i] = NULL;
 
 	if (n != 0 && strs == NULL) {
 		xfree(result);
@@ -231,6 +252,16 @@ XSTDMETHOD(wchar_t**) xwcssdup(const wchar_t** strs, size_t n) {
 
 	result[n] = NULL;
 	return result;
+}
+
+XSTDMETHOD(wchar_t*) xwcsrep(const wchar_t* str, wchar_t c1, wchar_t c2) {
+	if (!str) return NULL;
+	wchar_t* s = xwcsdup(str);
+	if (!s) return NULL;
+	for (size_t i = 0; s[i]; ++i) {
+		if (s[i] == c1) s[i] = c2;
+	}
+	return s;
 }
 
 #ifdef __cplusplus

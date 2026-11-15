@@ -208,7 +208,9 @@ XSTDMETHOD(const char*) xcdllibpath(const char *dir, const char *name) {
 #ifdef _WIN32
 	const char *prefix = "";
 	const char *suffix = ".dll";
+#ifndef __cplusplus
 	const char psep = '\\';
+#endif
 #else
 	const char *prefix = "lib";
 #ifdef __APPLE__
@@ -216,7 +218,9 @@ XSTDMETHOD(const char*) xcdllibpath(const char *dir, const char *name) {
 #else
 	const char* suffix = ".so";
 #endif
+#ifndef __cplusplus
 	const char psep = '/';
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -272,15 +276,19 @@ XSTDMETHOD(const wchar_t*) xcwdllibpath(const wchar_t *dir, const wchar_t *name)
 #ifdef _WIN32
 	const wchar_t *prefix = L"";
 	const wchar_t *suffix = L".dll";
+#ifndef __cplusplus
 	const wchar_t psep = L'\\';
+#endif
 #else
 	const wchar_t *prefix = L"lib";
 #ifdef __APPLE__
 	const wchar_t* suffix = L".dylib";
 #else
 	const wchar_t* suffix = L".so";
-	#endif
+#endif
+#ifndef __cplusplus
 	const wchar_t psep = L'/';
+#endif
 #endif
 
 #ifdef __cplusplus

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(xc
-	VERSION 1.0.9
+	VERSION 1.1.0
 	DESCRIPTION "Extern Utility Library"
 	LANGUAGES C CXX
 )
@@ -12,6 +12,7 @@ option(LIBXC_BUILD_SHARED "Build shared library" ON)
 option(LIBXC_BUILD_STATIC "Build static library" ON)
 option(LIBXC_INSTALL_MAN3 "Install man3" OFF)
 option(LIBXC_BUILD_TESTS "Build xc tests" OFF)
+option(LIBXC_DISABLE_LOCALE "Disable Locale in libxc" OFF)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
@@ -45,7 +46,13 @@ else()
 	if(UNIX)
 		list(APPEND LIBXC_LIBS m)
 	endif()
-	list(APPEND LIBXC_LIBS pthread ${CMAKE_DL_LIBS})
+	if(ANDROID)
+		find_library(log-lib log)
+		list(APPEND LIBXC_LIBS ${log-lib})
+	else()
+		list(APPEND LIBXC_LIBS pthread)
+	endif()
+	list(APPEND LIBXC_LIBS ${CMAKE_DL_LIBS})
 endif()
 
 
@@ -63,6 +70,7 @@ string(REPLACE ";" " " ILIBXC_LDFLAGS "${ILIBXC_LDFLAGS}")
 if (LIBXC_BUILD_SHARED)
 	add_library(libxc SHARED ${LIBXC_SOURCES})
 	target_compile_definitions(libxc PRIVATE XSTDAPI_BUILD)
+	target_compile_options(libxc PRIVATE -Wall -Wextra -Wpedantic)
 
 	# Set library version
 	if(NOT WIN32)
@@ -92,6 +100,9 @@ if (LIBXC_BUILD_SHARED)
 	set(LIBXC_LDFLAGS "-llibxc")
 	set(LIBXC_LDFLAGS_PRIVATE "${ILIBXC_LDFLAGS}")
 	set(LIBXC_CFLAGS "")
+	if (LIBXC_DISABLE_LOCALE)
+		set(LIBXC_CFLAGS " -DLIBXC_DISABLE_LOCALE")
+	endif()
 	set(LIBXC_DESCRIPTION "")
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libxc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libxc.pc @ONLY)
 
@@ -119,6 +130,9 @@ if (LIBXC_BUILD_STATIC)
 	set(LIBXC_LDFLAGS "-Wl,-Bstatic -llibxc -Wl,-Bdynamic")
 	set(LIBXC_LDFLAGS_PRIVATE "${ILIBXC_LDFLAGS}")
 	set(LIBXC_CFLAGS " -DXSTDAPI_STATIC")
+	if (LIBXC_DISABLE_LOCALE)
+		set(LIBXC_CFLAGS " -DXSTDAPI_STATIC -DLIBXC_DISABLE_LOCALE")
+	endif()
 	set(LIBXC_DESCRIPTION "(static)")
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/libxc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libxc-static.pc @ONLY)
 

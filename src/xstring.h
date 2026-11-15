@@ -68,16 +68,19 @@ XSTDMETHOD(int) xstrcmp(const char * s1, const char ** s2, size_t n) {
 XSTDMETHOD(int) xstrcasecmp(const char *s1, const char *s2) {
 #ifdef _WIN32
 	return _stricmp(s1, s2);
-#else
+#elif defined(__APPLE__) || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L)
 	return strcasecmp(s1, s2);
-#endif
-}
-
-XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l) {
-#ifdef _WIN32
-	return _stricmp_l(s1, s2,l);
 #else
-	return strcasecmp_l(s1, s2,l);
+	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL);
+	while (*s1 != '\0' && *s2 != '\0') {
+		char c1 = *s1;
+		char c2 = *s2;
+		if (c1 >= 'A' && c1 <= 'Z') c1 = (char)(c1 + ('a' - 'A'));
+		if (c2 >= 'A' && c2 <= 'Z') c2 = (char)(c2 + ('a' - 'A'));
+		if (c1 != c2) return (c1 > c2) - (c1 < c2);
+		++s1; ++s2;
+	}
+	return (*s1 != '\0') - (*s2 != '\0');
 #endif
 }
 
@@ -85,16 +88,30 @@ XSTDMETHOD(int) xstricmp(const char *s1, const char *s2) {
 	return xstrcasecmp(s1, s2);
 }
 
+#ifndef LIBXC_DISABLE_LOCALE
+XSTDMETHOD(int) xstrcasecmp_l(const char *s1, const char *s2,xlocale_t l) {
+#ifdef _WIN32
+	return _stricmp_l(s1, s2,l);
+#elif defined(__APPLE__) || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L) || \
+	  (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 23)
+	return strcasecmp_l(s1, s2,l);
+#else
+	(void)l;
+	return xstrcasecmp(s1,s2);
+#endif
+}
+
 XSTDMETHOD(int) xstricmp_l(const char *s1, const char *s2,xlocale_t l) {
 	return xstrcasecmp_l(s1, s2,l);
 }
+#endif
 
 XSTDMETHOD(char*) xstrdup(const char *s) {
 	if (!s) return NULL;
 	size_t len = strlen(s);
 	char *d = (char*)xmalloc(len + 1);
 	if (!d) return NULL;
-	memcpy(d, s, len + 1);
+	xmemcpy(d, s, len + 1);
 	return d;
 }
 
@@ -198,6 +215,25 @@ XSTDMETHOD(char**) xstrsdup(const char** strs, size_t n) {
 
 	result[n] = NULL;
 	return result;
+}
+
+XSTDMETHOD(char*) xstrrep(const char* str, int c1, int c2) {
+	if (!str) return NULL;
+
+	char* s = xstrdup(str);
+	if (!s) return NULL;
+
+	for (size_t i = 0; s[i]; ++i) {
+		if (s[i] == c1) {
+#ifdef __cplusplus
+			s[i] = static_cast<char>(c2);
+#else
+			s[i] = (char)c2;
+#endif
+		}
+	}
+
+	return s;
 }
 
 #ifdef __cplusplus

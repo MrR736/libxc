@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <cstddef>
 
-#include "xmemory.h"
 #include "xmap.h"
 
 using xmap_clock = std::chrono::steady_clock;

@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#define XSTD_USTRS(name,type,type1,tcnull) \
+#define XSTD_USTRS(nu,name,type,type1,tcnull,tc) \
 XSTDMETHOD(size_t) name##len(const type* s) { \
 	if (s == NULL) return 0; \
 	const type *p = s; \
@@ -78,11 +78,14 @@ XSTDMETHOD(int) name##ncmp(const type *s1, const type *s2, size_t n) { \
 	return (*s1 > *s2) - (*s1 < *s2); \
 } \
 XSTDMETHOD(int) name##coll(const type *s1, const type *s2) { \
-	return name##cmp(s1, s2); \
+	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL); \
+	while (*s1 == *s2 && *s1 != tcnull) { ++s1; ++s2; } \
+	return (*s1 > *s2) - (*s1 < *s2); \
 } \
-XSTDMETHOD(size_t) name##xfrm(type *xrestrict dest,const type *xrestrict src, size_t n) { \
+XSTDMETHOD(size_t) name##xfrm(type *xrestrict dest,const type *xrestrict src,size_t n) { \
 	if (src == NULL) return 0; \
 	size_t len = name##len(src); \
+	if (n > 0 && dest == NULL) return 0; \
 	if (n > 0) { \
 		size_t copy = (len < n - 1) ? len : n - 1; \
 		for (size_t i = 0; i < copy; ++i) dest[i] = src[i]; \
@@ -101,9 +104,8 @@ XSTDMETHOD(type*) name##dup(const type *s) { \
 } \
 XSTDMETHOD(type*) name##ndup(const type *s, size_t n) { \
 	if (s == NULL) return NULL; \
-	size_t len = 0; \
-	while (len < n && s[len] != tcnull) ++len; \
-	if (len >= SIZE_MAX / sizeof(type)) return NULL; \
+	size_t len = name##nlen(s,n); \
+	if (len > SIZE_MAX / sizeof(type) - 1) return NULL; \
 	type *result = (type*)xmalloc((len + 1) * sizeof(type)); \
 	if (result == NULL) return NULL; \
 	for (size_t i = 0; i < len; ++i) result[i] = s[i]; \
@@ -147,9 +149,10 @@ XSTDMETHOD(size_t) name##spn(const type *s, const type *accept) { \
 	} \
 	return (size_t)(p - s); \
 } \
-XSTDMETHOD(type*) name##tok_r(type *xrestrict s,const type *xrestrict delim,type **xrestrict save_ptr) { \
+XSTDMETHOD(type*) name##tok_r(type *s, const type *delim, type **save_ptr) { \
 	if (delim == NULL || save_ptr == NULL) return NULL; \
 	if (s == NULL) s = *save_ptr; \
+	else *save_ptr = s; \
 	if (s == NULL) return NULL; \
 	while (*s != tcnull) { \
 		const type *d = delim; \
@@ -175,8 +178,8 @@ XSTDMETHOD(type*) name##tok_r(type *xrestrict s,const type *xrestrict delim,type
 	*save_ptr = NULL; \
 	return token; \
 } \
-XSTDMETHOD(type*) name##tok(type *xrestrict s, const type *xrestrict delim) { \
-	static type *save_ptr; \
+XSTDMETHOD(type*) name##tok(type *s, const type *delim) { \
+	static XTHREAD_LOCAL type *save_ptr; \
 	return name##tok_r(s, delim, &save_ptr); \
 } \
 XSTDMETHOD(type*) name##pbrk(const type *s, const type *accept) { \
@@ -184,7 +187,7 @@ XSTDMETHOD(type*) name##pbrk(const type *s, const type *accept) { \
 	for (; *s != tcnull; ++s) { \
 		const type *a = accept; \
 		while (*a != tcnull && *a != *s) ++a; \
-		if (*a != tcnull) return (type *)s; \
+		if (*a != tcnull) return (type*)s; \
 	} \
 	return NULL; \
 } \
@@ -205,7 +208,14 @@ XSTDMETHOD(type*) name##casestr(const type *haystack, const type *needle) { \
 	for (const type *h = haystack; *h != tcnull; ++h) { \
 		const type *p = h; \
 		const type *n = needle; \
-		while (*p != tcnull && *n != tcnull && towlower((wint_t)*p) == towlower((wint_t)*n)) { ++p; ++n; } \
+		while (*p != tcnull && *n != tcnull) { \
+			type c1 = *p; \
+			type c2 = *n; \
+			if (c1 >= tc##'A' && c1 <= tc##'Z') c1 = (type)(c1 + ('a' - 'A')); \
+			if (c2 >= tc##'A' && c2 <= tc##'Z') c2 = (type)(c2 + ('a' - 'A')); \
+			if (c1 != c2) break; \
+			++p; ++n; \
+		} \
 		if (*n == tcnull) return (type*)h; \
 	} \
 	return NULL; \
@@ -213,8 +223,10 @@ XSTDMETHOD(type*) name##casestr(const type *haystack, const type *needle) { \
 XSTDMETHOD(int) name##casecmp(const type *s1, const type *s2) { \
 	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL); \
 	while (*s1 != tcnull && *s2 != tcnull) { \
-		wint_t c1 = towlower((wint_t)*s1); \
-		wint_t c2 = towlower((wint_t)*s2); \
+		type c1 = *s1; \
+		type c2 = *s2; \
+		if (c1 >= tc##'A' && c1 <= tc##'Z') c1 = (type)(c1 + (tc##'a' - tc##'A')); \
+		if (c2 >= tc##'A' && c2 <= tc##'Z') c2 = (type)(c2 + (tc##'a' - tc##'A')); \
 		if (c1 != c2) return (c1 > c2) - (c1 < c2); \
 		++s1; ++s2; \
 	} \
@@ -224,40 +236,40 @@ XSTDMETHOD(int) name##ncasecmp(const type *s1, const type *s2, size_t n) { \
 	if (n == 0) return 0; \
 	if (s1 == NULL || s2 == NULL) return (s1 != NULL) - (s2 != NULL); \
 	while (n > 0 && *s1 != tcnull && *s2 != tcnull) { \
-		wint_t c1 = towlower((wint_t)*s1); \
-		wint_t c2 = towlower((wint_t)*s2); \
+		type c1 = *s1; \
+		type c2 = *s2; \
+		if (c1 >= tc##'A' && c1 <= tc##'Z') c1 = (type)(c1 + (tc##'a' - tc##'A')); \
+		if (c2 >= tc##'A' && c2 <= tc##'Z') c2 = (type)(c2 + (tc##'a' - tc##'A')); \
 		if (c1 != c2) return (c1 > c2) - (c1 < c2); \
 		++s1; ++s2; --n; \
 	} \
 	if (n == 0) return 0; \
 	return (*s1 != tcnull) - (*s2 != tcnull); \
 } \
-XSTDMETHOD(const type*) name##basename(const type* path) { \
-	const type *p1 = name##chr(path, '/'); \
-	const type *p2 = name##chr(path, '\\'); \
-	const type *p = !p1 ? p2 : !p2 ? p1 : p1 > p2 ? p1 : p2; \
-	return p ? p + 1 : path; \
+XSTDMETHOD(const type*) name##basename(const type *path) { \
+	if (path == NULL) return NULL; \
+	const type *result = path; \
+	for (const type *p = path; *p != tcnull; ++p) \
+		if (*p == tc##'/' || *p == tc##'\\') result = p + 1; \
+	return result; \
 } \
-XSTDMETHOD(type*) name##cmbs(const type** ss, size_t n) { \
+XSTDMETHOD(type*) name##cmbs(const type **ss, size_t n) { \
 	if (ss == NULL || n == 0) return NULL; \
 	size_t total = 0; \
+	size_t max = SIZE_MAX / sizeof(type) - 1; \
 	for (size_t i = 0; i < n; ++i) { \
 		if (ss[i] == NULL) continue; \
 		size_t len = name##len(ss[i]); \
-		if (len > (SIZE_MAX / sizeof(type)) - total - 1) return NULL; \
+		if (total > max || len > max - total) return NULL; \
 		total += len; \
 	} \
-	if (total == 0) return NULL; \
-	type* result = (type*)xmalloc((total + 1) * sizeof(type)); \
+	type *result = (type*)xmalloc((total + 1) * sizeof(type)); \
 	if (result == NULL) return NULL; \
 	size_t pos = 0; \
 	for (size_t i = 0; i < n; ++i) { \
 		if (ss[i] == NULL) continue; \
 		size_t len = name##len(ss[i]); \
-		if (len != 0) { \
-			xmemcpy(result + pos, ss[i], len * sizeof(type)); \
-			pos += len; \
-		} \
+		for (size_t j = 0; j < len; ++j) result[pos++] = ss[i][j]; \
 	} \
 	result[pos] = tcnull; \
 	return result; \
@@ -273,9 +285,9 @@ XSTDMETHOD(int) name##cmps(const type * s1, const type ** s2, size_t n) { \
 	return 0; \
 }
 
-XSTD_USTRS(ustr8,char8_t,int,0)
-XSTD_USTRS(ustr16,char16_t,int,u'\0')
-XSTD_USTRS(ustr32,char32_t,int,U'\0')
+XSTD_USTRS(u8,ustr8,char8_t,int,0,)
+XSTD_USTRS(u16,ustr16,char16_t,int,u'\0',u)
+XSTD_USTRS(u32,ustr32,char32_t,int,U'\0',U)
 
 #undef XSTD_USTRS
 

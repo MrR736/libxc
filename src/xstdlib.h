@@ -87,6 +87,38 @@ XSTDMETHOD(void*) xrand(size_t size, unsigned int flags) {
 		p += n;
 		remaining -= n;
 	}
+#elif defined(__ANDROID__)
+#if defined(__ANDROID_API__) && __ANDROID_API__ >= 28
+	unsigned char* p = (unsigned char*)ret;
+	size_t remaining = size;
+
+	while (remaining != 0) {
+		ssize_t n = getrandom(p, remaining, 0);
+
+		if (n < 0) {
+			int error = errno;
+			xfree(ret);
+			errno = error;
+			return NULL;
+		}
+
+		if (n == 0) {
+			xfree(ret);
+			errno = EIO;
+			return NULL;
+		}
+
+		p += n;
+		remaining -= (size_t)n;
+	}
+#else
+	FILE *file = fopen("/dev/urandom", "rb");
+	if (file == NULL) return NULL;
+	size_t count = fread(ret, 1, size, file);
+	int failed = (count != size || ferror(file));
+	if (fclose(file) != 0) failed = 1;
+	if (failed) return NULL;
+#endif
 #elif defined(__linux__)
 	unsigned char* p = (unsigned char*)ret;
 	size_t remaining = size;
@@ -405,7 +437,7 @@ XSTDMETHOD(int) xsystem(const char *xrestrict command, ...) {
 }
 
 XSTDMETHOD(int) vnxwsystem(size_t len, const wchar_t *xrestrict command, va_list ap) {
-	va_list apc,apf;
+	va_list apf;
 	if (len <= 0) return -1;
 	// Allocate memory for the formatted command
 	wchar_t *wcmd = (wchar_t *)xmalloc(len * sizeof(wchar_t));
@@ -624,7 +656,7 @@ XSTDMETHOD(int) xcsystem(const char *xrestrict command, ...) {
 }
 
 XSTDMETHOD(int) vnxwcsystem(size_t len, const wchar_t *xrestrict command, va_list ap) {
-	va_list apc,apf;
+	va_list apf;
 	if (len <= 0) return -1;
 	// Allocate memory for the formatted command
 	wchar_t *wcmd = (wchar_t *)xmalloc(len * sizeof(wchar_t));
